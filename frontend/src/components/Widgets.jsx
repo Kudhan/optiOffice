@@ -64,7 +64,7 @@ export const WeeklyPresence = ({ isLoading }) => {
   );
 };
 
-export const PriorityTasks = ({ tasks, isLoading }) => {
+export const PriorityTasks = ({ tasks, isLoading, title = 'Priority Tasks' }) => {
   const [taskList, setTaskList] = React.useState(tasks || []);
 
   React.useEffect(() => {
@@ -89,7 +89,7 @@ export const PriorityTasks = ({ tasks, isLoading }) => {
   return (
     <div className={`col-span-12 lg:col-span-4 min-h-[600px] ${tileClasses} bg-slate-50/50 dark:bg-navy-900/30 border-dashed`}>
       <div className="flex justify-between items-center mb-8">
-        <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter">Priority Tasks</h3>
+        <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">{title}</h3>
         <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-black px-2.5 py-1 rounded-lg">
             {taskList.length} TOTAL
         </span>

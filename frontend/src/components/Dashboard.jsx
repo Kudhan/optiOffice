@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import apiClient from '../api/client';
+import useAuth from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { 
   StatsWidget, 
@@ -9,100 +10,12 @@ import {
   QuickActionsRow
 } from './Widgets';
 import { CardSkeleton, ListSkeleton } from './Skeleton';
+import InviteUserModal from './InviteUserModal';
 
-const InviteModal = ({ isOpen, onClose }) => {
-    const [formData, setFormData] = useState({ full_name: '', username: '', email: '', role: 'employee', password: 'Password123!' });
-    const [submitting, setSubmitting] = useState(false);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-        try {
-            await apiClient.post('users', formData);
-            toast.success(`Invitation sent to ${formData.full_name}!`, {
-                icon: '📩',
-                style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
-            });
-            onClose();
-        } catch (err) {
-            // Error handled by interceptor
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-navy-950/40 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-navy-900 w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl border border-slate-200 dark:border-slate-800 animate-scale-in">
-                <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">Invite New User</h3>
-                    <button onClick={onClose} className="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors text-xl">✕</button>
-                </div>
-                
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Full Name</label>
-                            <input 
-                                required 
-                                className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm font-bold dark:text-white"
-                                value={formData.full_name}
-                                onChange={e => setFormData({...formData, full_name: e.target.value})}
-                                placeholder="Alex Carter"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Username</label>
-                            <input 
-                                required 
-                                className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm font-bold dark:text-white"
-                                value={formData.username}
-                                onChange={e => setFormData({...formData, username: e.target.value})}
-                                placeholder="alex_c"
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Email Address Address</label>
-                        <input 
-                            required 
-                            type="email"
-                            className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm font-bold dark:text-white"
-                            value={formData.email}
-                            onChange={e => setFormData({...formData, email: e.target.value})}
-                            placeholder="alex@optioffice.com"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Organization Role</label>
-                        <select 
-                            className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm font-bold dark:text-white appearance-none"
-                            value={formData.role}
-                            onChange={e => setFormData({...formData, role: e.target.value})}
-                        >
-                            <option value="employee">Employee</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Administrator</option>
-                        </select>
-                    </div>
-
-                    <button 
-                        type="submit" 
-                        disabled={submitting}
-                        className="w-full bg-sky-500 hover:bg-sky-400 text-white font-black py-5 rounded-3xl transition-all shadow-xl shadow-sky-500/20 active:scale-95 disabled:opacity-50"
-                    >
-                        {submitting ? 'Sending Request...' : 'Dispatch Invitation'}
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
-};
 
 function Dashboard() {
-  const { user, data: layoutData } = useOutletContext();
+  const { isAdmin, isManager, user } = useAuth();
+  const { data: layoutData } = useOutletContext();
   const [data, setData] = useState(layoutData);
   const [isLoading, setIsLoading] = useState(!layoutData);
   const [isClocking, setIsClocking] = useState(false);
@@ -176,6 +89,43 @@ function Dashboard() {
     );
   }
 
+  // Role-Based Views
+  const AdminView = (
+    <div className="grid grid-cols-12 gap-10">
+        <div className="col-span-12 lg:col-span-8 flex flex-col gap-10">
+            <StatsWidget stats={data?.stats} isLoading={isLoading} />
+            <WeeklyPresence isLoading={isLoading} />
+            <QuickActionsRow />
+        </div>
+        <div className="col-span-12 lg:col-span-4 h-full">
+            <PriorityTasks tasks={data?.tasks} title="Company Velocity" isLoading={isLoading} />
+        </div>
+    </div>
+  );
+
+  const EmployeeView = (
+    <div className="grid grid-cols-12 gap-10">
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-10">
+             <div className="bg-white dark:bg-navy-950/50 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm transition-all h-full">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-4 block">My Personal Stats</span>
+                <div className="space-y-6">
+                    <div className="p-6 bg-sky-500/5 rounded-3xl border border-sky-500/10">
+                        <p className="text-xs font-bold text-sky-500 mb-1">Weekly Focus</p>
+                        <p className="text-3xl font-black dark:text-white">92%</p>
+                    </div>
+                    <div className="p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10">
+                        <p className="text-xs font-bold text-emerald-500 mb-1">Tasks Done</p>
+                        <p className="text-3xl font-black dark:text-white">{data?.tasks?.filter(t => t.status === 'Completed').length || 0}</p>
+                    </div>
+                </div>
+             </div>
+        </div>
+        <div className="col-span-12 lg:col-span-8">
+            <PriorityTasks tasks={data?.tasks} title="My Task List" isLoading={isLoading} />
+        </div>
+    </div>
+  );
+
   return (
     <div className="p-10 max-w-[1600px] mx-auto animate-fade-in transition-colors duration-500">
         
@@ -186,18 +136,22 @@ function Dashboard() {
               Good Morning, <span className="italic text-sky-500 dark:text-sky-400 font-extrabold">{firstName}.</span>
             </h2>
             <p className="text-slate-500 dark:text-slate-400 font-bold mt-6 text-lg max-w-2xl leading-relaxed tracking-tight">
-               Your office velocity is up <span className="text-sky-500 dark:text-sky-400">12.5%</span> this week. All systems in the New York hub are currently operational.
+               {isAdmin || isManager 
+                 ? `Your office velocity is up 12.5% this week. All systems in the ${user?.tenantId || 'global'} hub are currently operational.`
+                 : "You have 3 tasks due today. Remember to track your time in the attendance module."}
             </p>
           </div>
 
           <div className="flex items-center gap-4">
-             <button 
-                onClick={() => setIsInviteOpen(true)}
-                className="flex items-center gap-2 border border-slate-200 dark:border-slate-800 dark:text-white font-bold py-4 px-8 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm shadow-sm group"
-             >
-                <span className="text-lg group-hover:scale-110 transition-transform">👤+</span>
-                Invite User
-             </button>
+             {isAdmin && (
+                <button 
+                  onClick={() => setIsInviteOpen(true)}
+                  className="flex items-center gap-2 border border-slate-200 dark:border-slate-800 dark:text-white font-bold py-4 px-8 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm shadow-sm group"
+                >
+                  <span className="text-lg group-hover:scale-110 transition-transform">👤+</span>
+                  Invite User
+                </button>
+             )}
              <button 
                 onClick={toggleClockIn}
                 disabled={isClocking}
@@ -215,24 +169,10 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-12 gap-10">
-            
-            {/* Left/Central Column (8-col) */}
-            <div className="col-span-12 lg:col-span-8 flex flex-col gap-10">
-                <StatsWidget stats={data?.stats} isLoading={isLoading} />
-                <WeeklyPresence isLoading={isLoading} />
-                <QuickActionsRow />
-            </div>
+        {/* Dynamic Bento Swap */}
+        {(isAdmin || isManager) ? AdminView : EmployeeView}
 
-            {/* Right Side Column (4-col) */}
-            <div className="col-span-12 lg:col-span-4 h-full">
-                <PriorityTasks tasks={data?.tasks} isLoading={isLoading} />
-            </div>
-
-        </div>
-
-        <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
+        <InviteUserModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
     </div>
   );
 }

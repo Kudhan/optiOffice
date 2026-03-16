@@ -57,8 +57,21 @@ const checkOut = async (req, res) => {
   }
 };
 
+// @desc    Get all attendance records for tenant (Admin/Manager only)
+// @route   GET /attendance
+// @access  Private
+const getAllAttendance = async (req, res) => {
+  try {
+    const attendance = await Attendance.find({ tenantId: req.user.tenantId });
+    res.json(attendance);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 module.exports = {
   getMyAttendance,
+  getAllAttendance,
   checkIn,
   checkOut
 };

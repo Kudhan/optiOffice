@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
+import useAuth from './hooks/useAuth';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -16,36 +16,13 @@ import Profile from './components/Profile';
 import Roles from './components/Roles';
 import Policies from './components/Policies';
 import Placeholder from './components/Placeholder';
+import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUser(decoded); // contains sub, role, tenantId
-      } catch (err) {
-        setToken(null);
-        localStorage.removeItem('token');
-      }
-    } else {
-      setUser(null);
-    }
-  }, [token]);
-
-  const setAuthToken = (newToken) => {
-    if (newToken) {
-      localStorage.setItem('token', newToken);
-    } else {
-      localStorage.removeItem('token');
-    }
-    setToken(newToken);
-  };
+  const { token, login, isAuthenticated } = useAuth();
 
   return (
     <ThemeProvider>
@@ -55,33 +32,63 @@ function App() {
           <Routes>
             <Route
               path="/login"
-              element={!token ? <Login setToken={setAuthToken} /> : <Navigate to="/" />}
+              element={!isAuthenticated ? <Login setToken={login} /> : <Navigate to="/" />}
             />
 
             {/* Protected Routes wrapped in Layout */}
-            {token && user && (
-              <Route path="/" element={<Layout token={token} setToken={setAuthToken} user={user} />}>
-                <Route index element={<Dashboard token={token} user={user} />} />
-                {user.role === 'admin' && (
-                  <Route path="users" element={<UserList token={token} role={user.role} />} />
-                )}
-                <Route path="organization" element={<OrgTree token={token} />} />
-                <Route path="billing" element={<Billing token={token} />} />
-                <Route path="holidays" element={<Holidays token={token} />} />
-                <Route path="assets" element={<Assets token={token} />} />
-                <Route path="attendance" element={<Attendance token={token} />} />
-                <Route path="leaves" element={<Leaves token={token} />} />
-                <Route path="tasks" element={<Tasks token={token} />} />
-                <Route path="profile" element={<Profile token={token} />} />
-                <Route path="roles" element={<Roles token={token} />} />
-                <Route path="policies" element={<Policies token={token} />} />
-                <Route path="settings" element={<Placeholder title="Settings" />} />
-                <Route path="reports" element={<Placeholder title="Reports & Analytics" />} />
-                <Route path="sprints" element={<Placeholder title="Sprint Management" />} />
-              </Route>
-            )}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout token={token} />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              
+              <Route path="users" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <UserList />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="organization" element={<OrgTree />} />
+              
+              <Route path="billing" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Billing />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="holidays" element={<Holidays />} />
+              <Route path="assets" element={<Assets />} />
+              <Route path="attendance" element={<Attendance />} />
+              <Route path="leaves" element={<Leaves />} />
+              <Route path="tasks" element={<Tasks />} />
+              <Route path="profile" element={<Profile />} />
+              
+              {/* Specialized Guards */}
+              <Route path="roles" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Roles />
+                </ProtectedRoute>
+              } />
+              <Route path="policies" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Policies />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="settings" element={<Placeholder title="Settings" />} />
+              <Route path="reports" element={
+                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <Placeholder title="Reports & Analytics" />
+                </ProtectedRoute>
+              } />
+              <Route path="sprints" element={<Placeholder title="Sprint Management" />} />
+            </Route>
 
-            <Route path="*" element={<Navigate to={token ? "/" : "/login"} />} />
+            <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
           </Routes>
         </div>
       </Router>

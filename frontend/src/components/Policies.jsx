@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import apiClient from '../api/client';
+import toast from 'react-hot-toast';
 
 function Policies({ token }) {
   const [policy, setPolicy] = useState(null);
@@ -14,9 +13,7 @@ function Policies({ token }) {
 
   const fetchPolicies = async () => {
     try {
-      const response = await axios.get(`${API_URL}/policies`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('policies');
       setPolicy(response.data);
     } catch (err) {
       console.error("Failed to fetch policies", err);
@@ -36,13 +33,11 @@ function Policies({ token }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${API_URL}/policies`, policy, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await apiClient.put('policies', policy);
       setIsEditing(false);
-      alert("Policies updated successfully");
+      toast.success("Policies updated successfully");
     } catch (err) {
-      alert("Failed to update policies");
+      // apiClient handles toast
     }
   };
 

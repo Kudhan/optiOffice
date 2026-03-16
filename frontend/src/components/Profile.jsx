@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import apiClient from '../api/client';
+import toast from 'react-hot-toast';
 
 function Profile({ token }) {
   const [user, setUser] = useState(null);
@@ -14,9 +13,7 @@ function Profile({ token }) {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get(`${API_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('users/me');
       setUser(response.data);
       setFormData(response.data);
     } catch (err) {
@@ -41,14 +38,12 @@ function Profile({ token }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${API_URL}/users/me`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await apiClient.put('users/me', formData);
       setIsEditing(false);
       fetchProfile();
-      alert("Profile updated successfully");
+      toast.success("Profile updated successfully");
     } catch (err) {
-      alert("Failed to update profile");
+      // apiClient handles toast
     }
   };
 

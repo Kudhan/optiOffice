@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import apiClient from '../api/client';
+import useAuth from '../hooks/useAuth';
 import ThemeToggle from './ThemeToggle';
 
-function Layout({ token, setToken, user }) {
+function Layout() {
+  const { user, logout, isAdmin } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -21,13 +23,11 @@ function Layout({ token, setToken, user }) {
       }
     };
 
-    if (token) {
-      fetchData();
-    }
-  }, [token]);
+    fetchData();
+  }, []);
 
   const handleLogout = () => {
-    setToken(null);
+    logout();
     navigate('/login');
   };
 
@@ -38,6 +38,26 @@ function Layout({ token, setToken, user }) {
       </div>
     );
   }
+
+  // Define navigation items with roles
+  const navItems = [
+    { label: 'Dashboard', path: '/', icon: '🏢' },
+    { label: 'Team Hub', path: '/users', icon: '👥', roles: ['admin'] },
+    { label: 'Organization', path: '/organization', icon: '🌳', roles: ['admin', 'manager'] },
+    { label: 'Attendance', path: '/attendance', icon: '⏱️' },
+    { label: 'Tasks', path: '/tasks', icon: '🛠️' },
+    { label: 'Assets', path: '/assets', icon: '📦' },
+    { label: 'Billing', path: '/billing', icon: '💳', roles: ['admin'] },
+    { label: 'Holidays', path: '/holidays', icon: '📅' },
+    { label: 'Leaves', path: '/leaves', icon: '✉️' },
+    { label: 'Roles', path: '/roles', icon: '🔐', roles: ['admin'] },
+    { label: 'Policies', path: '/policies', icon: '📜', roles: ['admin'] },
+    { label: 'Reports', path: '/reports', icon: '📊', roles: ['admin', 'manager'] },
+  ];
+
+  const filteredNavItems = navItems.filter(item => 
+    !item.roles || item.roles.includes(user?.role)
+  );
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-navy-950 transition-colors duration-300 font-sans">
@@ -51,35 +71,19 @@ function Layout({ token, setToken, user }) {
             <span className="font-black text-xl">O</span>
           </div>
           <div>
-            <h1 className="text-slate-900 dark:text-white font-black text-xl tracking-tighter leading-none">OptiOffice</h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Command Center</p>
+            <h1 className="text-slate-900 dark:text-white font-black text-xl tracking-tighter leading-none">
+              {isAdmin ? 'Admin Portal' : 'OptiOffice'}
+            </h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+              {isAdmin ? 'Command Center' : 'My Workspace'}
+            </p>
           </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-8 overflow-y-auto custom-scrollbar">
           <ul className="space-y-2">
-            {[
-              { label: 'Dashboard', path: '/', icon: '🏢' },
-              ...(data?.menu || []).map(item => {
-                let path = '/';
-                let icon = '📄';
-                if (item === 'Users' || item === 'My Team') { path = '/users'; icon = '👥'; }
-                else if (item === 'Organization Tree') { path = '/organization'; icon = '🌳'; }
-                else if (item === 'Billing') { path = '/billing'; icon = '💳'; }
-                else if (item === 'Holidays') { path = '/holidays'; icon = '📅'; }
-                else if (item === 'Assets') { path = '/assets'; icon = '📦'; }
-                else if (item === 'Attendance') { path = '/attendance'; icon = '⏱️'; }
-                else if (item === 'Leaves') { path = '/leaves'; icon = '✉️'; }
-                else if (item === 'Tasks' || item === 'My Tasks') { path = '/tasks'; icon = '🛠️'; }
-                else if (item === 'Roles') { path = '/roles'; icon = '🔐'; }
-                else if (item === 'Policies') { path = '/policies'; icon = '📜'; }
-                else if (item === 'Settings') { path = '/settings'; icon = '⚙️'; }
-                else if (item === 'Reports') { path = '/reports'; icon = '📊'; }
-                
-                return { label: item, path, icon };
-              })
-            ].map((item, idx) => {
+            {filteredNavItems.map((item, idx) => {
               const isActive = location.pathname === item.path;
               return (
                 <li key={`${item.path}-${idx}`}>
@@ -116,7 +120,7 @@ function Layout({ token, setToken, user }) {
               {user?.sub?.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-bold text-slate-900 dark:text-white truncate uppercase tracking-tight">User Profile</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate uppercase tracking-tight">{user?.sub || 'User Profile'}</p>
               <p className="text-xs text-slate-400 font-medium">{user?.role || 'Member'}</p>
             </div>
           </div>
@@ -143,10 +147,12 @@ function Layout({ token, setToken, user }) {
 
           {/* Header Action Items */}
           <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center bg-red-100/50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2 rounded-full text-xs font-bold border border-red-200/50 dark:border-red-900/50 animate-pulse">
-              <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-              Subscription Past Due
-            </div>
+            {isAdmin && (
+              <div className="hidden lg:flex items-center bg-red-100/50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2 rounded-full text-xs font-bold border border-red-200/50 dark:border-red-900/50 animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                Subscription Past Due
+              </div>
+            )}
             
             <div className="flex gap-4 text-slate-400">
                <button className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-all">🔔</button>

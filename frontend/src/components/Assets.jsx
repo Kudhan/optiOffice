@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import apiClient from '../api/client';
+import toast from 'react-hot-toast';
 
 function Assets({ token }) {
   const [assets, setAssets] = useState([]);
@@ -16,9 +15,7 @@ function Assets({ token }) {
 
   const fetchAssets = async () => {
     try {
-      const response = await axios.get(`${API_URL}/assets`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('assets');
       setAssets(response.data);
     } catch (err) {
       console.error("Failed to fetch assets", err);
@@ -32,14 +29,13 @@ function Assets({ token }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/assets`, newAsset, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await apiClient.post('assets', newAsset);
       fetchAssets();
       setShowForm(false);
       setNewAsset({ name: '', type: '', serial_number: '', assigned_to: '', status: 'Available' });
+      toast.success("Asset added successfully");
     } catch (err) {
-      alert("Failed to add asset");
+      // apiClient handles toast
     }
   };
 

@@ -50,7 +50,58 @@ const createUser = async (req, res) => {
   }
 };
 
+// @desc    Update user (Role/Status)
+// @route   PATCH /users/:id
+// @access  Private/Admin
+const updateUser = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ detail: "Not authorized" });
+    }
+
+    const { role, status, department, full_name } = req.body;
+    const user = await User.findOne({ _id: req.params.id, tenantId: req.user.tenantId });
+
+    if (!user) {
+      return res.status(404).json({ detail: "User not found" });
+    }
+
+    if (role) user.role = role;
+    if (status) user.status = status;
+    if (department) user.department = department;
+    if (full_name) user.full_name = full_name;
+
+    await user.save();
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// @desc    Delete user
+// @route   DELETE /users/:id
+// @access  Private/Admin
+const deleteUser = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ detail: "Not authorized" });
+    }
+
+    const user = await User.findOneAndDelete({ _id: req.params.id, tenantId: req.user.tenantId });
+
+    if (!user) {
+      return res.status(404).json({ detail: "User not found" });
+    }
+
+    res.json({ message: "User removed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 module.exports = {
   getUsers,
-  createUser
+  createUser,
+  updateUser,
+  deleteUser
 };

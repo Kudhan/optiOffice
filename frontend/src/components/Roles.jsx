@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import apiClient from '../api/client';
+import toast from 'react-hot-toast';
 
 function Roles({ token }) {
   const [roles, setRoles] = useState([]);
@@ -15,9 +14,7 @@ function Roles({ token }) {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get(`${API_URL}/roles`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('roles');
       setRoles(response.data);
     } catch (err) {
       console.error("Failed to fetch roles", err);
@@ -35,14 +32,13 @@ function Roles({ token }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/roles`, newRole, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await apiClient.post('roles', newRole);
       fetchRoles();
       setShowForm(false);
       setNewRole({ name: '', description: '', permissions: [] });
+      toast.success("Role created successfully");
     } catch (err) {
-      alert("Failed to create role");
+      // apiClient handles toast
     }
   };
 

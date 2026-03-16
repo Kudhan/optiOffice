@@ -6,11 +6,8 @@ const Task = require('../models/Task');
 const getTasks = async (req, res) => {
   try {
     let tasks;
-    if (['admin', 'manager'].includes(req.user.role)) {
-      tasks = await Task.find({ tenantId: req.user.tenantId });
-    } else {
-      tasks = await Task.find({ tenantId: req.user.tenantId, assigned_to: req.user.sub });
-    }
+    const filter = req.user.role === 'employee' ? { assigned_to: req.user.sub } : {};
+    tasks = await Task.find({ tenantId: req.user.tenantId, ...filter });
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -60,10 +57,6 @@ const updateTask = async (req, res) => {
 // @access  Private
 const deleteTask = async (req, res) => {
   try {
-    if (!['admin', 'manager'].includes(req.user.role)) {
-      return res.status(403).json({ detail: "Not authorized" });
-    }
-    
     const task = await Task.findOneAndDelete({ _id: req.params.id, tenantId: req.user.tenantId });
     
     if (task) {
