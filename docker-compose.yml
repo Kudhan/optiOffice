@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: office_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - office-saas-net
+    restart: always
+
+  backend:
+    build:
+      context: ./backend # Pointing to backend (assuming cleanup.sh ran and renamed it)
+      dockerfile: Dockerfile
+    container_name: office_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - MONGO_URI=mongodb://mongodb:27017/office_saas
+      - JWT_SECRET=YOUR_SUPER_SECRET_COMPLEX_KEY_HERE
+      - JWT_EXPIRE=30m
+      - NODE_ENV=production
+    depends_on:
+      - mongodb
+    networks:
+      - office-saas-net
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: office_frontend
+    ports:
+      - "3000:80"
+    environment:
+      # In production, this needs to be the public IP/Domain if Nginx serves it strictly, 
+      # but React builds it statically. Nginx proxy routing is preferred in real prod.
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - office-saas-net
+    restart: always
+
+volumes:
+  mongodb_data:
+
+networks:
+  office-saas-net:
+    driver: bridge

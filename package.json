@@ -1,0 +1,14 @@
+{
+  "name": "office-saas",
+  "version": "1.0.0",
+  "description": "Office SaaS Management System",
+  "main": "index.js",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
