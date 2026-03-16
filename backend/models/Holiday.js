@@ -1,39 +1,34 @@
 const mongoose = require('mongoose');
 
-const holidaySchema = mongoose.Schema({
-  tenantId: {
-    type: String,
-    required: true,
-    default: 'default_tenant'
-  },
+const holidaySchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: [true, 'Holiday name is required'],
+    trim: true
   },
   date: {
-    type: String,
-    required: true
+    type: Date,
+    required: [true, 'Holiday date is required']
   },
   type: {
     type: String,
-    required: true
+    enum: ['Public', 'Optional', 'Company-Specific'],
+    default: 'Public'
   },
-  description: {
+  isPaid: {
+    type: Boolean,
+    default: true
+  },
+  tenantId: {
     type: String,
-    default: null
+    required: true,
+    index: true
   }
 }, {
-  collection: 'holidays_collection',
   timestamps: true
 });
 
-holidaySchema.set('toJSON', {
-  virtuals: true,
-  versionKey: false,
-  transform: function (doc, ret) {
-    ret.id = ret._id.toString();
-    delete ret._id;
-  }
-});
+// Unique composite index to prevent duplicate holidays for the same company on the same date
+holidaySchema.index({ tenantId: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('Holiday', holidaySchema);

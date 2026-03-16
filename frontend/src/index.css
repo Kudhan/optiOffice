@@ -21,3 +21,20 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   @apply bg-slate-400 dark:bg-slate-600;
 }
+@layer utilities {
+  .bento-card-hover {
+    @apply transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.2)] hover:border-sky-500/50 hover:-translate-y-1 active:scale-[0.98];
+  }
+}
+
+/* Glassmorphism Hover Effects */
+.glass-hover {
+  @apply relative overflow-hidden;
+}
+.glass-hover::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity duration-500;
+}
+.glass-hover:hover::after {
+  @apply opacity-100;
+}
