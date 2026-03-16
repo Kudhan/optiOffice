@@ -87,6 +87,10 @@ function Holidays() {
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [newHoliday, setNewHoliday] = useState({
+    name: '', date: '', type: 'Public', isPaid: true
+  });
 
   const fetchHolidays = async () => {
     try {
@@ -115,6 +119,19 @@ function Holidays() {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await apiClient.post('/holidays', newHoliday);
+      toast.success("Holiday added to calendar!");
+      setShowForm(false);
+      setNewHoliday({ name: '', date: '', type: 'Public', isPaid: true });
+      fetchHolidays();
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message);
+    }
+  };
+
   const nextHoliday = useMemo(() => getNextHolidayInfo(holidays), [holidays]);
 
   return (
@@ -140,12 +157,61 @@ function Holidays() {
               <span className="text-lg group-hover:rotate-12 transition-transform">{isSyncing ? '⌛' : '🇮🇳'}</span>
               Sync National Holidays
             </button>
-            <button className="bg-sky-500 text-white font-black py-4 px-10 rounded-[2rem] shadow-2xl shadow-sky-500/30 hover:brightness-110 active:scale-95 transition-all">
-              Add Custom
+            <button 
+              onClick={() => setShowForm(!showForm)}
+              className="bg-sky-500 text-white font-black py-4 px-10 rounded-[2rem] shadow-2xl shadow-sky-500/30 hover:brightness-110 active:scale-95 transition-all"
+            >
+              {showForm ? 'Cancel' : 'Add Custom'}
             </button>
           </div>
         )}
       </div>
+
+      {/* Add Holiday Form */}
+      {showForm && (
+        <div className="mb-12 bg-white/70 dark:bg-slate-800/40 backdrop-blur-xl rounded-[3rem] p-10 border border-slate-200 dark:border-slate-700/50 animate-fade-in">
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-6 uppercase tracking-tighter">New Holiday Event</h3>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Event Name</label>
+              <input 
+                className="bg-slate-100 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none"
+                placeholder="e.g. Annual Retreat"
+                value={newHoliday.name}
+                onChange={(e) => setNewHoliday({...newHoliday, name: e.target.value})}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Date</label>
+              <input 
+                type="date"
+                className="bg-slate-100 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none"
+                value={newHoliday.date}
+                onChange={(e) => setNewHoliday({...newHoliday, date: e.target.value})}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Type</label>
+              <select 
+                className="bg-slate-100 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none appearance-none"
+                value={newHoliday.type}
+                onChange={(e) => setNewHoliday({...newHoliday, type: e.target.value})}
+              >
+                <option value="Public">Public</option>
+                <option value="Optional">Optional</option>
+                <option value="Company-Specific">Company-Specific</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button type="submit" className="w-full bg-emerald-500 text-white font-black py-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 hover:brightness-110 transition-all">
+                Save Holiday
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Hero Widget: Next Holiday */}
       {nextHoliday && (
