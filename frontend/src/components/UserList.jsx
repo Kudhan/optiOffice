@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import apiClient from '../api/client';
 
 function UserList({ token, role }) {
   const [users, setUsers] = useState([]);
@@ -14,9 +12,7 @@ function UserList({ token, role }) {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${API_URL}/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('users');
       setUsers(response.data);
     } catch (err) {
       console.error("Failed to fetch users", err);
@@ -35,13 +31,9 @@ function UserList({ token, role }) {
     e.preventDefault();
     try {
       if (editingUser) {
-        await axios.put(`${API_URL}/users/${editingUser}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await apiClient.put(`users/${editingUser}`, formData);
       } else {
-        await axios.post(`${API_URL}/users`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await apiClient.post('users', formData);
       }
       setShowForm(false);
       setEditingUser(null);
@@ -51,7 +43,7 @@ function UserList({ token, role }) {
       });
       fetchUsers();
     } catch (err) {
-      alert("Operation failed: " + (err.response?.data?.detail || err.message));
+      // apiClient handles toast
     }
   };
 
@@ -73,12 +65,10 @@ function UserList({ token, role }) {
   const handleResign = async (username) => {
     if (window.confirm(`Are you sure you want to mark ${username} as resigned?`)) {
       try {
-        await axios.delete(`${API_URL}/users/${username}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await apiClient.delete(`users/${username}`);
         fetchUsers();
       } catch (err) {
-        alert("Failed to resign user");
+        // apiClient handles toast
       }
     }
   };

@@ -12,7 +12,7 @@ function Layout({ token, setToken, user }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiClient.get('/dashboard');
+        const response = await apiClient.get('dashboard');
         setData(response.data);
       } catch (err) {
         console.error("Failed to fetch layout data", err);

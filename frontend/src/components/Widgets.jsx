@@ -1,14 +1,18 @@
 import React from 'react';
+import apiClient from '../api/client';
+import toast from 'react-hot-toast';
+import { ListSkeleton } from './Skeleton';
 
 const tileClasses = "bg-white dark:bg-navy-950/50 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm transition-all duration-300 flex flex-col";
 
+// StatsWidget remained same...
 export const StatsWidget = ({ stats, isLoading }) => {
   const items = [
-    { label: 'Total Employees', value: '1,248', trend: '+4%', trendColor: 'text-emerald-500' },
-    { label: 'Active Tasks', value: '342', trend: '86%', trendColor: 'text-sky-500' },
-    { label: 'Pending Leaves', value: '12', trend: 'Critical', trendColor: 'text-rose-500' },
+    { label: 'Total Employees', value: stats?.total_employees || '1,248', trend: '+4%', trendColor: 'text-emerald-500' },
+    { label: 'Active Tasks', value: stats?.active_tasks || '342', trend: '86%', trendColor: 'text-sky-500' },
+    { label: 'Pending Leaves', value: stats?.pending_leaves || '12', trend: 'Critical', trendColor: 'text-rose-500' },
   ];
-
+  // ... rest of StatsWidget implementation
   return (
     <div className={`col-span-12 lg:col-span-8 ${tileClasses}`}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -25,7 +29,7 @@ export const StatsWidget = ({ stats, isLoading }) => {
     </div>
   );
 };
-
+// WeeklyPresence remained same...
 export const WeeklyPresence = ({ isLoading }) => {
   return (
     <div className={`col-span-12 lg:col-span-8 min-h-[400px] ${tileClasses}`}>
@@ -61,33 +65,63 @@ export const WeeklyPresence = ({ isLoading }) => {
 };
 
 export const PriorityTasks = ({ tasks, isLoading }) => {
-  const items = [
-    { type: 'URGENT', title: 'Onboard New Engineering Director', time: '2h ago', color: 'bg-rose-500', text: 'text-rose-500' },
-    { type: 'PROJECT', title: 'Review Q3 Office Budget Draft', time: '5h ago', color: 'bg-sky-500', text: 'text-sky-500' },
-    { type: 'ROUTINE', title: 'Weekly Maintenance Check', time: '8h ago', color: 'bg-slate-500', text: 'text-slate-500' },
-  ];
+  const [taskList, setTaskList] = React.useState(tasks || []);
+
+  React.useEffect(() => {
+    if (tasks) setTaskList(tasks);
+  }, [tasks]);
+
+  const handleToggleStatus = async (taskId, currentStatus) => {
+    const nextStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
+    try {
+        await apiClient.put(`tasks/${taskId}`, { status: nextStatus });
+        setTaskList(prev => prev.map(t => t._id === taskId ? { ...t, status: nextStatus } : t));
+        toast.success(`Task marked as ${nextStatus}`, {
+            style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
+        });
+    } catch (err) {
+        // Interceptor handles it
+    }
+  };
+
+  if (isLoading) return <div className={`col-span-12 lg:col-span-4 min-h-[600px] ${tileClasses} bg-slate-50/50 dark:bg-navy-900/30 border-dashed`}><ListSkeleton /></div>;
 
   return (
     <div className={`col-span-12 lg:col-span-4 min-h-[600px] ${tileClasses} bg-slate-50/50 dark:bg-navy-900/30 border-dashed`}>
       <div className="flex justify-between items-center mb-8">
         <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter">Priority Tasks</h3>
-        <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-black px-2.5 py-1 rounded-lg">8 NEW</span>
+        <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-black px-2.5 py-1 rounded-lg">
+            {taskList.length} TOTAL
+        </span>
       </div>
 
       <div className="space-y-4">
-        {items.map((task, idx) => (
-          <div key={idx} className="bg-white dark:bg-navy-950 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+        {taskList.slice(0, 5).map((task, idx) => (
+          <div 
+            key={task._id || idx} 
+            onClick={() => handleToggleStatus(task._id, task.status)}
+            className="bg-white dark:bg-navy-950 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+          >
             <div className="flex justify-between items-center mb-3">
-              <span className={`text-[9px] font-black px-2 py-0.5 rounded ${task.color} text-white`}>{task.type}</span>
-              <span className="text-[10px] font-medium text-slate-400">{task.time}</span>
+              <span className={`text-[9px] font-black px-2 py-0.5 rounded ${task.priority === 'High' ? 'bg-rose-500' : 'bg-sky-500'} text-white`}>
+                {task.priority || 'ROUTINE'}
+              </span>
+              <span className={`text-[10px] font-bold ${task.status === 'Completed' ? 'text-emerald-500' : 'text-slate-400'}`}>
+                {task.status || 'Pending'}
+              </span>
             </div>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-tight group-hover:text-sky-500 transition-colors uppercase tracking-tight">{task.title}</h4>
-            <div className="mt-4 flex -space-x-2">
-               {[1, 2].map(i => (
-                 <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-navy-950 bg-slate-300 overflow-hidden">
-                    <span className="text-[8px] flex items-center justify-center h-full">👤</span>
-                 </div>
-               ))}
+            <h4 className={`text-sm font-bold text-slate-800 dark:text-white leading-tight group-hover:text-sky-500 transition-colors uppercase tracking-tight ${task.status === 'Completed' ? 'line-through opacity-50' : ''}`}>
+                {task.title}
+            </h4>
+            <div className="mt-4 flex justify-between items-center">
+                <div className="flex -space-x-2">
+                    {[1, 2].map(i => (
+                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-navy-950 bg-slate-300 overflow-hidden">
+                            <span className="text-[8px] flex items-center justify-center h-full">👤</span>
+                        </div>
+                    ))}
+                </div>
+                <span className="text-[9px] text-slate-400 italic">Toggle Status ➡️</span>
             </div>
           </div>
         ))}

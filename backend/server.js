@@ -19,59 +19,48 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Routes
-// We mount the auth routes at the root because React expects POST /token
-app.use('/', require('./routes/authRoutes'));
+// Authentication strictly under /api/v1/auth
+app.use('/api/v1/auth', require('./routes/authRoutes'));
+
+// Fallback for variant auth pathing
+app.use('/auth', require('./routes/authRoutes')); 
+
+// Fallback for legacy /token if needed (optional based on user request " correttamente hits /api/v1/auth/token")
+app.use('/', require('./routes/authRoutes')); 
 
 // Check subscription status before allowing any write requests
 app.use(checkActiveSubscription);
 
-// Mount Phase 3 routes
+// Mount Phase 3 & 4 routes under /api/v1
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const organizationRoutes = require('./routes/organizationRoutes');
 const userRoutes = require('./routes/userRoutes');
-
-app.use('/api/v1/dashboard', dashboardRoutes);
-app.use('/dashboard', dashboardRoutes);
-
-app.use('/api/v1/organization', organizationRoutes);
-app.use('/organization', organizationRoutes);
-
-app.use('/api/v1/users', userRoutes);
-app.use('/users', userRoutes);
-
 const holidayRoutes = require('./routes/holidayRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const policyRoutes = require('./routes/policyRoutes');
-
-app.use('/api/v1/holidays', holidayRoutes);
-app.use('/holidays', holidayRoutes);
-
-app.use('/api/v1/roles', roleRoutes);
-app.use('/roles', roleRoutes);
-
-app.use('/api/v1/policies', policyRoutes);
-app.use('/policies', policyRoutes);
-
-// Phase 4 Routes
 const billingRoutes = require('./routes/billingRoutes');
-app.use('/api/v1/billing', billingRoutes);
-app.use('/billing', billingRoutes);
-
-//app.use('/api/v1/attendance', attendanceRoutes);
 const attendanceRoutes = require('./routes/attendanceRoutes');
-app.use('/api/v1/attendance',attendanceRoutes)
-app.use('/attendance', attendanceRoutes);
-
 const leaveRoutes = require('./routes/leaveRoutes');
-app.use('/api/v1/leaves', leaveRoutes);
-app.use('/leaves', leaveRoutes);
-
 const assetRoutes = require('./routes/assetRoutes');
-app.use('/api/v1/assets', assetRoutes);
-app.use('/assets', assetRoutes);
-
 const taskRoutes = require('./routes/taskRoutes');
+
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/organization', organizationRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/holidays', holidayRoutes);
+app.use('/api/v1/roles', roleRoutes);
+app.use('/api/v1/policies', policyRoutes);
+app.use('/api/v1/billing', billingRoutes);
+app.use('/api/v1/attendance', attendanceRoutes);
+app.use('/api/v1/leaves', leaveRoutes);
+app.use('/api/v1/assets', assetRoutes);
 app.use('/api/v1/tasks', taskRoutes);
+
+// Legacy/Alternative Mounts (Ensuring standard bento boxes work)
+app.use('/dashboard', dashboardRoutes);
+app.use('/organization', organizationRoutes);
+app.use('/users', userRoutes);
+app.use('/attendance', attendanceRoutes);
 app.use('/tasks', taskRoutes);
 
 app.get('/', (req, res) => {

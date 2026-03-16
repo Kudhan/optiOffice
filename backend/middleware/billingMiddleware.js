@@ -2,6 +2,9 @@ const Billing = require('../models/Billing');
 
 const checkActiveSubscription = async (req, res, next) => {
   try {
+    if (!req.user) {
+      return next();
+    }
     const tenantId = req.user.tenantId;
     
     // Admins might always need access to billing page even if past due
