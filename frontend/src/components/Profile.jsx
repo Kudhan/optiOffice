@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import apiClient from '../api/client';
 import toast from 'react-hot-toast';
-import { useAuth } from '../context/AuthContext';
+import useAuth from '../hooks/useAuth';
 import EditProfileModal from './EditProfileModal';
 import { 
     IconUsers, 
