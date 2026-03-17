@@ -18,7 +18,8 @@ import {
   IconLogOut, 
   IconBell, 
   IconHelp, 
-  IconSearch 
+  IconSearch,
+  IconMenu
 } from './Icons';
 
 function Layout() {
@@ -27,6 +28,7 @@ function Layout() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,21 +82,23 @@ function Layout() {
     <div className="flex h-screen bg-slate-50 dark:bg-navy-950 transition-colors duration-300 font-sans">
       
       {/* Floating Sidebar (Left) */}
-      <aside className="w-72 m-4 rounded-3xl bg-primary-surface border border-border text-content-muted flex flex-col shadow-xl z-20">
+      <aside className={`${isCollapsed ? 'w-24' : 'w-72'} m-4 rounded-3xl bg-primary-surface border border-border text-content-muted flex flex-col shadow-xl z-20 transition-all duration-300 overflow-hidden group/sidebar`}>
         
         {/* Logo Section */}
-        <div className="p-8 pb-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+        <div className={`p-8 pb-4 flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
+          <div className="w-10 h-10 bg-sky-500 rounded-xl flex min-w-[40px] items-center justify-center text-white shadow-lg shadow-sky-500/20">
             <span className="font-black text-xl">O</span>
           </div>
-          <div>
-            <h1 className="text-content-main font-black text-xl tracking-tighter leading-none">
-              {isAdmin ? 'Admin Portal' : 'OptiOffice'}
-            </h1>
-            <p className="text-[10px] font-bold text-content-muted uppercase tracking-widest mt-1">
-              {isAdmin ? 'Command Center' : 'My Workspace'}
-            </p>
-          </div>
+          {!isCollapsed && (
+            <div className="min-w-0">
+              <h1 className="text-content-main font-black text-xl tracking-tighter leading-none truncate">
+                {isAdmin ? 'Admin Portal' : 'OptiOffice'}
+              </h1>
+              <p className="text-[10px] font-bold text-content-muted uppercase tracking-widest mt-1">
+                {isAdmin ? 'Command Center' : 'My Workspace'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Navigation */}
@@ -110,10 +114,11 @@ function Layout() {
                       isActive 
                         ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 shadow-sm' 
                          : 'hover:bg-primary-muted'
-                    }`}
+                    } ${isCollapsed ? 'justify-center' : ''}`}
+                    title={isCollapsed ? item.label : ''}
                   >
-                    <span className="opacity-80">{item.icon}</span>
-                    <span>{item.label}</span>
+                    <span className="opacity-80 min-w-[20px]">{item.icon}</span>
+                    {!isCollapsed && <span className="truncate">{item.label}</span>}
                   </Link>
                 </li>
               );
@@ -121,25 +126,27 @@ function Layout() {
           </ul>
         </nav>
 
-        {/* Footer Section (Theme & Logout) */}
+        {/* Footer Section (Logout & Profile) */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-          <ThemeToggle />
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all font-semibold text-red-500 hover:bg-red-500/10 w-full"
+            className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all font-semibold text-red-500 hover:bg-red-500/10 w-full ${isCollapsed ? 'justify-center' : ''}`}
+            title={isCollapsed ? 'Logout' : ''}
           >
-            <IconLogOut className="w-5 h-5 opacity-80" />
-            <span>Logout</span>
+            <IconLogOut className="w-5 h-5 opacity-80 min-w-[20px]" />
+            {!isCollapsed && <span>Logout</span>}
           </button>
           
-          <div className="flex items-center gap-3 px-4 py-4 pt-6">
-            <div className="w-10 h-10 rounded-full bg-primary-muted flex items-center justify-center font-bold text-sky-500">
+          <div className={`flex items-center gap-3 px-4 py-4 pt-6 ${isCollapsed ? 'justify-center' : ''}`}>
+            <div className="w-10 h-10 rounded-full bg-primary-muted flex min-w-[40px] items-center justify-center font-bold text-sky-500">
               {user?.sub?.charAt(0).toUpperCase()}
             </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-bold text-content-main truncate uppercase tracking-tight">{user?.sub || 'User Profile'}</p>
-              <p className="text-xs text-content-muted font-medium">{user?.role || 'Member'}</p>
-            </div>
+            {!isCollapsed && (
+              <div className="flex-1 overflow-hidden">
+                <p className="text-sm font-bold text-content-main truncate uppercase tracking-tight">{user?.sub || 'User Profile'}</p>
+                <p className="text-xs text-content-muted font-medium">{user?.role || 'Member'}</p>
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -148,8 +155,15 @@ function Layout() {
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Header Bar */}
-        <header className="h-24 flex items-center justify-between px-10 relative z-10">
+        <header className="h-24 flex items-center justify-between px-10 relative z-10 gap-6">
           
+          <button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all text-content-muted"
+          >
+            <IconMenu className="w-5 h-5" />
+          </button>
+
           {/* Search Bar */}
           <div className="flex-1 max-w-xl">
             <div className="relative group">
@@ -174,6 +188,7 @@ function Layout() {
             )}
             
             <div className="flex gap-4 text-content-muted">
+               <ThemeToggle />
                <button className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all">
                  <IconBell className="w-5 h-5" />
                </button>

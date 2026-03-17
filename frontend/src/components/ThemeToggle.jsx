@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { IconSun, IconMoon } from './Icons';
 
 const ThemeToggle = () => {
     const { darkMode, toggleTheme } = useTheme();
@@ -7,10 +8,10 @@ const ThemeToggle = () => {
     return (
         <button 
             onClick={toggleTheme}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium border-l-4 border-transparent hover:bg-slate-800/50 hover:text-white text-slate-300 w-full text-left"
+            className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all text-content-muted flex items-center justify-center"
+            title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-            <span className="flex-1">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            <span className="text-xl">{darkMode ? '☀️' : '🌙'}</span>
+            {darkMode ? <IconSun className="w-5 h-5" /> : <IconMoon className="w-5 h-5" />}
         </button>
     );
 };
