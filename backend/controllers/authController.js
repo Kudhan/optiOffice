@@ -32,7 +32,7 @@ const loginUser = asyncHandler(async (req, res) => {
   // Generate JWT mirroring python payload {"sub": user["username"], "role": user["role"]} and added tenantId and userId
   const token = jwt.sign(
     { 
-      id: user._id, 
+      id: user._id.toString(), 
       sub: user.username, 
       role: user.role, 
       tenantId: user.tenantId || 'default_tenant' 

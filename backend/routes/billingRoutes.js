@@ -5,7 +5,7 @@ const { protect } = require('../middleware/authMiddleware');
 const authorize = require('../middleware/authorize');
 
 router.use(protect);
-router.use(authorize('admin'));
+router.use(authorize('can_manage_billing'));
 
 router.get('/', getBillingInfo);
 router.post('/mock-payment', mockPayment);

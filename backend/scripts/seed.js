@@ -9,6 +9,7 @@ const Task = require('../models/Task');
 const Leave = require('../models/Leave');
 const Billing = require('../models/Billing');
 const Asset = require('../models/Asset');
+const Role = require('../models/Role');
 const Holiday = require('../models/Holiday');
 
 // Connection
@@ -18,8 +19,9 @@ const seedDB = async () => {
     try {
         await connectDB();
         
-        console.log('Clearing existing data from users_collection, attendances_collection, etc...');
+        console.log('Clearing existing data from users_collection, roles_collection, etc...');
         await User.deleteMany({});
+        await Role.deleteMany({});
         await Attendance.deleteMany({});
         await Task.deleteMany({});
         await Leave.deleteMany({});
@@ -29,12 +31,48 @@ const seedDB = async () => {
 
         console.log('Inserting Mock Data for OptiOffice...');
 
-        const tenantId = 'acme_corp';
+        const tenantId = 'optiOffice_corp';
         const hashedPassword = await bcrypt.hash('password123', 10);
 
-        // 1. Create Users
+        // 1. Create Default Roles
+        console.log('Creating default roles...');
+        const roles = await Role.create([
+            {
+                tenantId: tenantId,
+                name: 'admin',
+                description: 'Full system access',
+                permissions: [
+                    'can_manage_users', 
+                    'can_manage_tasks', 
+                    'can_manage_holidays', 
+                    'can_manage_billing', 
+                    'can_view_all_attendance',
+                    'can_approve_leaves'
+                ]
+            },
+            {
+                tenantId: tenantId,
+                name: 'manager',
+                description: 'Team management access',
+                permissions: [
+                    'can_manage_tasks', 
+                    'can_view_all_attendance',
+                    'can_approve_leaves'
+                ]
+            },
+            {
+                tenantId: tenantId,
+                name: 'employee',
+                description: 'Standard employee access',
+                permissions: [
+                    'can_manage_tasks'
+                ]
+            }
+        ]);
+
+        // 2. Create Users
         console.log('Creating users...');
-        await User.create([
+        const users = await User.create([
             {
                 username: 'admin',
                 email: 'admin@acmecorp.com',
@@ -51,7 +89,8 @@ const seedDB = async () => {
                 hashed_password: hashedPassword,
                 role: 'employee',
                 tenantId: tenantId,
-                department: 'Engineering'
+                department: 'Engineering',
+                manager_id: 'admin'
             },
             {
                 username: 'asmith',
@@ -60,11 +99,16 @@ const seedDB = async () => {
                 hashed_password: hashedPassword,
                 role: 'employee',
                 tenantId: tenantId,
-                department: 'Marketing'
+                department: 'Marketing',
+                manager_id: 'admin'
             }
         ]);
 
-        // 2. Create Billing
+        const adminUser = users.find(u => u.username === 'admin');
+        const jdoeUser = users.find(u => u.username === 'jdoe');
+        const asmithUser = users.find(u => u.username === 'asmith');
+
+        // 3. Create Billing
         console.log('Creating billing record...');
         await Billing.create({
             tenantId: tenantId,
@@ -74,7 +118,7 @@ const seedDB = async () => {
             nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         });
 
-        // 3. Create Tasks
+        // 4. Create Tasks
         console.log('Creating tasks...');
         await Task.create([
             {
@@ -106,18 +150,18 @@ const seedDB = async () => {
             }
         ]);
 
-        // 4. Create Attendance
+        // 5. Create Attendance
         console.log('Creating attendance records...');
         await Attendance.create({
             tenantId: tenantId,
-            username: 'jdoe',
+            user: jdoeUser._id,
             date: new Date().toISOString().split('T')[0],
             status: 'Present',
-            check_in: new Date(new Date().setHours(9, 0, 0)),
-            check_out: new Date(new Date().setHours(17, 0, 0))
+            checkIn: new Date(new Date().setHours(9, 0, 0)),
+            checkOut: new Date(new Date().setHours(17, 0, 0))
         });
 
-        // 5. Create Leaves
+        // 6. Create Leaves
         console.log('Creating leaves...');
         await Leave.create({
             tenantId: tenantId,
@@ -129,7 +173,7 @@ const seedDB = async () => {
             status: 'Pending'
         });
 
-        // 6. Create Assets
+        // 7. Create Assets
         console.log('Creating assets...');
         await Asset.create({
             tenantId: tenantId,
@@ -139,19 +183,19 @@ const seedDB = async () => {
             status: 'Assigned'
         });
 
-        // 7. Create Holidays
+        // 8. Create Holidays
         console.log('Creating holidays...');
         await Holiday.create({
             tenantId: tenantId,
             name: 'Christmas',
-            date: '2024-12-25',
+            date: new Date('2024-12-25'),
             type: 'Public',
             description: 'Public Holiday'
         });
 
         console.log('\n✅ Seeding Complete. OptiOffice is ready for testing.');
         console.log('----------------------------------------------------');
-        console.log('TenantID | acme_corp');
+        console.log('TenantID | optiOffice_corp');
         console.log('Role     | Username | Password');
         console.log('----------------------------------------------------');
         console.log('Admin    | admin    | password123');

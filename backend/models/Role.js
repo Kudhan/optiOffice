@@ -23,6 +23,9 @@ const roleSchema = mongoose.Schema({
   timestamps: true
 });
 
+// Create a compound index for unique role names within a tenant
+roleSchema.index({ name: 1, tenantId: 1 }, { unique: true });
+
 roleSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,

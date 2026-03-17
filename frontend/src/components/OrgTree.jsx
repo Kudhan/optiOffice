@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import apiClient from '../api/client';
 
 function TreeNode({ node }) {
   const [expanded, setExpanded] = useState(true);
@@ -10,14 +8,14 @@ function TreeNode({ node }) {
   return (
     <div className="tree-node">
       <div className={`node-content ${node.role}`} onClick={() => setExpanded(!expanded)}>
-        <div className="avatar">{node.full_name.charAt(0)}</div>
+        <div className="avatar text-sky-500 font-bold">{node.full_name.charAt(0)}</div>
         <div className="info">
-          <span className="name">{node.full_name}</span>
-          <span className="role">{node.designation || node.role}</span>
+          <span className="name text-slate-100 font-bold">{node.full_name}</span>
+          <span className="role text-slate-500 text-xs font-semibold uppercase tracking-wider">{node.designation || node.role}</span>
         </div>
       </div>
       {hasChildren && expanded && (
-        <div className="children">
+        <div className="children ml-8 border-l border-slate-800 pl-4 mt-2 space-y-2">
           {node.children.map(child => (
             <TreeNode key={child.username} node={child} />
           ))}
@@ -27,22 +25,20 @@ function TreeNode({ node }) {
   );
 }
 
-function OrgTree({ token }) {
+function OrgTree() {
   const [treeData, setTreeData] = useState([]);
 
   useEffect(() => {
     const fetchTree = async () => {
       try {
-        const response = await axios.get(`${API_URL}/organization/tree`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.get('organization/tree');
         setTreeData(response.data);
       } catch (err) {
         console.error("Failed to fetch org tree", err);
       }
     };
     fetchTree();
-  }, [token]);
+  }, []);
 
   return (
     <div className="org-tree-container">

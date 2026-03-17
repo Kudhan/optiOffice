@@ -16,13 +16,13 @@ router.use(protect);
 router
   .route('/')
   .get(getHolidays)
-  .post(authorize('admin'), addHoliday);
+  .post(authorize('can_manage_holidays'), addHoliday);
 
-router.post('/sync-defaults', authorize('admin'), syncDefaults);
+router.post('/sync-defaults', authorize('can_manage_holidays'), syncDefaults);
 
 router
   .route('/:id')
-  .put(authorize('admin'), updateHoliday)
-  .delete(authorize('admin'), deleteHoliday);
+  .put(authorize('can_manage_holidays'), updateHoliday)
+  .delete(authorize('can_manage_holidays'), deleteHoliday);
 
 module.exports = router;
