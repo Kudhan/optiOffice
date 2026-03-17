@@ -66,6 +66,16 @@
   }
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0); opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(-100%); opacity: 0; }
+}
+
+.animate-marquee-hover:hover {
+  animation: marquee 10s linear infinite;
+}
+
 .glass-hover {
   @apply relative overflow-hidden;
 }
