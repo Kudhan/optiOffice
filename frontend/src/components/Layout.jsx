@@ -19,7 +19,7 @@ import {
   IconBell, 
   IconHelp, 
   IconSearch,
-  IconMenu
+  IconChevronLeft
 } from './Icons';
 
 function Layout() {
@@ -29,6 +29,25 @@ function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  const handleScroll = (e) => {
+    const currentScrollY = e.currentTarget.scrollTop;
+    
+    // Show navbar if scrolling up or if near top
+    if (currentScrollY <= 50) {
+      setShowNavbar(true);
+    } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      // Scrolling down and past threshold
+      setShowNavbar(false);
+    } else if (currentScrollY < lastScrollY) {
+      // Scrolling up
+      setShowNavbar(true);
+    }
+    
+    setLastScrollY(currentScrollY);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -152,16 +171,27 @@ function Layout() {
       </aside>
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div 
+        className="flex-1 flex flex-col min-w-0 overflow-y-auto custom-scrollbar"
+        onScroll={handleScroll}
+      >
         
         {/* Top Header Bar */}
-        <header className="h-24 flex items-center justify-between px-10 relative z-10 gap-6">
+        <header className={`py-4 flex items-center justify-between px-8 sticky top-4 z-30 gap-8 transition-all duration-500 ease-in-out backdrop-blur-xl bg-primary-surface/90 rounded-[2.5rem] mx-6  shadow-xl shadow-sky-500/5 ${
+          showNavbar ? 'translate-y-0 opacity-100' : '-translate-y-[calc(100%+2rem)] opacity-0'
+        }`}>
           
+          {/* Animated Collapse Button */}
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all text-content-muted"
+            className="group/btn relative p-3 rounded-2xl bg-primary-surface border border-border hover:border-sky-500/50 hover:bg-sky-500/5 hover:shadow-lg hover:shadow-sky-500/10 transition-all duration-300"
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            <IconMenu className="w-5 h-5" />
+            <div className={`transition-transform duration-500 ease-out ${isCollapsed ? 'rotate-180' : 'rotate-0'}`}>
+              <IconChevronLeft className="w-5 h-5 text-content-muted group-hover/btn:text-sky-500 transition-colors" />
+            </div>
+            {/* Visual Flare Effect */}
+            <span className="absolute inset-0 rounded-2xl bg-sky-500/0 group-hover/btn:bg-sky-500/5 scale-90 group-hover/btn:scale-100 transition-all duration-300 -z-10"></span>
           </button>
 
           {/* Search Bar */}
@@ -180,12 +210,10 @@ function Layout() {
 
           {/* Header Action Items */}
           <div className="flex items-center gap-6">
-            {isAdmin && (
-              <div className="hidden lg:flex items-center bg-red-100/50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2 rounded-full text-xs font-bold border border-red-200/50 dark:border-red-900/50 animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-                Subscription Past Due
-              </div>
-            )}
+            <div className="hidden lg:flex items-center bg-sky-100/50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 px-4 py-2 rounded-full text-xs font-bold border border-sky-200/50 dark:border-sky-900/40">
+              <span className="w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
+              Tenant: <span className="uppercase ml-1">{user?.tenantId || 'OptiOffice Central'}</span>
+            </div>
             
             <div className="flex gap-4 text-content-muted">
                <ThemeToggle />
@@ -203,7 +231,7 @@ function Layout() {
         </header>
 
         {/* Dynamic Canvas */}
-        <main className="flex-1 overflow-auto bg-transparent relative custom-scrollbar">
+        <main className="flex-1 bg-transparent relative">
            <Outlet context={{ user, data }} />
         </main>
       </div>
