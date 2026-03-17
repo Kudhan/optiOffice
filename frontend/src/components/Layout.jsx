@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import apiClient from '../api/client';
 import useAuth from '../hooks/useAuth';
 import ThemeToggle from './ThemeToggle';
+import HeaderDropdown from './HeaderDropdown';
 import { 
   IconDashboard, 
   IconUsers, 
@@ -19,7 +20,12 @@ import {
   IconBell, 
   IconHelp, 
   IconSearch,
-  IconChevronLeft
+  IconChevronLeft,
+  IconSettings,
+  IconInfo,
+  IconBookOpen,
+  IconActivity,
+  IconZap
 } from './Icons';
 
 function Layout() {
@@ -218,19 +224,113 @@ function Layout() {
               <span className="w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
               Tenant: <span className="uppercase ml-1">{user?.tenantId || 'OptiOffice Central'}</span>
             </div>
-            
-            <div className="flex gap-4 text-content-muted">
-               <ThemeToggle />
-               <button className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all">
-                 <IconBell className="w-5 h-5" />
-               </button>
-               <button className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all">
-                 <IconHelp className="w-5 h-5" />
-               </button>
-               <div className="w-10 h-10 rounded-xl bg-primary-surface flex items-center justify-center border border-border overflow-hidden shadow-inner cursor-pointer hover:border-sky-500 transition-colors">
-                  <IconUsers className="w-6 h-6 text-content-muted" />
-               </div>
-            </div>
+
+             <div className="flex gap-4 text-content-muted">
+                <ThemeToggle />
+
+                {/* Notifications */}
+                <HeaderDropdown
+                  title="Secure Notifications"
+                  trigger={
+                    <button className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all relative group">
+                        <IconBell className="w-5 h-5 group-hover:text-sky-500 transition-colors" />
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-primary-surface"></span>
+                    </button>
+                  }
+                  items={[
+                    {
+                        label: 'Neural Task Assignment',
+                        description: 'New objective: Refinement of Profile UI',
+                        icon: <IconZap size={16} />,
+                        colorClass: 'bg-amber-500/10 text-amber-500',
+                        badge: true
+                    },
+                    {
+                        label: 'Protocol: Leave Approved',
+                        description: 'Your leave node for March 24-25 is active.',
+                        icon: <IconCalendar size={16} />,
+                        colorClass: 'bg-emerald-500/10 text-emerald-500'
+                    },
+                    { type: 'divider' },
+                    {
+                        label: 'System Maintenance',
+                        description: 'Operational downtime scheduled for 0200h.',
+                        icon: <IconShield size={16} />,
+                        colorClass: 'bg-indigo-500/10 text-indigo-500'
+                    }
+                  ]}
+                />
+
+                {/* Help/Support */}
+                <HeaderDropdown
+                  title="Operations Support"
+                  trigger={
+                    <button className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all group">
+                        <IconHelp className="w-5 h-5 group-hover:text-sky-500 transition-colors" />
+                    </button>
+                  }
+                  items={[
+                    {
+                        label: 'Operational Guide',
+                        description: 'Search documentation core',
+                        icon: <IconBookOpen size={16} />,
+                        colorClass: 'bg-sky-500/10 text-sky-500'
+                    },
+                    {
+                        label: 'Command Support',
+                        description: 'Open a priority uplink',
+                        icon: <IconMail size={16} />,
+                        colorClass: 'bg-emerald-500/10 text-emerald-500'
+                    },
+                    { type: 'divider' },
+                    {
+                        label: 'Protocol Status',
+                        description: 'Global system availability',
+                        icon: <IconInfo size={16} />,
+                        colorClass: 'bg-amber-500/10 text-amber-500'
+                    }
+                  ]}
+                />
+
+                {/* Quick Profile/Users */}
+                <HeaderDropdown
+                  title="Identity Perspective"
+                  trigger={
+                    <div className="w-10 h-10 rounded-xl bg-primary-surface flex items-center justify-center border border-border overflow-hidden shadow-inner cursor-pointer hover:border-sky-500 transition-colors">
+                        <IconUsers className="w-6 h-6 text-content-muted" />
+                    </div>
+                  }
+                  items={[
+                    {
+                        label: 'Identity Dashboard',
+                        description: 'View overall performance',
+                        icon: <IconActivity size={16} />,
+                        colorClass: 'bg-sky-500/10 text-sky-500',
+                        onClick: () => navigate(`/profile/${user.id}`)
+                    },
+                    {
+                        label: 'Security Core',
+                        description: 'Manage authentication nodes',
+                        icon: <IconShield size={16} />,
+                        colorClass: 'bg-emerald-500/10 text-emerald-500'
+                    },
+                    {
+                        label: 'System Settings',
+                        description: 'Configure interface preferences',
+                        icon: <IconSettings size={16} />,
+                        colorClass: 'bg-indigo-500/10 text-indigo-500'
+                    },
+                    { type: 'divider' },
+                    {
+                        label: 'Terminate Session',
+                        description: 'Immediate secure logout',
+                        icon: <IconLogOut size={16} />,
+                        colorClass: 'bg-rose-500/10 text-rose-500',
+                        onClick: logout
+                    }
+                  ]}
+                />
+             </div>
           </div>
         </header>
 
