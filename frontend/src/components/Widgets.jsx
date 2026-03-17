@@ -105,7 +105,7 @@ export const PriorityTasks = ({ tasks, isLoading, title = 'Priority Tasks' }) =>
     const nextStatus = currentStatus === 'Done' ? 'To Do' : 'Done';
     try {
         await apiClient.put(`tasks/${taskId}`, { status: nextStatus });
-        setTaskList(prev => prev.map(t => t._id === taskId ? { ...t, status: nextStatus } : t));
+        setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, status: nextStatus } : t));
         toast.success(`Task marked as ${nextStatus}`, {
             style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
         });
@@ -128,15 +128,15 @@ export const PriorityTasks = ({ tasks, isLoading, title = 'Priority Tasks' }) =>
       <div className="space-y-4">
         {taskList.slice(0, 5).map((task, idx) => (
           <div 
-            key={task._id || idx} 
-            onClick={() => handleToggleStatus(task._id, task.status)}
+            key={task.id || idx} 
+            onClick={() => handleToggleStatus(task.id, task.status)}
             className="bg-primary-surface p-5 rounded-3xl border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
           >
             <div className="flex justify-between items-center mb-3">
               <span className={`text-[9px] font-black px-2 py-0.5 rounded ${task.priority === 'High' ? 'bg-rose-500' : 'bg-sky-500'} text-white`}>
                 {task.priority || 'ROUTINE'}
               </span>
-              <span className={`text-[10px] font-bold ${task.status === 'Completed' ? 'text-emerald-500' : 'text-content-muted'}`}>
+              <span className={`text-[10px] font-bold ${task.status === 'Done' ? 'text-emerald-500' : 'text-content-muted'}`}>
                 {task.status || 'Pending'}
               </span>
             </div>
@@ -145,13 +145,11 @@ export const PriorityTasks = ({ tasks, isLoading, title = 'Priority Tasks' }) =>
             </h4>
             <div className="mt-4 flex justify-between items-center">
                 <div className="flex -space-x-2">
-                    {[1, 2].map(i => (
-                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-navy-950 bg-slate-300 overflow-hidden">
-                            <span className="text-[8px] flex items-center justify-center h-full">👤</span>
-                        </div>
-                    ))}
+                    <div className="w-8 h-8 rounded-full border-2 border-white dark:border-navy-950 bg-sky-500 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
+                        {task.assigned_to ? task.assigned_to.charAt(0).toUpperCase() : '?'}
+                    </div>
                 </div>
-                <span className="text-[9px] text-slate-400 italic">Toggle Status ➡️</span>
+                <span className="text-[9px] text-content-muted font-bold italic group-hover:text-sky-500 transition-colors">Toggle Status ➡️</span>
             </div>
           </div>
         ))}
