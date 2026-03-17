@@ -44,12 +44,14 @@ const userSchema = mongoose.Schema({
     type: String,
     default: ""
   },
-  department: {
-    type: String,
-    default: ""
+  manager: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   },
-  manager_id: {
-    type: String,
+  department_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
     default: null
   },
   status: {

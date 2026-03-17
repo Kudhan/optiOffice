@@ -5,7 +5,7 @@ import Login from './components/Login';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import UserList from './components/UserList';
-import OrgTree from './components/OrgTree';
+import Hierarchy from './components/Hierarchy';
 import Billing from './components/Billing';
 import Holidays from './components/Holidays';
 import Assets from './components/Assets';
@@ -52,7 +52,7 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              <Route path="organization" element={<OrgTree />} />
+              <Route path="organization" element={<Hierarchy />} />
               
               <Route path="billing" element={
                 <ProtectedRoute allowedRoles={['admin']}>

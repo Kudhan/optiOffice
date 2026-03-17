@@ -9,6 +9,7 @@ const Task = require('../models/Task');
 const Leave = require('../models/Leave');
 const Billing = require('../models/Billing');
 const Asset = require('../models/Asset');
+const Department = require('../models/Department');
 const Role = require('../models/Role');
 const Holiday = require('../models/Holiday');
 
@@ -19,9 +20,10 @@ const seedDB = async () => {
     try {
         await connectDB();
         
-        console.log('Clearing existing data from users_collection, roles_collection, etc...');
+        console.log('Clearing existing data...');
         await User.deleteMany({});
         await Role.deleteMany({});
+        await Department.deleteMany({});
         await Attendance.deleteMany({});
         await Task.deleteMany({});
         await Leave.deleteMany({});
@@ -41,62 +43,90 @@ const seedDB = async () => {
                 tenantId: null, // Global Role
                 name: 'super-admin',
                 description: 'Global System Overlord',
-                permissions: ['*'] // Bypasses anyway, but for completeness
+                permissions: ['*']
             },
             {
                 tenantId: tenantId,
                 name: 'admin',
                 description: 'Full system access',
-                permissions: [
-                    'can_manage_users', 
-                    'can_manage_tasks', 
-                    'can_manage_holidays', 
-                    'can_manage_billing', 
-                    'can_view_all_attendance',
-                    'can_approve_leaves'
-                ]
+                permissions: ['can_manage_users', 'can_manage_tasks', 'can_manage_holidays', 'can_manage_billing', 'can_view_all_attendance', 'can_approve_leaves']
             },
             {
                 tenantId: tenantId,
                 name: 'manager',
                 description: 'Team management access',
-                permissions: [
-                    'can_manage_tasks', 
-                    'can_view_all_attendance',
-                    'can_approve_leaves'
-                ]
+                permissions: ['can_manage_tasks', 'can_view_all_attendance', 'can_approve_leaves']
             },
             {
                 tenantId: tenantId,
                 name: 'employee',
                 description: 'Standard employee access',
-                permissions: [
-                    'can_manage_tasks'
-                ]
+                permissions: ['can_manage_tasks']
             }
         ]);
 
-        // 2. Create Departments & Users
-        console.log('Creating users across departments...');
-        const departments = ['Engineering', 'Product', 'Design', 'Sales', 'HR'];
-        const usernames = [
-            'superadmin', 'admin', 'jdoe', 'asmith', 'rgreen', 
-            'mwhite', 'kbrown', 'tblack', 'cgrey', 'pblue', 
-            'spurple', 'yorange', 'fred', 'lyellow', 'gsilver'
-        ];
+        // 2. Create Departments
+        console.log('Creating departments...');
+        const deptNames = ['Engineering', 'Product', 'Design', 'Sales', 'HR'];
+        const departmentDocs = await Department.create(deptNames.map(name => ({ name, tenantId })));
+        const deptMap = {};
+        departmentDocs.forEach(d => deptMap[d.name] = d._id);
 
-        const userDocs = usernames.map((uname, idx) => ({
+        // 3. Create Users (Hierarchical)
+        console.log('Creating users with hierarchical links...');
+        
+        // CEO/Admin first
+        const adminDoc = await User.create({
+            username: 'admin',
+            email: 'admin@optioffice.com',
+            full_name: 'OptiOffice CEO',
+            hashed_password: hashedPassword,
+            role: 'admin',
+            tenantId: tenantId,
+            department_id: deptMap['Engineering'],
+            manager: null
+        });
+
+        // Managers
+        const managerUsernames = ['jdoe', 'asmith', 'rgreen'];
+        const managers = await User.create(managerUsernames.map((uname, idx) => ({
             username: uname,
             email: `${uname}@optioffice.com`,
-            full_name: uname === 'superadmin' ? 'The Overlord' : `${uname.charAt(0).toUpperCase() + uname.slice(1)} Worker`,
+            full_name: `${uname.charAt(0).toUpperCase() + uname.slice(1)} Manager`,
             hashed_password: hashedPassword,
-            role: uname === 'superadmin' ? 'super-admin' : (uname === 'admin' ? 'admin' : (idx < 6 ? 'manager' : 'employee')),
-            tenantId: uname === 'superadmin' ? 'global' : tenantId,
-            department: uname === 'superadmin' ? 'HQ' : departments[idx % departments.length],
-            manager_id: (uname === 'superadmin' || uname === 'admin') ? null : 'admin'
-        }));
+            role: 'manager',
+            tenantId: tenantId,
+            department_id: departmentDocs[idx % departmentDocs.length]._id,
+            manager: adminDoc._id
+        })));
 
-        const users = await User.create(userDocs);
+        // Employees
+        const employeeUsernames = ['mwhite', 'kbrown', 'tblack', 'cgrey', 'pblue', 'spurple', 'yorange', 'fred', 'lyellow', 'gsilver'];
+        const employees = await User.create(employeeUsernames.map((uname, idx) => ({
+            username: uname,
+            email: `${uname}@optioffice.com`,
+            full_name: `${uname.charAt(0).toUpperCase() + uname.slice(1)} Worker`,
+            hashed_password: hashedPassword,
+            role: 'employee',
+            tenantId: tenantId,
+            department_id: departmentDocs[idx % departmentDocs.length]._id,
+            manager: managers[idx % managers.length]._id
+        })));
+
+        // Super Admin (Global)
+        await User.create({
+            username: 'superadmin',
+            email: 'super@optioffice.com',
+            full_name: 'The Overlord',
+            hashed_password: hashedPassword,
+            role: 'super-admin',
+            tenantId: 'global',
+            department_id: null,
+            manager: null
+        });
+
+        const users = [adminDoc, ...managers, ...employees];
+        const allUsernames = ['admin', ...managerUsernames, ...employeeUsernames];
 
         // 3. Create Billing
         console.log('Creating billing record...');
@@ -126,7 +156,7 @@ const seedDB = async () => {
             description: `Automated task description for ${title}`,
             status: idx % 3 === 0 ? 'To Do' : (idx % 3 === 1 ? 'In Progress' : 'Done'),
             priority: idx % 4 === 0 ? 'High' : (idx % 4 === 1 ? 'Medium' : 'Low'),
-            assigned_to: usernames[idx % usernames.length],
+            assigned_to: allUsernames[idx % allUsernames.length],
             due_date: new Date(Date.now() + (idx - 5) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         }));
         await Task.create(taskDocs);
