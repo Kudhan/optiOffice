@@ -33,7 +33,7 @@ const EditProfileModal = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-navy-950/40 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/20 dark:bg-navy-950/40 backdrop-blur-md animate-fade-in">
             <div className="bg-primary-surface border border-border w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-scale-in">
                 <div className="p-10">
                     <div className="flex justify-between items-center mb-10">

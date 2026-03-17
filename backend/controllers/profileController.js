@@ -130,14 +130,22 @@ const getProfileData = async (req, res) => {
 // @access  Private
 const updateProfile = async (req, res) => {
   try {
-    const { phone, bio, profile_photo, role, department_id } = req.body;
-    const user = await User.findById(req.user.id);
+    const { userId, full_name, phone, bio, profile_photo, role, department_id } = req.body;
+    
+    // Determine target user: self if no userId provided or if non-admin
+    const targetUserId = (req.user.role === 'admin' && userId) ? userId : req.user.id;
+    const user = await User.findById(targetUserId);
 
     if (!user) {
       return res.status(404).json({ detail: "User not found" });
     }
 
-    // Restriction: Users CANNOT change their own 'Role' or 'Department' (Admin only)
+    // Security: Admin can only update users in their own tenant
+    if (req.user.role === 'admin' && req.user.id !== targetUserId && user.tenantId !== req.user.tenantId) {
+      return res.status(403).json({ detail: "Unauthorized: User belongs to another organization" });
+    }
+
+    // Restriction: Non-admins cannot change roles or departments
     if (req.user.role !== 'admin') {
         if (role && role !== user.role) {
             return res.status(403).json({ detail: "Only admins can change roles" });
@@ -147,19 +155,20 @@ const updateProfile = async (req, res) => {
         }
     }
 
-    // Apply allowed updates
+    // Apply updates
+    if (full_name !== undefined) user.full_name = full_name;
     if (phone !== undefined) user.phone = phone;
     if (bio !== undefined) user.bio = bio;
     if (profile_photo !== undefined) user.profile_photo = profile_photo;
 
-    // Admin-only updates
+    // Admin-only fields (Role/Dept)
     if (req.user.role === 'admin') {
         if (role) user.role = role;
         if (department_id) user.department_id = department_id;
     }
 
     await user.save();
-    res.json({ message: "Profile updated successfully", user });
+    res.json({ message: "Identity updated successfully", user });
 
   } catch (error) {
     console.error(error);

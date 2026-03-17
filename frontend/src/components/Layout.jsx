@@ -98,7 +98,7 @@ function Layout() {
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-navy-950 transition-colors duration-300 font-sans">
+    <div className="flex h-screen bg-primary transition-colors duration-300 font-sans">
       
       {/* Floating Sidebar (Left) */}
       <aside className={`${isCollapsed ? 'w-24' : 'w-72'} m-4 rounded-3xl bg-primary-surface border border-border text-content-muted flex flex-col shadow-xl z-20 transition-all duration-300 overflow-hidden group/sidebar`}>
@@ -109,7 +109,7 @@ function Layout() {
             <span className="font-black text-xl">O</span>
           </div>
           {!isCollapsed && (
-            <Link to="/" className="min-w-0 text-left">
+            <Link to="/" className="min-w-0 text-left"> 
               <h1 className="text-content-main font-black text-xl tracking-tighter leading-none truncate">
                 {isAdmin ? 'Admin Portal' : 'OptiOffice'}
               </h1>
