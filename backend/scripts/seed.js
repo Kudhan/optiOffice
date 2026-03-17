@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -173,15 +174,36 @@ const seedDB = async () => {
         users.forEach(u => {
             if (u.tenantId === tenantId) {
                 last5Days.forEach(day => {
-                    // Randomize presence (80% chance)
-                    if (Math.random() > 0.2) {
+                    // Randomize presence (90% chance for more data)
+                    if (Math.random() > 0.1) {
+                        // Random Check-in: 08:30 AM - 10:15 AM
+                        const checkInHour = 8;
+                        const checkInMin = Math.floor(Math.random() * 105); // 0 to 105 mins after 8:00
+                        const checkInDate = new Date(`${day}T00:00:00Z`);
+                        checkInDate.setUTCHours(checkInHour, checkInMin, 0, 0);
+
+                        // Random Check-out: 05:00 PM - 06:30 PM
+                        const checkOutHour = 17;
+                        const checkOutMin = Math.floor(Math.random() * 90);
+                        const checkOutDate = new Date(`${day}T00:00:00Z`);
+                        checkOutDate.setUTCHours(checkOutHour, checkOutMin, 0, 0);
+
+                        // Calculate workHours
+                        const diffMs = checkOutDate - checkInDate;
+                        const workHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+
+                        // Determine status
+                        const threshold = new Date(`${day}T09:30:00Z`);
+                        const status = checkInDate > threshold ? 'Late' : 'Present';
+
                         attendanceDocs.push({
                             tenantId: tenantId,
                             user: u._id,
                             date: day,
-                            status: 'Present',
-                            checkIn: new Date(`${day}T09:00:00Z`),
-                            checkOut: new Date(`${day}T17:00:00Z`)
+                            status,
+                            checkIn: checkInDate,
+                            checkOut: checkOutDate,
+                            workHours
                         });
                     }
                 });
