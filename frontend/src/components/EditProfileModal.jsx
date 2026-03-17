@@ -51,31 +51,33 @@ const EditProfileModal = ({
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="grid md:grid-cols-2 gap-8">
                             {/* Common Fields */}
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-content-muted uppercase tracking-widest ml-1">Visible Name</label>
+                            <div className="space-y-2 group">
+                                <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.15em] ml-1 group-focus-within:text-sky-500 transition-colors">Visible Name</label>
                                 <input 
                                     value={formData.full_name}
                                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                                    className="w-full bg-primary-muted/50 border border-transparent focus:border-sky-500/30 rounded-2xl py-4 px-6 font-bold text-content-main outline-none transition-all"
+                                    placeholder="Enter your full name"
+                                    className="w-full bg-primary-surface border-2 border-border/60 hover:border-border focus:border-sky-500/50 rounded-2xl py-3.5 px-6 font-bold text-content-main outline-none transition-all shadow-sm focus:shadow-lg focus:shadow-sky-500/5 placeholder:text-content-muted/30"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-content-muted uppercase tracking-widest ml-1">Secure Contact</label>
+                            <div className="space-y-2 group">
+                                <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.15em] ml-1 group-focus-within:text-sky-500 transition-colors">Secure Contact</label>
                                 <input 
                                     value={formData.phone}
                                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                    className="w-full bg-primary-muted/50 border border-transparent focus:border-sky-500/30 rounded-2xl py-4 px-6 font-bold text-content-main outline-none transition-all"
+                                    placeholder="+1 234 567 890"
+                                    className="w-full bg-primary-surface border-2 border-border/60 hover:border-border focus:border-sky-500/50 rounded-2xl py-3.5 px-6 font-bold text-content-main outline-none transition-all shadow-sm focus:shadow-lg focus:shadow-sky-500/5 placeholder:text-content-muted/30"
                                 />
                             </div>
 
                             {/* Bio (Full Width) */}
-                            <div className="col-span-2 space-y-2">
-                                <label className="text-[10px] font-black text-content-muted uppercase tracking-widest ml-1">Professional Bio</label>
+                            <div className="col-span-2 space-y-2 group">
+                                <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.15em] ml-1 group-focus-within:text-sky-500 transition-colors">Professional Bio</label>
                                 <textarea 
                                     rows="3"
                                     value={formData.bio}
                                     onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                                    className="w-full bg-primary-muted/50 border border-transparent focus:border-sky-500/30 rounded-3xl py-4 px-6 font-bold text-content-main outline-none transition-all resize-none"
+                                    className="w-full bg-primary-surface border-2 border-border/60 hover:border-border focus:border-sky-500/50 rounded-[2rem] py-4 px-6 font-bold text-content-main outline-none transition-all resize-none shadow-sm focus:shadow-lg focus:shadow-sky-500/5 placeholder:text-content-muted/30"
                                     placeholder="Write something about yourself..."
                                 />
                             </div>
@@ -83,27 +85,37 @@ const EditProfileModal = ({
                             {/* Admin Only Fields */}
                             {isAdminView && (
                                 <>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-content-muted uppercase tracking-widest ml-1">Strategic Role</label>
-                                        <select 
-                                            value={formData.role}
-                                            onChange={(e) => setFormData({...formData, role: e.target.value})}
-                                            className="w-full bg-primary-muted/50 border border-transparent focus:border-sky-500/30 rounded-2xl py-4 px-6 font-bold text-content-main outline-none transition-all appearance-none"
-                                        >
-                                            {roles.map(r => <option key={r} value={r}>{r.toUpperCase()}</option>)}
-                                        </select>
+                                    <div className="space-y-2 group">
+                                        <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.15em] ml-1 group-focus-within:text-sky-500 transition-colors">Strategic Role</label>
+                                        <div className="relative">
+                                            <select 
+                                                value={formData.role}
+                                                onChange={(e) => setFormData({...formData, role: e.target.value})}
+                                                className="w-full bg-primary-surface border-2 border-border/60 hover:border-border focus:border-sky-500/50 rounded-2xl py-3.5 px-6 font-bold text-content-main outline-none transition-all appearance-none cursor-pointer shadow-sm"
+                                            >
+                                                {roles.map(r => <option key={r} value={r} className="bg-primary-surface">{r.toUpperCase()}</option>)}
+                                            </select>
+                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-content-muted">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-content-muted uppercase tracking-widest ml-1">Current Status</label>
-                                        <select 
-                                            value={formData.status}
-                                            onChange={(e) => setFormData({...formData, status: e.target.value})}
-                                            className="w-full bg-primary-muted/50 border border-transparent focus:border-sky-500/30 rounded-2xl py-4 px-6 font-bold text-content-main outline-none transition-all appearance-none"
-                                        >
-                                            <option value="Active">ACTIVE</option>
-                                            <option value="Deactivated">DEACTIVATED</option>
-                                            <option value="Away">AWAY</option>
-                                        </select>
+                                    <div className="space-y-2 group">
+                                        <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.15em] ml-1 group-focus-within:text-sky-500 transition-colors">Current Status</label>
+                                        <div className="relative">
+                                            <select 
+                                                value={formData.status}
+                                                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                                                className="w-full bg-primary-surface border-2 border-border/60 hover:border-border focus:border-sky-500/50 rounded-2xl py-3.5 px-6 font-bold text-content-main outline-none transition-all appearance-none cursor-pointer shadow-sm"
+                                            >
+                                                <option value="Active" className="bg-primary-surface">ACTIVE</option>
+                                                <option value="Deactivated" className="bg-primary-surface">DEACTIVATED</option>
+                                                <option value="Away" className="bg-primary-surface">AWAY</option>
+                                            </select>
+                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-content-muted">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                            </div>
+                                        </div>
                                     </div>
                                 </>
                             )}

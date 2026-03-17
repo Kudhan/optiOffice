@@ -2,7 +2,7 @@ import React from 'react';
 
 export const CardSkeleton = () => (
     <div className="bg-primary-surface border border-border rounded-[2.5rem] p-8 animate-pulse">
-        <div className="h-4 bg-primary-muted rounded w-1/4 mb-4"></div>
+        <div className="h-4 bg-primary-muted rounded w-1/4 mb-2"></div>
         <div className="h-10 bg-primary rounded w-1/2 mb-2"></div>
         <div className="h-4 bg-primary-muted rounded w-full"></div>
     </div>
