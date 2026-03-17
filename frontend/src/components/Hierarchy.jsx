@@ -111,6 +111,7 @@ function Hierarchy() {
   const [expandedNodes, setExpandedNodes] = useState({});
   const [activeTab, setActiveTab] = useState('tree');
   const [deptStats, setDeptStats] = useState({});
+  const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
     fetchData();
@@ -155,6 +156,12 @@ function Hierarchy() {
     }));
   };
 
+  const handleZoom = (type) => {
+    if (type === 'in') setZoom(prev => Math.min(prev + 0.1, 1.5));
+    if (type === 'out') setZoom(prev => Math.max(prev - 0.1, 0.5));
+    if (type === 'reset') setZoom(1);
+  };
+
   if (isLoading) {
     return (
       <div className="p-10 flex flex-col items-center justify-center min-h-[400px]">
@@ -165,9 +172,9 @@ function Hierarchy() {
   }
 
   return (
-    <div className="p-10 max-w-[1600px] mx-auto animate-in fade-in duration-700 space-y-12">
+    <div className="p-10 max-w-[1600px] mx-auto animate-in fade-in duration-700 space-y-12 relative">
       {/* Header aligned with Roles.jsx */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
         <div>
           <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-2">Authority Structure.</h2>
           <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Visualize reporting lines and department logistics</p>
@@ -190,17 +197,50 @@ function Hierarchy() {
       </header>
 
       {activeTab === 'tree' ? (
-        <div className="relative overflow-x-auto pb-24 scrollbar-hide mask-fade-edges">
-          <div className="flex flex-col items-center min-w-max pb-10">
-            {treeData.map(rootNode => (
-              <RecursiveTree 
-                key={rootNode.id} 
-                node={rootNode} 
-                expandedNodes={expandedNodes} 
-                toggleNode={toggleNode} 
-                isRoot={true}
-              />
-            ))}
+        <div className="relative group/hierarchy">
+          {/* Zoom Controls */}
+          <div className="absolute top-0 right-0 z-20 flex flex-col gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl opacity-0 group-hover/hierarchy:opacity-100 transition-opacity duration-500">
+            <button 
+              onClick={() => handleZoom('in')}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-500 hover:text-white transition-all text-slate-600 dark:text-slate-400"
+              title="Zoom In"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+            </button>
+            <button 
+              onClick={() => handleZoom('reset')}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-500 hover:text-white transition-all text-[10px] font-black"
+              title="Reset Zoom"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button 
+              onClick={() => handleZoom('out')}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-500 hover:text-white transition-all text-slate-600 dark:text-slate-400"
+              title="Zoom Out"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4" /></svg>
+            </button>
+          </div>
+
+          <div 
+            className="overflow-x-auto pb-24 scrollbar-hide mask-fade-edges"
+            style={{ minHeight: '600px' }}
+          >
+            <div 
+              className="flex flex-col items-center min-w-max pb-10 transition-transform duration-500 ease-out origin-top"
+              style={{ transform: `scale(${zoom})` }}
+            >
+              {treeData.map(rootNode => (
+                <RecursiveTree 
+                  key={rootNode.id} 
+                  node={rootNode} 
+                  expandedNodes={expandedNodes} 
+                  toggleNode={toggleNode} 
+                  isRoot={true}
+                />
+              ))}
+            </div>
           </div>
         </div>
       ) : (
