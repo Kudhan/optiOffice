@@ -1,28 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
+import { IconClock, IconBarChart, IconUsers } from './Icons';
 
+/**
+ * Attendance Component: Premium Detailed History Page
+ */
 function Attendance({ token }) {
   const [records, setRecords] = useState([]);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [currentRecordId, setCurrentRecordId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (token) fetchAttendance();
-  }, [token]);
+    fetchAttendance();
+  }, []);
 
   const fetchAttendance = async () => {
+    setIsLoading(true);
     try {
       const response = await apiClient.get('/attendance/me');
       setRecords(response.data);
 
       const today = new Date().toISOString().split('T')[0];
-      const todayRecord = response.data.find(r => r.date === today && !r.check_out);
+      const todayRecord = response.data.find(r => r.date === today && !r.checkOut);
       if (todayRecord) {
         setIsCheckedIn(true);
         setCurrentRecordId(todayRecord.id);
       }
     } catch (err) {
       console.error("Failed to fetch attendance", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -33,7 +41,7 @@ function Attendance({ token }) {
       setCurrentRecordId(response.data.id);
       fetchAttendance();
     } catch (err) {
-      alert("Check-in failed");
+      // Handled by client interceptor
     }
   };
 
@@ -44,69 +52,117 @@ function Attendance({ token }) {
       setCurrentRecordId(null);
       fetchAttendance();
     } catch (err) {
-      alert("Check-out failed");
+      // Handled by client interceptor
     }
   };
 
+  const formatTime = (dateStr) => {
+    if (!dateStr) return '--:--';
+    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-[85vh] animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <div className="p-10 max-w-[1400px] mx-auto min-h-[85vh] animate-fade-in space-y-12">
+      
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-border pb-10">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800">My Attendance</h2>
-          <p className="text-slate-500 mt-1">Track your daily clock-ins and clock-outs.</p>
+          <h2 className="text-5xl font-black text-content-main tracking-tighter uppercase italic leading-none">
+            Time <span className="text-sky-500">Log.</span>
+          </h2>
+          <p className="text-content-muted font-bold mt-4 uppercase tracking-widest text-xs">
+            Advanced Attendance Management / {new Date().getFullYear()}
+          </p>
         </div>
-        <div className="flex">
+        
+        <div className="flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-6 px-8 py-4 bg-primary-muted rounded-2xl border border-border mr-4">
+             <div className="text-center">
+                <p className="text-[9px] font-black text-content-muted uppercase">Avg Hours</p>
+                <p className="text-lg font-black text-content-main">8.4<span className="text-xs text-sky-500 ml-0.5">h</span></p>
+             </div>
+             <div className="w-px h-8 bg-border"></div>
+             <div className="text-center">
+                <p className="text-[9px] font-black text-content-muted uppercase">Monthly Presence</p>
+                <p className="text-lg font-black text-content-main">96<span className="text-xs text-sky-500 ml-0.5">%</span></p>
+             </div>
+          </div>
+          
           {isCheckedIn ? (
             <button 
-              className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg active:scale-95 animate-pulse" 
+              className="bg-rose-500 hover:brightness-110 text-white font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-rose-500/20 active:scale-95 animate-pulse" 
               onClick={handleCheckOut}
             >
-              Clock Out
+              STOP SESSION
             </button>
           ) : (
             <button 
-              className="bg-success hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg active:scale-95" 
+              className="bg-[#7DD3FC] hover:brightness-110 text-slate-800 font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-sky-300/20 active:scale-95" 
               onClick={handleCheckIn}
             >
-              Clock In
+              START SHIFT
             </button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {records.length === 0 ? (
-          <div className="col-span-full bg-white/70 backdrop-blur-md rounded-2xl p-12 shadow-lg border border-slate-200 text-center">
-            <p className="text-slate-500 text-lg">No attendance records found.</p>
+      {/* Grid: Stats & Detailed History */}
+      <div className="grid grid-cols-12 gap-10">
+        
+        {/* History Table/List */}
+        <div className="col-span-12">
+          <div className="bg-primary-surface border border-border rounded-[3rem] overflow-hidden shadow-sm">
+             <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-border bg-primary-muted/30">
+                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest">Date / Period</th>
+                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">In</th>
+                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">Out</th>
+                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">Hours</th>
+                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {isLoading ? (
+                    <tr><td colSpan="5" className="p-20 text-center animate-pulse text-content-muted font-bold italic">Syncing with server...</td></tr>
+                  ) : records.length === 0 ? (
+                    <tr><td colSpan="5" className="p-20 text-center text-content-muted font-bold uppercase italic">No records found.</td></tr>
+                  ) : (
+                    records.map(record => (
+                      <tr key={record.id} className="hover:bg-primary-muted/20 transition-colors group">
+                        <td className="px-10 py-8">
+                           <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-primary-muted rounded-2xl flex flex-col items-center justify-center border border-border group-hover:bg-sky-500 group-hover:text-white transition-all">
+                                 <span className="text-[8px] font-black leading-none">{new Date(record.date).toLocaleString('default', { month: 'short' })}</span>
+                                 <span className="text-lg font-black leading-none mt-0.5">{new Date(record.date).getDate()}</span>
+                              </div>
+                              <div>
+                                <p className="text-sm font-black text-content-main uppercase">{new Date(record.date).toLocaleDateString('default', { weekday: 'long' })}</p>
+                                <p className="text-[9px] font-bold text-content-muted uppercase tracking-tighter">Tenant Hub: {record.tenantId}</p>
+                              </div>
+                           </div>
+                        </td>
+                        <td className="px-10 py-8 text-center text-sm font-bold text-content-main">{formatTime(record.checkIn)}</td>
+                        <td className="px-10 py-8 text-center text-sm font-bold text-content-main">{formatTime(record.checkOut)}</td>
+                        <td className="px-10 py-8 text-center">
+                           <span className="text-lg font-black text-content-main italic">{record.workHours || '0.0'}<span className="text-[9px] ml-0.5 not-italic text-sky-500">HRS</span></span>
+                        </td>
+                        <td className="px-10 py-8 text-right">
+                           <span className={`inline-block px-4 py-1.5 text-[9px] font-black uppercase rounded-full border ${
+                             record.status === 'Present' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
+                             record.status === 'Late' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+                             'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                           }`}>
+                             {record.status}
+                           </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+             </table>
           </div>
-        ) : (
-          records.map(record => (
-            <div key={record.id} className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-slate-200 hover:scale-[1.02] transition-transform duration-200 flex flex-col justify-between relative overflow-hidden">
-              <div className="flex justify-between items-start mb-6">
-                 <div className="bg-slate-100 text-slate-800 rounded-xl p-2 px-4 shadow-inner border border-slate-200/60 flex flex-col items-center">
-                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{new Date(record.date).toLocaleString('default', { month: 'short' })}</span>
-                   <span className="text-2xl font-black">{new Date(record.date).getDate()}</span>
-                 </div>
-                 <span className={`inline-block px-3 py-1 text-xs font-bold uppercase rounded-full ${record.status === 'Present' ? 'bg-emerald-100 text-emerald-700' : record.status === 'Late' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                   {record.status}
-                 </span>
-              </div>
-              
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex flex-col gap-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-semibold text-slate-500">In:</span>
-                  <span className="font-bold text-slate-800">{new Date(record.check_in).toLocaleTimeString()}</span>
-                </div>
-                {record.check_out && (
-                  <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200/60">
-                    <span className="font-semibold text-slate-500">Out:</span>
-                    <span className="font-bold text-slate-800">{new Date(record.check_out).toLocaleTimeString()}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+        </div>
       </div>
     </div>
   );

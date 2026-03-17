@@ -1,37 +1,46 @@
 const mongoose = require('mongoose');
 
 const attendanceSchema = mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   tenantId: {
     type: String,
     required: true,
-    default: 'default_tenant'
-  },
-  username: {
-    type: String,
-    required: true
+    index: true
   },
   date: {
-    type: String,
+    type: String, // Format: YYYY-MM-DD
     required: true
   },
-  check_in: {
+  checkIn: {
     type: Date,
-    default: null
+    required: true
   },
-  check_out: {
+  checkOut: {
     type: Date,
     default: null
   },
   status: {
     type: String,
-    default: "Present"
+    enum: ['Present', 'Late', 'Half-Day'],
+    default: 'Present'
+  },
+  workHours: {
+    type: Number,
+    default: 0
   }
 }, {
   collection: 'attendances_collection',
   timestamps: true
 });
 
-// Transform _id to id to match Python output
+// Composite Index: Ensure { user, date } is unique so a user can't check in twice on the same day.
+attendanceSchema.index({ user: 1, date: 1 }, { unique: true });
+
+// Transform output to match expected frontend structure (id instead of _id)
 attendanceSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,

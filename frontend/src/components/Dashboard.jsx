@@ -7,11 +7,40 @@ import {
   StatsWidget, 
   WeeklyPresence, 
   PriorityTasks,
-  QuickActionsRow
+  QuickActionsRow,
+  FloorDynamics
 } from './Widgets';
 import { CardSkeleton, ListSkeleton } from './Skeleton';
 import InviteUserModal from './InviteUserModal';
 
+/**
+ * LiveTimer: Simple ticking component that calculates HH:MM:SS from a start date
+ */
+const LiveTimer = ({ startTime }) => {
+  const [elapsed, setElapsed] = useState('00:00:00');
+
+  useEffect(() => {
+    if (!startTime) return;
+
+    const tick = () => {
+      const start = new Date(startTime).getTime();
+      const now = new Date().getTime();
+      const diff = Math.max(0, Math.floor((now - start) / 1000));
+
+      const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+      const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+      const s = (diff % 60).toString().padStart(2, '0');
+
+      setElapsed(`${h}:${m}:${s}`);
+    };
+
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [startTime]);
+
+  return <span className="font-mono text-sm tracking-tighter tabular-nums">{elapsed}</span>;
+};
 
 function Dashboard() {
   const { isAdmin, isManager, user } = useAuth();
@@ -20,6 +49,7 @@ function Dashboard() {
   const [isLoading, setIsLoading] = useState(!layoutData);
   const [isClocking, setIsClocking] = useState(false);
   const [attendanceId, setAttendanceId] = useState(null);
+  const [checkInTime, setCheckInTime] = useState(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
@@ -37,10 +67,11 @@ function Dashboard() {
             const res = await apiClient.get('attendance/me');
             const records = res.data;
             const today = new Date().toISOString().split('T')[0];
-            const todayRecord = records.find(r => r.date === today && !r.check_out);
+            const todayRecord = records.find(r => r.date === today && !r.checkOut);
             if (todayRecord) {
                 setIsClockedIn(true);
-                setAttendanceId(todayRecord._id);
+                setAttendanceId(todayRecord.id);
+                setCheckInTime(todayRecord.checkIn);
             }
         } catch (err) {
             console.error("Status check failed", err);
@@ -55,18 +86,63 @@ function Dashboard() {
         if (!isClockedIn) {
             const res = await apiClient.post('attendance/check-in');
             setIsClockedIn(true);
-            setAttendanceId(res.data._id);
-            toast.success('Shift started! Have a productive day.', { icon: '🚀' });
+            setAttendanceId(res.data.id);
+            setCheckInTime(res.data.checkIn);
+            
+            // Personalized Feedback Loop
+            toast.success(
+              `Welcome to OptiOffice, ${res.data.userName}! Clock-in at ${res.data.formattedTime}`, 
+              { icon: '🚀', duration: 4000 }
+            );
         } else {
             await apiClient.put(`attendance/check-out/${attendanceId}`);
             setIsClockedIn(false);
             setAttendanceId(null);
+            setCheckInTime(null);
             toast.success('Shift ended. Rest well!', { icon: '🌙' });
         }
     } catch (err) {
         // Interceptor handles error toast
     } finally {
         setIsClocking(false);
+    }
+  };
+
+  // Report Download Logic
+  const handleDownloadReport = async () => {
+    setIsLoading(true);
+    try {
+        const res = await apiClient.get('attendance/report');
+        const data = res.data;
+
+        if (data.length === 0) {
+            toast.error("No attendance data found for this month.");
+            return;
+        }
+
+        // CSV Helper: Convert JSON to CSV string
+        const headers = ["Name", "Email", "Total Days", "Total Lates", "Avg Work Hours"];
+        const csvContent = [
+            headers.join(","),
+            ...data.map(r => [r.name, r.email, r.totalDays, r.totalLates, r.avgWorkHours].join(","))
+        ].join("\n");
+
+        // Trigger Download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Attendance_Report_${new Date().getMonth()+1}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        toast.success("Monthly report generated & shared!", { icon: '📊' });
+    } catch (err) {
+        console.error("Report generation failed", err);
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -95,9 +171,10 @@ function Dashboard() {
         <div className="col-span-12 lg:col-span-8 flex flex-col gap-10">
             <StatsWidget stats={data?.stats} isLoading={isLoading} />
             <WeeklyPresence isLoading={isLoading} />
-            <QuickActionsRow />
+            <QuickActionsRow onAction={(title) => title === 'Generate Report' && handleDownloadReport()} isLoading={isLoading} />
         </div>
-        <div className="col-span-12 lg:col-span-4 h-full">
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-10">
+            <FloorDynamics isLoading={isLoading} />
             <PriorityTasks tasks={data?.tasks} title="Company Velocity" isLoading={isLoading} />
         </div>
     </div>
@@ -151,17 +228,32 @@ function Dashboard() {
                   Invite User
                 </button>
              )}
+             
+             {/* Smart Button: Clock In/Out */}
              <button 
                 onClick={toggleClockIn}
                 disabled={isClocking}
-                className={`flex items-center gap-3 ${isClockedIn ? 'bg-rose-500 shadow-rose-500/20' : 'bg-sky-500 shadow-sky-500/20'} hover:brightness-110 active:scale-95 text-white font-black py-4 px-10 rounded-2xl transition-all text-sm shadow-xl group`}
+                className={`flex items-center gap-4 ${isClockedIn ? 'bg-rose-500 shadow-rose-500/20' : 'bg-[#7DD3FC] shadow-sky-300/20'} hover:brightness-105 active:scale-95 text-white font-black py-4 px-10 rounded-2xl transition-all text-sm shadow-xl group relative overflow-hidden`}
              >
                 {isClocking ? (
                     <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
                 ) : (
                     <>
-                        <span className="text-lg animate-pulse">{isClockedIn ? '🌙' : '⏰'}</span>
-                        <span>{isClockedIn ? 'Clock Out' : 'Clock In'}</span>
+                        {isClockedIn ? (
+                            <div className="flex flex-col items-start leading-none gap-0.5">
+                                <span className="uppercase text-[9px] font-bold opacity-80 tracking-widest text-white/90">Work Session Live</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">🌙</span>
+                                  <LiveTimer startTime={checkInTime} />
+                                  <span className="ml-2 bg-white/20 px-2 py-0.5 rounded text-[10px]">CLOCK OUT</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <span className="text-lg animate-pulse">⏰</span>
+                                <span className="uppercase tracking-widest text-slate-800">Clock In</span>
+                            </>
+                        )}
                     </>
                 )}
              </button>

@@ -29,9 +29,14 @@ const loginUser = asyncHandler(async (req, res) => {
     return res.status(403).json({ success: false, message: 'User is disabled' });
   }
 
-  // Generate JWT mirroring python payload {"sub": user["username"], "role": user["role"]} and added tenantId
+  // Generate JWT mirroring python payload {"sub": user["username"], "role": user["role"]} and added tenantId and userId
   const token = jwt.sign(
-    { sub: user.username, role: user.role, tenantId: user.tenantId || 'default_tenant' },
+    { 
+      id: user._id, 
+      sub: user.username, 
+      role: user.role, 
+      tenantId: user.tenantId || 'default_tenant' 
+    },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE || '30m' }
   );
