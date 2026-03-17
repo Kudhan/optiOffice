@@ -9,7 +9,7 @@ function Profile({ token }) {
 
   useEffect(() => {
     fetchProfile();
-  }, [token]);
+  }, []);
 
   const fetchProfile = async () => {
     try {

@@ -9,8 +9,8 @@ function Tasks({ token }) {
   });
 
   useEffect(() => {
-    if (token) fetchTasks();
-  }, [token]);
+    fetchTasks();
+  }, []);
 
   const fetchTasks = async () => {
     try {

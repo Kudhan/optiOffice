@@ -11,7 +11,7 @@ function Assets({ token }) {
 
   useEffect(() => {
     fetchAssets();
-  }, [token]);
+  }, []);
 
   const fetchAssets = async () => {
     try {

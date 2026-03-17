@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import apiClient from '../api/client';
 
 function Leaves({ token }) {
   const [leaves, setLeaves] = useState([]);
@@ -14,22 +12,18 @@ function Leaves({ token }) {
   useEffect(() => {
     fetchLeaves();
     checkRole();
-  }, [token]);
+  }, []);
 
   const checkRole = async () => {
     try {
-        const userRes = await axios.get(`${API_URL}/users/me`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const userRes = await apiClient.get('/users/me');
         setIsAdmin(['admin', 'manager'].includes(userRes.data.role));
     } catch (e) {}
   };
 
   const fetchLeaves = async () => {
     try {
-      const response = await axios.get(`${API_URL}/leaves`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/leaves');
       setLeaves(response.data);
     } catch (err) {
       console.error("Failed to fetch leaves", err);
@@ -39,25 +33,21 @@ function Leaves({ token }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_URL}/leaves`, newLeave, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await apiClient.post('/leaves', newLeave);
       fetchLeaves();
       setShowForm(false);
       setNewLeave({ type: 'Annual', start_date: '', end_date: '', reason: '' });
     } catch (err) {
-      alert("Failed to apply leave");
+      // apiClient handles toast
     }
   };
 
   const handleAction = async (id, action) => {
     try {
-      await axios.put(`${API_URL}/leaves/${id}/${action}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await apiClient.put(`/leaves/${id}/${action}`, {});
       fetchLeaves();
     } catch (err) {
-      alert(`Failed to ${action} leave`);
+      // Handled by client interceptor
     }
   };
 
