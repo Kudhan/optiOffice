@@ -32,6 +32,10 @@ const userSchema = mongoose.Schema({
     type: String,
     default: ""
   },
+  leave_balance: {
+    type: Number,
+    default: 20
+  },
   disabled: {
     type: Boolean,
     default: false

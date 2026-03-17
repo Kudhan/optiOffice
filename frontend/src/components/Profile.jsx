@@ -83,7 +83,7 @@ function Profile() {
   if (isLoading) return <div className="p-10 animate-pulse">Synchronizing Data...</div>;
   if (!profileData) return <div className="p-10">Identity record not found.</div>;
 
-  const { user, hierarchy, attendance_snapshot, task_overview } = profileData;
+  const { user, hierarchy, stats, task_overview, recent_activity } = profileData;
   const roleGlow = user.role === 'admin' ? 'rgba(99,102,241,0.15)' : 'rgba(14,165,233,0.15)';
 
   return (
@@ -97,7 +97,7 @@ function Profile() {
                 <div className="w-48 h-48 bg-primary-surface rounded-[3rem] border-4 border-white dark:border-navy-900 shadow-2xl flex items-center justify-center text-7xl font-black text-sky-500 relative z-10 overflow-hidden">
                     {user.profile_photo ? (
                         <img src={user.profile_photo} alt="" className="w-full h-full object-cover" />
-                    ) : user.full_name?.charAt(0)}
+                    ) : (user.full_name?.charAt(0) || 'U')}
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-emerald-500 rounded-full border-4 border-primary-surface z-20 flex items-center justify-center">
                     <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
@@ -122,6 +122,9 @@ function Profile() {
                     </div>
                     <div className="flex items-center gap-2 text-content-muted font-bold text-sm">
                         <IconBriefcase className="w-4 h-4" /> {user.designation || 'Specialist'}
+                    </div>
+                    <div className="flex items-center gap-2 text-content-muted font-bold text-sm">
+                        <span className="text-sky-500 font-black">TENURE:</span> {user.tenure || 'NEW'}
                     </div>
                 </div>
             </div>
@@ -173,6 +176,27 @@ function Profile() {
                     </div>
                 </div>
             </BentoCard>
+
+            <BentoCard glowColor={roleGlow}>
+                <h3 className="text-[10px] font-black text-content-muted uppercase tracking-widest mb-6">Recent Activity Log</h3>
+                <div className="space-y-6">
+                    {recent_activity.length > 0 ? recent_activity.map((act, i) => (
+                        <div key={i} className="flex gap-4 group">
+                            <div className="flex flex-col items-center">
+                                <div className={`w-2 h-2 rounded-full mt-1.5 ${act.type === 'attendance' ? 'bg-sky-500' : 'bg-emerald-500'}`}></div>
+                                {i !== recent_activity.length - 1 && <div className="w-px flex-1 bg-border my-1"></div>}
+                            </div>
+                            <div className="pb-4">
+                                <p className="text-xs font-black text-content-main uppercase tracking-tight group-hover:text-sky-500 transition-colors">{act.title}</p>
+                                <p className="text-[10px] font-bold text-content-muted mt-0.5">{act.description}</p>
+                                <p className="text-[10px] font-medium text-content-muted/60 mt-1 uppercase">{new Date(act.date).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                    )) : (
+                        <p className="text-xs font-bold text-content-muted italic">No recent logs detected.</p>
+                    )}
+                </div>
+            </BentoCard>
         </div>
 
         {/* High Impact Stats */}
@@ -180,21 +204,21 @@ function Profile() {
             <StatWidget 
                 icon={IconZap}
                 label="Work Velocity"
-                value={`${Math.round((task_overview.completed / (task_overview.pending + task_overview.completed || 1)) * 100)}%`}
-                subValue={`of tasks`}
+                value={`${stats.task_velocity}%`}
+                subValue={`Efficiency`}
                 colorClass="bg-amber-500/10 text-amber-500"
             />
             <StatWidget 
                 icon={IconActivity}
                 label="Punctuality"
-                value={`${100 - (attendance_snapshot.late_count * 5)}%`}
-                subValue="Score"
+                value={`${stats.punctuality_score}%`}
+                subValue="Consistency"
                 colorClass="bg-emerald-500/10 text-emerald-500"
             />
             <StatWidget 
                 icon={IconCalendar}
                 label="Time Off"
-                value="12"
+                value={user.leave_balance}
                 subValue="Days Left"
                 colorClass="bg-rose-500/10 text-rose-500"
             />

@@ -35,11 +35,19 @@ const testProfile = async () => {
             { user: { id: employeeUser._id.toString(), role: 'employee', tenantId: employeeUser.tenantId }, params: { id: employeeUser._id.toString() } },
             mockRes
         );
-        console.log("Status:", mockRes.statusCode || 200);
-        if (mockRes.data.user && mockRes.data.user.full_name === employeeUser.full_name) {
-            console.log("PASS: Data stitched correctly.");
-        } else {
-            console.log("FAIL:", mockRes.data);
+        console.log(`[TEST 1] Employee gets own profile... Status: ${mockRes.statusCode}`);
+        if (mockRes.statusCode === 200) {
+            const data = mockRes.data;
+            const hasRealism = data.user.leave_balance !== undefined &&
+                               data.user.tenure !== undefined &&
+                               data.recent_activity !== undefined &&
+                               data.stats.task_velocity !== undefined;
+
+            if (hasRealism) {
+                console.log("PASS: Realism fields detected (Leave, Tenure, Activity, Velocity).");
+            } else {
+                console.log("FAIL: Realism fields missing from response.");
+            }
         }
 
         // --- TEST 2: Employee gets Admin profile (Should fail) ---

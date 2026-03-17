@@ -31,22 +31,43 @@ const getProfileData = async (req, res) => {
       return res.status(403).json({ detail: "User belongs to a different organization" });
     }
 
-    // Attendance Snapshot (Current Month)
+    // Monthly Attendance Stats
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
     
-    const attendanceRecords = await Attendance.find({
+    const monthlyAttendance = await Attendance.find({
       user: targetUserId,
       date: { $gte: startOfMonth }
     });
 
-    const totalHours = attendanceRecords.reduce((acc, curr) => acc + (curr.workHours || 0), 0);
-    const lateCount = attendanceRecords.filter(r => r.status === 'Late').length;
+    const totalHours = monthlyAttendance.reduce((acc, curr) => acc + (curr.workHours || 0), 0);
+    const monthlyLateCount = monthlyAttendance.filter(r => r.status === 'Late').length;
 
-    // Task Overview
-    const tasks = await Task.find({ assigned_to: targetUser.username }); // Task model uses username string
-    const pendingTasks = tasks.filter(t => t.status !== 'Completed' && t.status !== 'Done').length;
-    const completedTasks = tasks.filter(t => t.status === 'Completed' || t.status === 'Done').length;
+    // Recent Activity (Last 5 attendance records)
+    const recentAttendance = await Attendance.find({ user: targetUserId })
+      .sort({ date: -1 })
+      .limit(5);
+
+    // Recent Tasks (Last 5)
+    const recentTasks = await Task.find({ assigned_to: targetUser.username })
+      .sort({ updatedAt: -1 })
+      .limit(5);
+
+    // All-time Task Stats for Velocity
+    const allTasks = await Task.find({ assigned_to: targetUser.username });
+    const pendingTasks = allTasks.filter(t => !['Completed', 'Done'].includes(t.status)).length;
+    const completedTasks = allTasks.filter(t => ['Completed', 'Done'].includes(t.status)).length;
+
+    // Tenure Calculation
+    let tenure = "Fresh recruit";
+    if (targetUser.joining_date) {
+        const joinDate = new Date(targetUser.joining_date);
+        const diffTime = Math.abs(now - joinDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 365) tenure = `${Math.floor(diffDays/365)}y ${Math.floor((diffDays%365)/30)}m`;
+        else if (diffDays > 30) tenure = `${Math.floor(diffDays/30)} months`;
+        else tenure = `${diffDays} days`;
+    }
 
     res.json({
       user: {
@@ -59,7 +80,10 @@ const getProfileData = async (req, res) => {
         bio: targetUser.bio,
         profile_photo: targetUser.profile_photo,
         role: targetUser.role,
-        status: targetUser.status
+        status: targetUser.status,
+        leave_balance: targetUser.leave_balance || 20,
+        joining_date: targetUser.joining_date,
+        tenure
       },
       hierarchy: {
         manager: targetUser.manager ? {
@@ -67,14 +91,32 @@ const getProfileData = async (req, res) => {
           designation: targetUser.manager.designation
         } : null
       },
-      attendance_snapshot: {
+      stats: {
         total_hours_this_month: Math.round(totalHours * 100) / 100,
-        late_count: lateCount
+        late_count_this_month: monthlyLateCount,
+        task_velocity: allTasks.length > 0 ? Math.round((completedTasks / allTasks.length) * 100) : 0,
+        punctuality_score: monthlyAttendance.length > 0 ? Math.round(((monthlyAttendance.length - monthlyLateCount) / monthlyAttendance.length) * 100) : 100
       },
       task_overview: {
         pending: pendingTasks,
         completed: completedTasks
-      }
+      },
+      recent_activity: [
+        ...recentAttendance.map(a => ({
+            type: 'attendance',
+            date: a.date,
+            title: a.status === 'Late' ? 'Late Arrival' : 'Punctual Check-in',
+            description: `${a.workHours}h logged`,
+            status: a.status
+        })),
+        ...recentTasks.map(t => ({
+            type: 'task',
+            date: t.updatedAt,
+            title: `Task: ${t.title}`,
+            description: `Moved to ${t.status}`,
+            status: t.status
+        }))
+      ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8)
     });
 
   } catch (error) {
