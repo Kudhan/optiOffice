@@ -2,13 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Light Theme - Clean Zinc/Slate */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --accent: #0ea5e9;
+}
+
+.dark {
+  /* Dark Theme - Deep Obsidian/Midnight */
+  --bg-primary: #020617;
+  --bg-secondary: #0B1120;
+  --bg-tertiary: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #1e293b;
+  --accent: #38bdf8;
+}
+
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 antialiased font-sans;
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    @apply antialiased font-sans transition-all duration-700 ease-in-out;
+  }
+  
+  * {
+    @apply transition-colors duration-300 ease-in-out;
   }
 }
 
-/* Custom Webkit scrollbar for sleek bento boxes */
+/* Custom Webkit scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -16,18 +44,16 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full dark:bg-slate-700;
+  background: var(--border-color);
+  border-radius: 10px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400 dark:bg-slate-600;
-}
+
 @layer utilities {
   .bento-card-hover {
     @apply transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.2)] hover:border-sky-500/50 hover:-translate-y-1 active:scale-[0.98];
   }
 }
 
-/* Glassmorphism Hover Effects */
 .glass-hover {
   @apply relative overflow-hidden;
 }

@@ -7,17 +7,24 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        primary: {
+          DEFAULT: 'var(--bg-primary)',
+          surface: 'var(--bg-secondary)',
+          muted: 'var(--bg-tertiary)',
+        },
+        content: {
+          main: 'var(--text-main)',
+          muted: 'var(--text-muted)',
+        },
+        border: 'var(--border-color)',
         navy: {
-          950: '#0B1120', // Deep Dark Navy from image
+          950: '#0B1120',
           900: '#111827',
           800: '#1F2937',
         },
         sky: {
           400: '#38BDF8',
-          500: '#0EA5E9', // Clock In button Blue
-        },
-        slate: {
-          900: '#0B1120',
+          500: '#0EA5E9',
         },
         action: {
           DEFAULT: '#0EA5E9',

@@ -3,6 +3,14 @@ import apiClient from '../api/client';
 import useAuth from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { CardSkeleton } from './Skeleton';
+import { 
+  IconTrash, 
+  IconCalendar, 
+  IconPlus, 
+  IconSync, 
+  IconGlobe, 
+  IconPaid 
+} from './Icons';
 
 // --- Utility: Get Next Holiday & Countdown ---
 const getNextHolidayInfo = (holidays) => {
@@ -51,7 +59,7 @@ const HolidayCard = ({ holiday, isAdmin, onRefresh }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800/40 backdrop-blur-xl rounded-[2.5rem] p-6 border border-slate-200 dark:border-slate-700/50 bento-card-hover glass-hover flex items-center gap-6 group">
+    <div className="bg-primary-surface backdrop-blur-xl rounded-[2.5rem] p-6 border border-border bento-card-hover glass-hover flex items-center gap-6 group">
       {/* Date Badge */}
       <div className="flex flex-col items-center justify-center min-w-[80px] h-24 bg-sky-500 rounded-3xl shadow-lg shadow-sky-500/20 text-white">
         <span className="text-[10px] font-black uppercase tracking-widest opacity-80">{month}</span>
@@ -65,9 +73,14 @@ const HolidayCard = ({ holiday, isAdmin, onRefresh }) => {
           }`}>
             {holiday.type}
           </span>
-          {holiday.isPaid && <span className="text-xs" title="Paid Holiday">💰</span>}
+          {holiday.isPaid && (
+            <span className="flex items-center gap-1 bg-sky-500/10 text-sky-500 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider">
+              <IconPaid className="w-3 h-3" />
+              Paid
+            </span>
+          )}
         </div>
-        <h3 className="text-xl font-black text-slate-900 dark:text-white truncate tracking-tight">{holiday.name}</h3>
+        <h3 className="text-xl font-black text-content-main truncate tracking-tight">{holiday.name}</h3>
       </div>
 
       {isAdmin && (
@@ -75,7 +88,7 @@ const HolidayCard = ({ holiday, isAdmin, onRefresh }) => {
           onClick={handleDelete}
           className="w-10 h-10 rounded-2xl bg-rose-500/5 hover:bg-rose-500 text-rose-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
         >
-          🗑️
+          <IconTrash className="w-4 h-4" />
         </button>
       )}
     </div>
@@ -139,10 +152,10 @@ function Holidays() {
       {/* Header Area */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-12 gap-8">
         <div>
-          <h2 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-4">
+          <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none mb-4">
             Office <span className="italic text-sky-500 font-extrabold underline decoration-sky-500/20 underline-offset-8">Leave.</span>
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 font-bold text-lg tracking-tight max-w-xl">
+          <p className="text-content-muted font-bold text-lg tracking-tight max-w-xl">
             View upcoming public and company-specific holidays for your hub.
           </p>
         </div>
@@ -152,9 +165,9 @@ function Holidays() {
             <button 
               onClick={handleSync}
               disabled={isSyncing}
-              className="flex items-center gap-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-black py-4 px-8 rounded-[2rem] hover:bg-slate-50 dark:hover:bg-slate-900 transition-all shadow-xl group disabled:opacity-50"
+              className="flex items-center gap-3 bg-primary-surface border border-border text-content-main font-black py-4 px-8 rounded-[2rem] hover:bg-primary-muted transition-all shadow-xl group disabled:opacity-50"
             >
-              <span className="text-lg group-hover:rotate-12 transition-transform">{isSyncing ? '⌛' : '🇮🇳'}</span>
+              <IconSync className={`w-5 h-5 ${isSyncing ? 'animate-spin' : 'group-hover:rotate-12 transition-transform'}`} />
               Sync National Holidays
             </button>
             <button 
@@ -169,13 +182,13 @@ function Holidays() {
 
       {/* Add Holiday Form */}
       {showForm && (
-        <div className="mb-12 bg-white/70 dark:bg-slate-800/40 backdrop-blur-xl rounded-[3rem] p-10 border border-slate-200 dark:border-slate-700/50 animate-fade-in">
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-6 uppercase tracking-tighter">New Holiday Event</h3>
+        <div className="mb-12 bg-primary-surface backdrop-blur-xl rounded-[3rem] p-10 border border-border animate-fade-in">
+          <h3 className="text-2xl font-black text-content-main mb-6 uppercase tracking-tighter">New Holiday Event</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Event Name</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Event Name</label>
               <input 
-                className="bg-slate-100 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none"
+                className="bg-primary-muted border border-border rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none"
                 placeholder="e.g. Annual Retreat"
                 value={newHoliday.name}
                 onChange={(e) => setNewHoliday({...newHoliday, name: e.target.value})}
@@ -183,19 +196,19 @@ function Holidays() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Date</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Date</label>
               <input 
                 type="date"
-                className="bg-slate-100 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none"
+                className="bg-primary-muted border border-border rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none text-content-main"
                 value={newHoliday.date}
                 onChange={(e) => setNewHoliday({...newHoliday, date: e.target.value})}
                 required
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Type</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Type</label>
               <select 
-                className="bg-slate-100 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none appearance-none"
+                className="bg-primary-muted border border-border rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none appearance-none text-content-main"
                 value={newHoliday.type}
                 onChange={(e) => setNewHoliday({...newHoliday, type: e.target.value})}
               >
@@ -215,17 +228,17 @@ function Holidays() {
 
       {/* Hero Widget: Next Holiday */}
       {nextHoliday && (
-        <div className="mb-12 bg-slate-900 dark:bg-white rounded-[3rem] p-10 flex flex-col md:flex-row justify-between items-center gap-8 shadow-2xl relative overflow-hidden group">
+        <div className="mb-12 bg-content-main dark:bg-primary-surface rounded-[3rem] p-10 flex flex-col md:flex-row justify-between items-center gap-8 shadow-2xl relative overflow-hidden group border border-border">
           <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform">
-             <span className="text-9xl">🗓️</span>
+             <IconCalendar className="w-32 h-32 text-sky-500" />
           </div>
           <div className="z-10 text-center md:text-left">
             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-sky-500 mb-4 block">Coming Up Next</span>
-            <h3 className="text-4xl md:text-5xl font-black text-white dark:text-navy-950 tracking-tighter mb-2">{nextHoliday.name}</h3>
-            <p className="text-slate-400 dark:text-slate-500 font-bold text-lg">{new Date(nextHoliday.date).toLocaleDateString(undefined, { dateStyle: 'full' })}</p>
+            <h3 className="text-4xl md:text-5xl font-black text-primary-surface dark:text-content-main tracking-tighter mb-2">{nextHoliday.name}</h3>
+            <p className="text-content-muted font-bold text-lg">{new Date(nextHoliday.date).toLocaleDateString(undefined, { dateStyle: 'full' })}</p>
           </div>
-          <div className="z-10 bg-white/10 dark:bg-navy-900/5 backdrop-blur-md rounded-[2.5rem] p-8 text-center min-w-[200px] border border-white/10">
-            <span className="text-5xl font-black text-white dark:text-navy-950 block leading-tight">{nextHoliday.daysRemaining}</span>
+          <div className="z-10 bg-primary-surface/10 dark:bg-primary-muted backdrop-blur-md rounded-[2.5rem] p-8 text-center min-w-[200px] border border-border">
+            <span className="text-5xl font-black text-primary-surface dark:text-content-main block leading-tight">{nextHoliday.daysRemaining}</span>
             <span className="text-[10px] font-black uppercase tracking-widest text-sky-500">Days Remaining</span>
           </div>
         </div>
@@ -237,9 +250,9 @@ function Holidays() {
           {[1, 2, 3, 4, 5, 6].map(i => <CardSkeleton key={i} />)}
         </div>
       ) : holidays.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-40 bg-slate-100/50 dark:bg-navy-950/20 rounded-[4rem] border-4 border-dashed border-slate-200 dark:border-slate-800">
-          <span className="text-8xl mb-8 animate-bounce">🏝️</span>
-          <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter mb-4">No Holidays Loaded.</h3>
+        <div className="flex flex-col items-center justify-center py-40 bg-primary-muted rounded-[4rem] border-4 border-dashed border-border">
+          <IconCalendar className="w-20 h-20 text-content-muted opacity-20 mb-8" />
+          <h3 className="text-3xl font-black text-content-main tracking-tighter mb-4">No Holidays Loaded.</h3>
           {isAdmin && (
              <button onClick={handleSync} className="text-sky-500 font-bold hover:underline underline-offset-4">Click here to seed India standard holidays.</button>
           )}

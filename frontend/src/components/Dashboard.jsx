@@ -106,16 +106,16 @@ function Dashboard() {
   const EmployeeView = (
     <div className="grid grid-cols-12 gap-10">
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-10">
-             <div className="bg-white dark:bg-navy-950/50 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm transition-all h-full">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-4 block">My Personal Stats</span>
+             <div className="bg-primary-surface p-8 rounded-[2.5rem] border border-border shadow-sm transition-all h-full">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-content-muted mb-4 block">My Personal Stats</span>
                 <div className="space-y-6">
                     <div className="p-6 bg-sky-500/5 rounded-3xl border border-sky-500/10">
                         <p className="text-xs font-bold text-sky-500 mb-1">Weekly Focus</p>
-                        <p className="text-3xl font-black dark:text-white">92%</p>
+                        <p className="text-3xl font-black text-content-main">92%</p>
                     </div>
                     <div className="p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10">
                         <p className="text-xs font-bold text-emerald-500 mb-1">Tasks Done</p>
-                        <p className="text-3xl font-black dark:text-white">{data?.tasks?.filter(t => t.status === 'Completed').length || 0}</p>
+                        <p className="text-3xl font-black text-content-main">{data?.tasks?.filter(t => t.status === 'Completed').length || 0}</p>
                     </div>
                 </div>
              </div>
@@ -132,10 +132,10 @@ function Dashboard() {
         {/* The Command Center Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-8">
           <div>
-            <h2 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
+            <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none">
               Good Morning, <span className="italic text-sky-500 dark:text-sky-400 font-extrabold">{firstName}.</span>
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 font-bold mt-6 text-lg max-w-2xl leading-relaxed tracking-tight">
+            <p className="text-content-muted font-bold mt-6 text-lg max-w-2xl leading-relaxed tracking-tight">
                {isAdmin || isManager 
                  ? `Your office velocity is up 12.5% this week. All systems in the ${user?.tenantId || 'global'} hub are currently operational.`
                  : "You have 3 tasks due today. Remember to track your time in the attendance module."}
@@ -146,9 +146,8 @@ function Dashboard() {
              {isAdmin && (
                 <button 
                   onClick={() => setIsInviteOpen(true)}
-                  className="flex items-center gap-2 border border-slate-200 dark:border-slate-800 dark:text-white font-bold py-4 px-8 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm shadow-sm group"
+                  className="flex items-center gap-2 border border-border text-content-main font-bold py-4 px-8 rounded-2xl hover:bg-primary-muted transition-all text-sm shadow-sm group"
                 >
-                  <span className="text-lg group-hover:scale-110 transition-transform">👤+</span>
                   Invite User
                 </button>
              )}
