@@ -146,6 +146,13 @@ function Dashboard() {
     }
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   const firstName = user?.sub?.split(' ')[0] || 'User';
 
   if (isLoading) {
@@ -210,12 +217,15 @@ function Dashboard() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 gap-8">
           <div>
             <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none">
-              Good Morning, <span className="italic text-sky-500 dark:text-sky-400 font-extrabold">{firstName}.</span>
+              {getGreeting()}, <span className="italic text-sky-500 dark:text-sky-400 font-extrabold">{firstName}.</span>
             </h2>
-            <p className="text-content-muted font-bold mt-6 text-lg max-w-2xl leading-relaxed tracking-tight">
+             <p className="text-content-muted font-bold mt-6 text-lg max-w-2xl leading-relaxed tracking-tight">
                {isAdmin || isManager 
-                 ? `Your office velocity is up 12.5% this week. All systems in the ${user?.tenantId || 'global'} hub are currently operational.`
-                 : "You have 3 tasks due today. Remember to track your time in the attendance module."}
+                 ? `There are ${data?.stats?.active_tasks || 0} active tasks across the ${user?.tenantId || 'global'} hub. All systems are currently operational.`
+                 : (data?.tasks?.filter(t => t.status !== 'Done' && t.status !== 'Completed').length > 0 
+                    ? `You have ${data.tasks.filter(t => t.status !== 'Done' && t.status !== 'Completed').length} tasks to focus on today. Don't forget to track your progress!`
+                    : "You've cleared your deck! Great job on staying ahead of your schedule today.")
+               }
             </p>
           </div>
 
