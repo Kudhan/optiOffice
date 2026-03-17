@@ -203,3 +203,30 @@ export const IconChevronLeft = ({ className = "" }) => (
     <path d="m15 18-6-6 6-6" />
   </svg>
 );
+
+export const IconActivity = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+  </svg>
+);
+
+export const IconZap = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
+
+export const IconEdit = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
+
+export const IconUserMinus = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <line x1="23" y1="11" x2="17" y2="11" />
+  </svg>
+);

@@ -109,14 +109,14 @@ function Layout() {
             <span className="font-black text-xl">O</span>
           </div>
           {!isCollapsed && (
-            <div className="min-w-0">
+            <Link to="/" className="min-w-0 text-left">
               <h1 className="text-content-main font-black text-xl tracking-tighter leading-none truncate">
                 {isAdmin ? 'Admin Portal' : 'OptiOffice'}
               </h1>
               <p className="text-[10px] font-bold text-content-muted uppercase tracking-widest mt-1">
                 {isAdmin ? 'Command Center' : 'My Workspace'}
               </p>
-            </div>
+            </Link>
           )}
         </div>
 
@@ -156,17 +156,21 @@ function Layout() {
             {!isCollapsed && <span>Logout</span>}
           </button>
           
-          <div className={`flex items-center gap-3 px-4 py-4 pt-6 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="w-10 h-10 rounded-full bg-primary-muted flex min-w-[40px] items-center justify-center font-bold text-sky-500">
+          <Link 
+            to="/profile"
+            className={`flex items-center gap-3 px-4 py-4 pt-6 hover:bg-primary-muted rounded-2xl transition-all cursor-pointer ${isCollapsed ? 'justify-center' : ''}`}
+            title={isCollapsed ? 'View Profile' : ''}
+          >
+            <div className="w-10 h-10 rounded-full bg-primary-muted flex min-w-[40px] items-center justify-center font-bold text-sky-500 shadow-inner">
               {user?.sub?.charAt(0).toUpperCase()}
             </div>
             {!isCollapsed && (
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden text-left">
                 <p className="text-sm font-bold text-content-main truncate uppercase tracking-tight">{user?.sub || 'User Profile'}</p>
                 <p className="text-xs text-content-muted font-medium">{user?.role || 'Member'}</p>
               </div>
             )}
-          </div>
+          </Link>
         </div>
       </aside>
 

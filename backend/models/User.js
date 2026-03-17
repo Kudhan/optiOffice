@@ -28,6 +28,10 @@ const userSchema = mongoose.Schema({
     type: String,
     default: ""
   },
+  bio: {
+    type: String,
+    default: ""
+  },
   disabled: {
     type: Boolean,
     default: false
