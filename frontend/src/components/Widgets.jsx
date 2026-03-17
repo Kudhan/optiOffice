@@ -18,9 +18,9 @@ const tileClasses = "bg-primary-surface backdrop-blur-md border border-border ro
 // StatsWidget remained same...
 export const StatsWidget = ({ stats, isLoading }) => {
   const items = [
-    { label: 'Total Employees', value: stats?.total_employees || '1,248', trend: '+4%', trendColor: 'text-emerald-500' },
-    { label: 'Active Tasks', value: stats?.active_tasks || '342', trend: '86%', trendColor: 'text-sky-500' },
-    { label: 'Pending Leaves', value: stats?.pending_leaves || '12', trend: 'Critical', trendColor: 'text-rose-500' },
+    { label: 'Total Employees', value: stats?.total_employees || '0', trend: '+4%', trendColor: 'text-emerald-500' },
+    { label: 'Active Tasks', value: stats?.active_tasks || '0', trend: 'Live', trendColor: 'text-sky-500' },
+    { label: 'Pending Leaves', value: stats?.pending_leaves || '0', trend: 'Action Required', trendColor: 'text-rose-500' },
   ];
   
   return (
@@ -102,7 +102,7 @@ export const PriorityTasks = ({ tasks, isLoading, title = 'Priority Tasks' }) =>
   }, [tasks]);
 
   const handleToggleStatus = async (taskId, currentStatus) => {
-    const nextStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
+    const nextStatus = currentStatus === 'Done' ? 'To Do' : 'Done';
     try {
         await apiClient.put(`tasks/${taskId}`, { status: nextStatus });
         setTaskList(prev => prev.map(t => t._id === taskId ? { ...t, status: nextStatus } : t));
@@ -140,7 +140,7 @@ export const PriorityTasks = ({ tasks, isLoading, title = 'Priority Tasks' }) =>
                 {task.status || 'Pending'}
               </span>
             </div>
-            <h4 className={`text-sm font-bold text-content-main leading-tight group-hover:text-sky-500 transition-colors uppercase tracking-tight ${task.status === 'Completed' ? 'line-through opacity-50' : ''}`}>
+            <h4 className={`text-sm font-bold text-content-main leading-tight group-hover:text-sky-500 transition-colors uppercase tracking-tight ${task.status === 'Done' ? 'line-through opacity-50' : ''}`}>
                 {task.title}
             </h4>
             <div className="mt-4 flex justify-between items-center">

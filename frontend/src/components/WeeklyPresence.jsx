@@ -10,9 +10,20 @@ const WeeklyPresence = ({ isLoading }) => {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const getDensityColor = (val) => {
-    if (val < 30) return 'bg-slate-200 dark:bg-slate-800/50';
-    if (val < 70) return 'bg-sky-300 dark:bg-sky-500/40';
+    if (val < 20) return 'bg-slate-200 dark:bg-slate-800/30';
+    if (val < 50) return 'bg-sky-200 dark:bg-sky-500/20';
+    if (val < 80) return 'bg-sky-400 dark:bg-sky-500/60';
     return 'bg-sky-600 dark:bg-sky-500';
+  };
+
+  // Mocking realistic density per department for the week
+  const getDeptValue = (dept, dayIdx) => {
+    // Weekend logic
+    if (dayIdx > 4) return Math.random() * 15;
+    // Weekday logic based on department "vibe"
+    if (dept === 'Engineering') return 70 + Math.random() * 30;
+    if (dept === 'Sales') return 40 + Math.random() * 50;
+    return 30 + Math.random() * 40;
   };
 
   return (
@@ -46,7 +57,7 @@ const WeeklyPresence = ({ isLoading }) => {
               <span className="text-[10px] font-bold text-content-main truncate uppercase tracking-tighter">{dept}</span>
             </div>
             {days.map((_, i) => {
-              const val = Math.random() * 100;
+              const val = getDeptValue(dept, i);
               return (
                 <div 
                   key={i} 

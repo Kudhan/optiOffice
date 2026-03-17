@@ -18,47 +18,48 @@ const getDashboardData = async (req, res) => {
     };
     
     // Aggregation: Count Total Employees in Tenant
-    const totalEmployeesAggr = await User.aggregate([
-      { $match: { tenantId } },
-      { $count: "count" }
-    ]);
-    const totalEmployees = totalEmployeesAggr.length > 0 ? totalEmployeesAggr[0].count : 0;
+    const totalEmployees = await User.countDocuments({ tenantId });
     
     // Aggregation: Count Active Tasks (not 'Done') in Tenant
-    const activeTasksAggr = await Task.aggregate([
-      { $match: { tenantId, status: { $ne: 'Done' } } },
-      { $count: "count" }
-    ]);
-    const activeTasks = activeTasksAggr.length > 0 ? activeTasksAggr[0].count : 0;
+    const activeTasks = await Task.countDocuments({ tenantId, status: { $ne: 'Done' } });
 
     // Aggregation: Count Pending Leaves in Tenant
-    const pendingLeavesAggr = await Leave.aggregate([
-      { $match: { tenantId, status: 'Pending' } },
-      { $count: "count" }
+    const pendingLeaves = await Leave.countDocuments({ tenantId, status: 'Pending' });
+
+    // Aggregation: Department Stats
+    const deptStats = await User.aggregate([
+      { $match: { tenantId } },
+      { $group: { _id: "$department", count: { $sum: 1 } } }
     ]);
-    const pendingLeaves = pendingLeavesAggr.length > 0 ? pendingLeavesAggr[0].count : 0;
     
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'super-admin') {
       dashboardResponse.menu = ["Users", "Roles", "Policies", "Assets", "Attendance", "Leaves", "Tasks", "Settings", "Reports", "Billing", "Organization Tree", "Holidays"];
       dashboardResponse.stats = {
-        totalEmployees,
-        activeTasks,
-        pendingLeaves
+        total_employees: totalEmployees,
+        active_tasks: activeTasks,
+        pending_leaves: pendingLeaves
       };
+      
+      // Get all active tasks for admin overview
+      dashboardResponse.tasks = await Task.find({ tenantId, status: { $ne: 'Done' } }).sort({ priority: 1 }).limit(10);
+      dashboardResponse.dept_distribution = deptStats;
+
     } else if (role === 'manager') {
       dashboardResponse.menu = ["Projects", "My Team", "Assets", "Attendance", "Leaves", "Tasks", "Sprints", "Reports", "Organization Tree", "Holidays"];
       dashboardResponse.stats = {
         project_progress: "75%",
         active_sprints: 2,
-        pendingLeaves,
-        activeTasks
+        pending_leaves: pendingLeaves,
+        active_tasks: activeTasks
       };
+      // Tasks assigned to their team (mocking team as those managed by them)
+      dashboardResponse.tasks = await Task.find({ tenantId, assigned_to: { $in: [req.user.sub] } }).limit(10);
+      
     } else {
       dashboardResponse.menu = ["My Tasks", "Attendance", "Leaves", "Profile", "Organization Tree", "Holidays"];
       
       // Get user specific tasks
-      const myTasks = await Task.find({ tenantId, assigned_to: req.user.sub, status: { $ne: 'Done' } }).limit(5);
-      dashboardResponse.tasks = myTasks.map(t => t.title);
+      dashboardResponse.tasks = await Task.find({ tenantId, assigned_to: req.user.username }).limit(10);
     }
     
     res.json(dashboardResponse);

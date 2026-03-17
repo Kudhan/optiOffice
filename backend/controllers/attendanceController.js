@@ -1,4 +1,5 @@
 const Attendance = require('../models/Attendance');
+const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 
 // Configurable Late Threshold (Default 9:30 AM)

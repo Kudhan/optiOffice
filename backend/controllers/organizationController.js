@@ -1,4 +1,5 @@
 const Organization = require('../models/Organization');
+const User = require('../models/User');
 
 // @desc    Get organization details
 // @route   GET /organization
