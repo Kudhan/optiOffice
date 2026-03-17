@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const roleSchema = mongoose.Schema({
   tenantId: {
     type: String,
-    required: true,
-    default: 'default_tenant'
+    required: false,
+    default: null
   },
   name: {
     type: String,

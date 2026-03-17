@@ -6,8 +6,17 @@ const Role = require('../models/Role');
  */
 const authorize = (requiredPermission) => {
   return async (req, res, next) => {
-    if (!req.user || !req.user.role || !req.user.tenantId) {
+    if (!req.user || !req.user.role) {
       return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    // Task 1: Super Admin Bypass
+    if (req.user.role === 'super-admin') {
+      return next();
+    }
+
+    if (!req.user.tenantId) {
+      return res.status(401).json({ success: false, message: 'Tenant context missing' });
     }
 
     try {

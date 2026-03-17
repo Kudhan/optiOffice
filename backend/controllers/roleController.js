@@ -53,11 +53,11 @@ const updateRole = async (req, res) => {
     const role = await Role.findOneAndUpdate(
       { _id: req.params.id, tenantId: req.user.tenantId },
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
     
     if (role) {
-      res.json(true);
+      res.json(role);
     } else {
       res.status(404).json({ detail: "Role not found" });
     }

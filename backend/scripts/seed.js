@@ -38,6 +38,12 @@ const seedDB = async () => {
         console.log('Creating default roles...');
         const roles = await Role.create([
             {
+                tenantId: null, // Global Role
+                name: 'super-admin',
+                description: 'Global System Overlord',
+                permissions: ['*'] // Bypasses anyway, but for completeness
+            },
+            {
                 tenantId: tenantId,
                 name: 'admin',
                 description: 'Full system access',
@@ -73,6 +79,15 @@ const seedDB = async () => {
         // 2. Create Users
         console.log('Creating users...');
         const users = await User.create([
+            {
+                username: 'superadmin',
+                email: 'super@optioffice.com',
+                full_name: 'The Overlord',
+                hashed_password: hashedPassword,
+                role: 'super-admin',
+                tenantId: 'global',
+                department: 'HQ'
+            },
             {
                 username: 'admin',
                 email: 'admin@acmecorp.com',
@@ -195,12 +210,12 @@ const seedDB = async () => {
 
         console.log('\n✅ Seeding Complete. OptiOffice is ready for testing.');
         console.log('----------------------------------------------------');
-        console.log('TenantID | optiOffice_corp');
-        console.log('Role     | Username | Password');
+        console.log('TenantID        | Role        | Username    | Password');
         console.log('----------------------------------------------------');
-        console.log('Admin    | admin    | password123');
-        console.log('Employee | jdoe     | password123');
-        console.log('Employee | asmith   | password123');
+        console.log('global          | Super Admin | superadmin  | password123');
+        console.log('optiOffice_corp | Admin       | admin       | password123');
+        console.log('optiOffice_corp | Employee    | jdoe        | password123');
+        console.log('optiOffice_corp | Employee    | asmith      | password123');
         console.log('----------------------------------------------------');
         process.exit();
     } catch (err) {
