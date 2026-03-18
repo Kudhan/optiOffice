@@ -95,7 +95,7 @@ const Shifts = () => {
         }
     };
 
-    const getShiftIcon = (startTime, className = "w-6 h-6 px-6") => {
+    const getShiftIcon = (startTime, className = "w-5 h-5") => {
         if (!startTime) return <IconSun className={`text-amber-500 ${className}`} />;
         const hour = parseInt(startTime.split(':')[0]);
         if (hour >= 6 && hour < 16) return <IconSun className={`text-amber-500 ${className}`} />;
@@ -155,10 +155,8 @@ const Shifts = () => {
                         >
                             <div className="absolute top-0 right-0 w-48 h-48 bg-sky-500/5 rounded-full -mr-24 -mt-24 blur-3xl transition-all group-hover:bg-sky-500/10" />
                             
-                            <div className="flex justify-between items-center mb-14 relative z-10">
-                                <div className="w-10 h-10 px-2 py-2 ml-4 bg-primary-muted rounded-[2rem] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform border border-border">
-                                    {getShiftIcon(shift.startTime, "w-8 h-8")}
-                                </div>
+                            <div className="flex justify-between items-center mb-12 relative z-10 w-full">
+                                
                                 <div className="flex items-center gap-4">
                                     {canManageShifts && (
                                         <div className="flex gap-2">
