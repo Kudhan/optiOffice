@@ -25,7 +25,8 @@ import {
   IconInfo,
   IconBookOpen,
   IconActivity,
-  IconZap
+  IconZap,
+  IconMap
 } from './Icons';
 
 function Layout() {
@@ -88,6 +89,7 @@ function Layout() {
   const navItems = [
     { label: 'Dashboard', path: '/', icon: <IconDashboard className="w-5 h-5" /> },
     { label: 'Team Hub', path: '/users', icon: <IconUsers className="w-5 h-5" />, permission: 'can_manage_users' },
+    { label: 'Floor Map', path: '/floor-map', icon: <IconMap className="w-5 h-5" /> },
     { label: 'Organization', path: '/organization', icon: <IconBriefcase className="w-5 h-5" /> },
     { label: 'Attendance', path: '/attendance', icon: <IconClock className="w-5 h-5" /> },
     { label: 'Tasks', path: '/tasks', icon: <IconFileText className="w-5 h-5" /> },
