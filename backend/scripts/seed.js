@@ -13,6 +13,7 @@ const Asset = require('../models/Asset');
 const Department = require('../models/Department');
 const Role = require('../models/Role');
 const Holiday = require('../models/Holiday');
+const Shift = require('../models/Shift');
 
 // Connection
 const connectDB = require('../config/db');
@@ -31,6 +32,7 @@ const seedDB = async () => {
         await Billing.deleteMany({});
         await Asset.deleteMany({});
         await Holiday.deleteMany({});
+        await Shift.deleteMany({});
 
         console.log('Inserting Mock Data for OptiOffice...');
 
@@ -73,6 +75,44 @@ const seedDB = async () => {
         const deptMap = {};
         departmentDocs.forEach(d => deptMap[d.name] = d._id);
 
+        // 2.5 Create Shift Templates
+        console.log('Creating shift patterns...');
+        const shifts = await Shift.create([
+            {
+                tenantId: tenantId,
+                name: 'Alpha Core (General)',
+                startTime: '09:00',
+                endTime: '18:00',
+                gracePeriod: 15,
+                workDays: [1, 2, 3, 4, 5]
+            },
+            {
+                tenantId: tenantId,
+                name: 'Beta Morning Protocol',
+                startTime: '07:30',
+                endTime: '16:30',
+                gracePeriod: 10,
+                workDays: [1, 2, 3, 4, 5]
+            },
+            {
+                tenantId: tenantId,
+                name: 'Gamma Evening Watch',
+                startTime: '16:00',
+                endTime: '01:00',
+                gracePeriod: 20,
+                workDays: [1, 2, 3, 4, 5]
+            },
+            {
+                tenantId: tenantId,
+                name: 'Delta Night Command',
+                startTime: '22:00',
+                endTime: '07:00',
+                gracePeriod: 30,
+                workDays: [1, 2, 3, 4, 5]
+            }
+        ]);
+        const shiftIds = shifts.map(s => s._id);
+
         // 3. Create Users (Hierarchical)
         console.log('Creating users with hierarchical links...');
         
@@ -85,34 +125,50 @@ const seedDB = async () => {
             role: 'admin',
             tenantId: tenantId,
             department_id: deptMap['Engineering'],
-            manager: null
+            department: 'Engineering',
+            manager: null,
+            shift_id: shiftIds[0] // General Shift
         });
 
         // Managers
-        const managerUsernames = ['jdoe', 'asmith', 'rgreen'];
-        const managers = await User.create(managerUsernames.map((uname, idx) => ({
-            username: uname,
-            email: `${uname}@optioffice.com`,
-            full_name: `${uname.charAt(0).toUpperCase() + uname.slice(1)} Manager`,
-            hashed_password: hashedPassword,
-            role: 'manager',
-            tenantId: tenantId,
-            department_id: departmentDocs[idx % departmentDocs.length]._id,
-            manager: adminDoc._id
-        })));
+        const managerUsernames = ['jdoe', 'asmith', 'rgreen', 'bblack', 'wwhite'];
+        const managers = await User.create(managerUsernames.map((uname, idx) => {
+            const dept = departmentDocs[idx % departmentDocs.length];
+            return {
+                username: uname,
+                email: `${uname}@optioffice.com`,
+                full_name: `${uname.charAt(0).toUpperCase() + uname.slice(1)} Manager`,
+                hashed_password: hashedPassword,
+                role: 'manager',
+                tenantId: tenantId,
+                department_id: dept._id,
+                department: dept.name,
+                manager: adminDoc._id,
+                shift_id: shiftIds[idx % shiftIds.length]
+            };
+        }));
 
         // Employees
-        const employeeUsernames = ['mwhite', 'kbrown', 'tblack', 'cgrey', 'pblue', 'spurple', 'yorange', 'fred', 'lyellow', 'gsilver'];
-        const employees = await User.create(employeeUsernames.map((uname, idx) => ({
-            username: uname,
-            email: `${uname}@optioffice.com`,
-            full_name: `${uname.charAt(0).toUpperCase() + uname.slice(1)} Worker`,
-            hashed_password: hashedPassword,
-            role: 'employee',
-            tenantId: tenantId,
-            department_id: departmentDocs[idx % departmentDocs.length]._id,
-            manager: managers[idx % managers.length]._id
-        })));
+        const employeeUsernames = [
+            'mwhite', 'kbrown', 'tblack', 'cgrey', 'pblue', 'spurple', 'yorange', 'fred', 'lyellow', 'gsilver',
+            'awilson', 'bcook', 'cdavis', 'dking', 'emiller', 'fclark', 'gharris', 'ityler', 'jmoore', 'kwright',
+            'lrobinson', 'mwood', 'nhill', 'oevans', 'pwright', 'qscott', 'rtaylor', 'syoung', 'tallen', 'uwalker'
+        ];
+        const employees = await User.create(employeeUsernames.map((uname, idx) => {
+            const dept = departmentDocs[idx % departmentDocs.length];
+            return {
+                username: uname,
+                email: `${uname}@optioffice.com`,
+                full_name: `${uname.charAt(0).toUpperCase() + uname.slice(1)} Worker`,
+                hashed_password: hashedPassword,
+                role: 'employee',
+                tenantId: tenantId,
+                department_id: dept._id,
+                department: dept.name,
+                manager: managers[idx % managers.length]._id,
+                shift_id: shiftIds[Math.floor(Math.random() * shiftIds.length)]
+            };
+        }));
 
         // Super Admin (Global)
         await User.create({

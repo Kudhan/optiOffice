@@ -25,6 +25,7 @@ const calculateWorkHours = (checkIn, checkOut) => {
 const checkIn = asyncHandler(async (req, res) => {
   const now = new Date();
   const today = now.toISOString().split('T')[0];
+  const dayOfWeek = now.getDay(); // 0 is Sunday, 1 is Monday...
 
   // Debugging identity
   if (!req.user || !req.user.id) {
@@ -36,17 +37,32 @@ const checkIn = asyncHandler(async (req, res) => {
 
   // Determine late status based on shift or fallback threshold
   let status = 'Present';
+  let warning = null;
   const user = await User.findById(req.user.id).populate('shift_id');
   
   if (user && user.shift_id) {
-    const { startTime, gracePeriod } = user.shift_id;
+    const { startTime, gracePeriod, workDays, name } = user.shift_id;
+    
+    // 1. Check if today is a scheduled work day
+    if (workDays && !workDays.includes(dayOfWeek)) {
+      warning = `Note: Today is not a scheduled work day for the '${name}' shift.`;
+    }
+
     const [shiftH, shiftM] = startTime.split(':').map(Number);
     const cutoff = new Date(now);
     cutoff.setHours(shiftH, shiftM + (gracePeriod || 0), 0, 0);
 
+    const shiftStart = new Date(now);
+    shiftStart.setHours(shiftH, shiftM, 0, 0);
+
+    // 2. Identify Lateness
     if (now > cutoff) {
       status = 'Late';
       console.log(`[Attendance] Personnel ${user.full_name} is Late. Shift starts at ${startTime} (Grace: ${gracePeriod}m)`);
+    } 
+    // 3. Identify if checking in too early (e.g., more than 4 hours before shift)
+    else if (now < new Date(shiftStart.getTime() - 4 * 60 * 60 * 1000)) {
+      warning = warning || `Note: You are checking in significantly earlier than your scheduled '${startTime}' start time.`;
     }
   } else {
     // Fallback to global threshold
@@ -74,7 +90,8 @@ const checkIn = asyncHandler(async (req, res) => {
     res.status(201).json({
       ...populated.toJSON(),
       userName: populated.user.full_name,
-      formattedTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      formattedTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      warning // Frontend can use this to show a toast or alert
     });
   } catch (error) {
     // Handling MongoDB duplicate key error (11000) for { user, date }

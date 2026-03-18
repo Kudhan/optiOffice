@@ -122,62 +122,61 @@ const Shifts = () => {
             <div className="p-10 max-w-[1600px] mx-auto space-y-16 animate-fade-in">
                 
                 {/* Header Section */}
-                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-10">
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
                     <div>
-                        <h2 className="text-7xl font-black text-content-main tracking-tighter leading-none mb-6 uppercase">
-                            Shift <span className="text-sky-500 italic">Roster</span>
+                        <h2 className="text-5xl font-black text-content-main tracking-tighter leading-none mb-4 uppercase">
+                            Temporal <span className="text-sky-500 italic">Roster</span>
                         </h2>
-                        <div className="flex items-center gap-4 bg-primary-muted/50 px-6 py-3 rounded-2xl border border-border w-fit">
-                            <IconClock className="w-4 h-4 text-sky-500" />
-                            <p className="text-content-muted font-black text-[10px] uppercase tracking-[0.2em]">Hub Temporal Control</p>
+                        <div className="flex items-center gap-3 bg-primary-muted/50 px-4 py-2 rounded-xl border border-border w-fit">
+                            <IconClock className="w-3.5 h-3.5 text-sky-500" />
+                            <p className="text-content-muted font-black text-[9px] uppercase tracking-[0.25em]">Operational Timing Control</p>
                         </div>
                     </div>
                     {canManageShifts && (
                         <button 
                             onClick={() => { setEditShift(null); setIsCreateMode(true); }}
-                            className="bg-sky-500 hover:bg-sky-600 text-white font-black py-5 px-12 rounded-[2rem] shadow-2xl shadow-sky-500/30 transition-all flex items-center gap-4 active:scale-95 uppercase tracking-[0.2em] text-[10px]"
+                            className="bg-sky-500 hover:bg-sky-600 text-white font-black py-4 px-10 rounded-2xl shadow-xl shadow-sky-500/20 transition-all flex items-center gap-3 active:scale-95 uppercase tracking-[0.2em] text-[10px]"
                         >
-                            <IconPlus className="w-5 h-5" />
-                            Engineer New Template
+                            <IconPlus className="w-4 h-4" />
+                            Engineer Template
                         </button>
                     )}
                 </div>
 
                 {/* Shift Template Cards (Dynamic Grid) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {shifts.map((shift, idx) => (
                         <motion.div 
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1, duration: 0.5 }}
                             key={shift._id}
-                            className="group relative p-10 rounded-[3.5rem] bg-primary-surface border border-border hover:border-sky-500/40 transition-all shadow-xl hover:shadow-2xl overflow-hidden flex flex-col justify-between"
+                            className="group relative p-8 rounded-[2.5rem] bg-primary-surface/40 backdrop-blur-3xl border border-border hover:border-sky-500/40 transition-all shadow-lg hover:shadow-2xl overflow-hidden flex flex-col justify-between"
                         >
-                            <div className="absolute top-0 right-0 w-48 h-48 bg-sky-500/5 rounded-full -mr-24 -mt-24 blur-3xl transition-all group-hover:bg-sky-500/10" />
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full -mr-16 -mt-16 blur-2xl transition-all group-hover:bg-sky-500/10" />
                             
-                            <div className="flex justify-between items-center mb-12 relative z-10 w-full">
-                                
-                                <div className="flex items-center gap-4">
+                            <div className="flex justify-between items-center mb-8 relative z-10 w-full">
+                                <div className="flex items-center gap-3">
                                     {canManageShifts && (
                                         <div className="flex gap-2">
                                             <button 
                                                 onClick={() => { setEditShift(shift); setIsCreateMode(true); }}
-                                                className="w-12 h-12 flex items-center justify-center bg-primary-muted hover:bg-sky-500 hover:text-white rounded-2xl border border-border transition-all shadow-sm group/edit"
+                                                className="w-10 h-10 flex items-center justify-center bg-primary-muted/50 hover:bg-sky-500 hover:text-white rounded-xl border border-border transition-all shadow-sm group/edit"
                                                 title="Edit Pattern"
                                             >
-                                                <IconSettings className="w-5 h-5 group-hover/edit:rotate-45 transition-transform" />
+                                                <IconSettings className="w-4 h-4 group-hover/edit:rotate-45 transition-transform" />
                                             </button>
                                             <button 
                                                 onClick={() => handleDeleteShift(shift._id)}
-                                                className="w-12 h-12 flex items-center justify-center bg-primary-muted hover:bg-rose-500 hover:text-white rounded-2xl border border-border transition-all shadow-sm"
+                                                className="w-10 h-10 flex items-center justify-center bg-primary-muted/50 hover:bg-rose-500 hover:text-white rounded-xl border border-border transition-all shadow-sm"
                                                 title="Delete Pattern"
                                             >
-                                                <IconTrash className="w-5 h-5" />
+                                                <IconTrash className="w-4 h-4" />
                                             </button>
                                         </div>
                                     )}
-                                    <div className="bg-navy-950 dark:bg-sky-500/20 px-6 py-3 rounded-2xl border border-white/10 flex items-center justify-center h-fit min-w-[120px]">
-                                        <span className="text-[10px] font-black text-white dark:text-sky-400 uppercase tracking-widest whitespace-nowrap">
+                                    <div className="bg-navy-950 dark:bg-sky-500/20 px-4 py-2 rounded-xl border border-white/10 flex items-center justify-center h-fit">
+                                        <span className="text-[9px] font-black text-white dark:text-sky-400 uppercase tracking-widest whitespace-nowrap">
                                             {shift.startTime} - {shift.endTime}
                                         </span>
                                     </div>
@@ -185,17 +184,17 @@ const Shifts = () => {
                             </div>
 
                             <div className="relative z-10">
-                                <h3 className="text-2xl font-black text-content-main tracking-tighter uppercase mb-6 group-hover:text-sky-500 transition-colors leading-tight">
+                                <h3 className="text-lg font-black text-content-main tracking-tighter uppercase mb-4 group-hover:text-sky-500 transition-colors leading-tight">
                                     {shift.name}
                                 </h3>
-                                <div className="flex flex-wrap items-center gap-4">
-                                    <div className="flex items-center gap-3 px-5 py-2.5 bg-primary-muted/50 rounded-2xl border border-border text-[9px] font-black text-content-muted uppercase tracking-widest transition-all hover:bg-primary-muted">
-                                        <IconUsers className="w-4 h-4 text-sky-500" />
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <div className="flex items-center gap-2.5 px-4 py-2 bg-primary-muted/30 rounded-xl border border-border text-[8px] font-black text-content-muted uppercase tracking-widest transition-all hover:bg-primary-muted">
+                                        <IconUsers className="w-3.5 h-3.5 text-sky-500" />
                                         {shift.userCount} Assigned
                                     </div>
-                                    <div className="flex items-center gap-3 px-5 py-2.5 bg-primary-muted/50 rounded-2xl border border-border text-[9px] font-black text-content-muted uppercase tracking-widest transition-all hover:bg-primary-muted">
-                                        <IconSync className="w-4 h-4 text-emerald-500" />
-                                        {shift.gracePeriod}m Grace
+                                    <div className="flex items-center gap-2.5 px-4 py-2 bg-primary-muted/30 rounded-xl border border-border text-[8px] font-black text-content-muted uppercase tracking-widest transition-all hover:bg-primary-muted">
+                                        <IconSync className="w-3.5 h-3.5 text-emerald-500" />
+                                        {shift.gracePeriod}m Offset
                                     </div>
                                 </div>
                             </div>
@@ -204,30 +203,30 @@ const Shifts = () => {
                 </div>
 
                 {/* Personnel Roster Section */}
-                <section className="bg-primary-surface rounded-[4rem] border border-border overflow-hidden shadow-2xl relative">
-                    <div className="p-10 border-b border-border bg-slate-50/50 dark:bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/20 shadow-inner">
-                                <IconBriefcase className="w-8 h-8 text-sky-500" />
+                <section className="bg-primary-surface/40 backdrop-blur-3xl rounded-[2.5rem] border border-border overflow-hidden shadow-2xl relative">
+                    <div className="p-8 border-b border-border bg-slate-50/50 dark:bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/20 shadow-inner">
+                                <IconBriefcase className="w-6 h-6 text-sky-500" />
                             </div>
                             <div>
-                                <h3 className="text-3xl font-black text-content-main tracking-tighter uppercase leading-none mb-1.5">Stationing Matrix</h3>
-                                <p className="text-[10px] font-black text-content-muted/60 uppercase tracking-[0.3em]">Operational User Registry</p>
+                                <h3 className="text-2xl font-black text-content-main tracking-tighter uppercase leading-none mb-1">Stationing Matrix</h3>
+                                <p className="text-[9px] font-black text-content-muted/60 uppercase tracking-[0.3em]">Operational Registry</p>
                             </div>
                         </div>
-                        <div className="flex items-center bg-primary-muted/50 px-8 py-4 rounded-[2rem] border border-border shadow-inner">
-                            <span className="text-[11px] font-black text-content-muted uppercase tracking-[0.2em]">Registry Capacity: {users.length} Nodes</span>
+                        <div className="flex items-center bg-primary-muted/50 px-6 py-3 rounded-xl border border-border shadow-inner">
+                            <span className="text-[10px] font-black text-content-muted uppercase tracking-[0.2em]">Capacity: {users.length} Nodes</span>
                         </div>
                     </div>
 
                     <div className="overflow-x-auto custom-scrollbar">
-                        <table className="w-full text-left border-collapse min-w-[1100px]">
+                        <table className="w-full text-left border-collapse min-w-[1000px]">
                             <thead>
                                 <tr className="bg-primary-muted/30">
-                                    <th className="px-12 py-10 text-[10px] font-black uppercase text-content-muted tracking-[0.4em] opacity-50">User Personnel</th>
-                                    <th className="px-12 py-10 text-[10px] font-black uppercase text-content-muted tracking-[0.4em] opacity-50">Sector</th>
-                                    <th className="px-12 py-10 text-[10px] font-black uppercase text-content-muted tracking-[0.4em] opacity-50">Timing Protocol</th>
-                                    <th className="px-12 py-10 text-[10px] font-black uppercase text-content-muted tracking-[0.4em] opacity-50 text-right">System Action</th>
+                                    <th className="px-10 py-6 text-[9px] font-black uppercase text-content-muted tracking-[0.4em] opacity-50">Personnel</th>
+                                    <th className="px-10 py-6 text-[9px] font-black uppercase text-content-muted tracking-[0.4em] opacity-50">Sector</th>
+                                    <th className="px-10 py-6 text-[9px] font-black uppercase text-content-muted tracking-[0.4em] opacity-50">Timing</th>
+                                    <th className="px-10 py-6 text-[9px] font-black uppercase text-content-muted tracking-[0.4em] opacity-50 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/20">
@@ -235,53 +234,53 @@ const Shifts = () => {
                                     const userShift = shifts.find(s => s._id === member.shift_id);
                                     return (
                                         <tr key={member.id} className="hover:bg-primary-muted/40 group transition-all duration-300">
-                                            <td className="px-12 py-10">
-                                                <div className="flex items-center gap-6">
-                                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-500/20 to-sky-500/5 flex items-center justify-center font-black text-sky-500 text-base shadow-inner border border-sky-500/20 group-hover:scale-105 transition-transform">
+                                            <td className="px-10 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500/20 to-sky-500/5 flex items-center justify-center font-black text-sky-500 text-sm shadow-inner border border-sky-500/20 group-hover:scale-105 transition-transform">
                                                         {member.full_name?.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <p className="text-base font-black text-content-main uppercase tracking-tight mb-1">{member.full_name}</p>
-                                                        <p className="text-[11px] font-medium text-content-muted/60 lowercase tracking-widest">{member.email}</p>
+                                                        <p className="text-sm font-black text-content-main uppercase tracking-tight mb-0.5">{member.full_name}</p>
+                                                        <p className="text-[9px] font-medium text-content-muted/60 lowercase tracking-widest">{member.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-12 py-10">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-2 h-2 rounded-full bg-sky-500/40" />
-                                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-content-muted/80">
+                                            <td className="px-10 py-6">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-sky-500/40" />
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-content-muted/80">
                                                         {member.department || 'GLOBAL'}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-12 py-10">
+                                            <td className="px-10 py-6">
                                                 {userShift ? (
-                                                    <div className="flex items-center gap-5 bg-primary-muted/40 p-4 pr-8 rounded-3xl border border-border group-hover:bg-white dark:group-hover:bg-navy-950 group-hover:border-sky-500/30 transition-all shadow-sm w-fit">
-                                                        <div className="w-12 h-12 rounded-2xl bg-primary-surface flex items-center justify-center shadow-md border border-border group-hover:scale-110 transition-transform">
-                                                            {getShiftIcon(userShift.startTime, "w-6 h-6")}
+                                                    <div className="flex items-center gap-4 bg-primary-muted/40 p-3 pr-6 rounded-2xl border border-border group-hover:bg-white dark:group-hover:bg-navy-950 group-hover:border-sky-500/30 transition-all shadow-sm w-fit">
+                                                        <div className="w-9 h-9 rounded-xl bg-primary-surface flex items-center justify-center shadow-md border border-border group-hover:scale-110 transition-transform">
+                                                            {getShiftIcon(userShift.startTime, "w-5 h-5")}
                                                         </div>
                                                         <div>
-                                                            <p className="text-[11px] font-black text-content-main uppercase tracking-[0.15em] leading-none mb-1.5">{userShift.name}</p>
-                                                            <p className="text-[10px] font-bold text-sky-500 tracking-tighter flex items-center gap-2">
-                                                                <IconClock className="w-3 h-3" />
+                                                            <p className="text-[10px] font-black text-content-main uppercase tracking-[0.15em] leading-none mb-1">{userShift.name}</p>
+                                                            <p className="text-[9px] font-bold text-sky-500 tracking-tighter flex items-center gap-1.5">
+                                                                <IconClock className="w-2.5 h-2.5" />
                                                                 {userShift.startTime} — {userShift.endTime}
                                                             </p>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-4 py-2 px-5 rounded-2xl bg-rose-500/5 border border-rose-500/10 w-fit">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
-                                                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] leading-none">Status: Unstationed</span>
+                                                    <div className="flex items-center gap-3 py-1.5 px-4 rounded-xl bg-rose-500/5 border border-rose-500/10 w-fit">
+                                                        <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+                                                        <span className="text-[9px] font-black text-rose-500 uppercase tracking-[0.2em] leading-none">Unstationed</span>
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-12 py-10 text-right">
+                                            <td className="px-10 py-6 text-right">
                                                 {canManageShifts && (
                                                     <button 
                                                         onClick={() => setSelectedUser(member)}
-                                                        className="w-14 h-14 flex items-center justify-center bg-primary-muted rounded-2xl border border-border hover:border-sky-500/50 hover:bg-sky-500 hover:text-white transition-all active:scale-90 group/btn shadow-md"
+                                                        className="w-10 h-10 flex items-center justify-center bg-primary-muted rounded-xl border border-border hover:border-sky-500/50 hover:bg-sky-500 hover:text-white transition-all active:scale-90 group/btn shadow-md"
                                                     >
-                                                        <IconEdit className="w-6 h-6" />
+                                                        <IconEdit className="w-4 h-4" />
                                                     </button>
                                                 )}
                                             </td>
@@ -293,21 +292,21 @@ const Shifts = () => {
                     </div>
 
                     {/* Matrix Pagination Controls */}
-                    <div className="p-10 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-8 bg-slate-50/30 dark:bg-white/5">
+                    <div className="p-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-6 bg-slate-50/30 dark:bg-white/5">
                         <button 
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="w-full sm:w-auto flex items-center justify-center gap-4 px-10 py-5 rounded-[2rem] bg-primary-muted text-[11px] font-black uppercase tracking-[0.25em] disabled:opacity-30 hover:bg-sky-500 hover:text-white transition-all shadow-md active:scale-95 text-content-muted"
+                            className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-primary-muted text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-30 hover:bg-sky-500 hover:text-white transition-all shadow-md active:scale-95 text-content-muted"
                         >
-                            <IconChevronLeft className="w-4 h-4" />
+                            <IconChevronLeft className="w-3.5 h-3.5" />
                             Previous Trace
                         </button>
-                        <div className="flex items-center gap-4 overflow-x-auto py-2 px-6 max-w-full no-scrollbar">
+                        <div className="flex items-center gap-3 overflow-x-auto py-2 px-4 max-w-full no-scrollbar">
                             {Array.from({ length: totalPages }).map((_, i) => (
                                 <button
                                     key={i}
                                     onClick={() => setCurrentPage(i + 1)}
-                                    className={`min-w-[48px] h-12 rounded-2xl font-black text-sm transition-all shadow-sm ${
+                                    className={`min-w-[40px] h-10 rounded-xl font-black text-xs transition-all shadow-sm ${
                                         currentPage === i + 1 
                                         ? 'bg-sky-500 text-white shadow-xl shadow-sky-500/40 scale-110' 
                                         : 'bg-primary-muted text-content-muted hover:text-sky-500 hover:bg-sky-500/10'
@@ -320,10 +319,10 @@ const Shifts = () => {
                         <button 
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="w-full sm:w-auto flex items-center justify-center gap-4 px-10 py-5 rounded-[2rem] bg-primary-muted text-[11px] font-black uppercase tracking-[0.25em] disabled:opacity-30 hover:bg-sky-500 hover:text-white transition-all shadow-md active:scale-95 text-content-muted"
+                            className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-primary-muted text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-30 hover:bg-sky-500 hover:text-white transition-all shadow-md active:scale-95 text-content-muted"
                         >
                             Next Trace
-                            <IconChevronRight className="w-4 h-4" />
+                            <IconChevronRight className="w-3.5 h-3.5" />
                         </button>
                     </div>
                 </section>
@@ -341,49 +340,49 @@ const Shifts = () => {
                         <motion.div 
                             initial={{ scale: 0.9, y: 50, opacity: 0 }}
                             animate={{ scale: 1, y: 0, opacity: 1 }}
-                            className="bg-primary-surface rounded-[4rem] border border-sky-500/20 shadow-[0_40px_100px_rgba(0,0,0,0.6)] p-12 w-full max-w-xl flex flex-col gap-12 relative overflow-hidden"
+                            className="bg-primary-surface/90 backdrop-blur-3xl rounded-[2.5rem] border border-sky-500/20 shadow-[0_40px_100px_rgba(0,0,0,0.6)] p-10 w-full max-w-lg flex flex-col gap-8 relative overflow-hidden"
                         >
-                             <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/20 rounded-full -mr-40 -mt-40 blur-3xl opacity-50" />
+                             <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/20 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
                             
                             <div className="flex justify-between items-start relative z-10">
                                 <div>
-                                    <h3 className="text-4xl font-black text-content-main tracking-tighter uppercase leading-none">
-                                        Shift <span className="text-sky-500 italic">Alignment</span>
+                                    <h3 className="text-2xl font-black text-content-main tracking-tighter uppercase leading-none">
+                                        Temporal <span className="text-sky-500 italic">Alignment</span>
                                     </h3>
-                                    <p className="text-[11px] font-black text-content-muted uppercase tracking-[0.4em] mt-4 flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
-                                        Target Node: {selectedUser.full_name}
+                                    <p className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] mt-3 flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+                                        Target: {selectedUser.full_name}
                                     </p>
                                 </div>
-                                <button onClick={() => setSelectedUser(null)} className="w-14 h-14 flex items-center justify-center text-content-muted font-black border border-border bg-primary-muted rounded-[2rem] hover:bg-rose-500 hover:text-white transition-all shadow-lg">✕</button>
+                                <button onClick={() => setSelectedUser(null)} className="w-10 h-10 flex items-center justify-center text-content-muted bg-primary-muted/50 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-lg border border-border/50">✕</button>
                             </div>
 
-                            <div className="space-y-5 max-h-[480px] overflow-y-auto pr-4 custom-scrollbar relative z-10">
+                            <div className="space-y-4 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
                                 {shifts.map((shift) => (
                                     <button 
                                         key={shift._id}
                                         onClick={() => handleAssignShift(selectedUser.id, shift._id)}
-                                        className={`w-full p-8 border rounded-[3rem] flex items-center justify-between transition-all group shadow-sm ${
+                                        className={`w-full p-6 border rounded-[1.5rem] flex items-center justify-between transition-all group shadow-sm ${
                                             selectedUser.shift_id === shift._id 
-                                            ? 'bg-sky-500/10 border-sky-500 shadow-sky-500/30' 
-                                            : 'bg-primary-muted/30 border-border hover:border-sky-500/50 hover:bg-primary-surface'
+                                            ? 'bg-sky-500/10 border-sky-500 shadow-sky-500/20' 
+                                            : 'bg-white/40 dark:bg-black/20 border-border/50 hover:border-sky-500/50 hover:bg-white dark:hover:bg-black/40'
                                         }`}
                                     >
-                                        <div className="flex items-center gap-8">
-                                            <div className="w-16 h-16 bg-white dark:bg-navy-950 rounded-[1.5rem] flex items-center justify-center shadow-md border border-border group-hover:scale-110 transition-transform">
-                                                {getShiftIcon(shift.startTime, "w-8 h-8")}
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-12 h-12 bg-white dark:bg-navy-950 rounded-xl flex items-center justify-center shadow-md border border-border group-hover:scale-110 transition-transform">
+                                                {getShiftIcon(shift.startTime, "w-6 h-6")}
                                             </div>
                                             <div className="text-left">
-                                                <p className="text-base font-black text-content-main uppercase tracking-[0.1em]">{shift.name}</p>
-                                                <p className="text-xs font-bold text-sky-500 tracking-tight mt-1.5 opacity-80">{shift.startTime} — {shift.endTime}</p>
+                                                <p className="text-sm font-black text-content-main uppercase tracking-[0.1em]">{shift.name}</p>
+                                                <p className="text-[10px] font-bold text-sky-500 tracking-tight mt-1 opacity-80">{shift.startTime} — {shift.endTime}</p>
                                             </div>
                                         </div>
                                         {selectedUser.shift_id === shift._id ? (
-                                            <div className="w-12 h-12 bg-sky-500 rounded-full flex items-center justify-center shadow-xl shadow-sky-500/40">
-                                                <IconSync className="w-6 h-6 text-white animate-spin-slow" />
+                                            <div className="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center shadow-xl shadow-sky-500/40">
+                                                <IconSync className="w-4 h-4 text-white animate-spin-slow" />
                                             </div>
                                         ) : (
-                                            <div className="w-10 h-10 rounded-full border-[6px] border-border group-hover:border-sky-500 transition-all scale-75 group-hover:scale-100 shadow-inner" />
+                                            <div className="w-6 h-6 rounded-full border-[4px] border-border group-hover:border-sky-500 transition-all scale-75 group-hover:scale-100 shadow-inner" />
                                         )}
                                     </button>
                                 ))}
@@ -403,27 +402,33 @@ const Shifts = () => {
                         className="fixed inset-0 z-[1100] bg-navy-950/90 backdrop-blur-2xl flex items-center justify-center p-6"
                     >
                         <motion.div 
-                            initial={{ scale: 0.95, y: 50, opacity: 0 }}
+                            initial={{ scale: 0.9, y: 30, opacity: 0 }}
                             animate={{ scale: 1, y: 0, opacity: 1 }}
-                            className="bg-white/80 dark:bg-navy-950/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/20 dark:border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.3)] p-10 w-full max-w-lg flex flex-col gap-8 overflow-hidden relative"
+                            className="bg-white/95 dark:bg-navy-950/95 backdrop-blur-3xl rounded-[2rem] border-2 border-border/50 dark:border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.5)] p-10 w-full max-w-lg flex flex-col gap-8 overflow-hidden relative group/modal"
                         >
-                            <div className="absolute top-0 left-0 w-full h-2.5 bg-sky-500/20 overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1.5 bg-sky-500/20 overflow-hidden">
                                 <motion.div 
                                     initial={{ x: '-100%' }}
                                     animate={{ x: '100%' }}
                                     transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                                    className="w-1/2 h-full bg-sky-500 shadow-[0_0_20px_#0ea5e9]"
+                                    className="w-1/2 h-full bg-sky-500"
                                 />
                             </div>
 
                             <div className="flex justify-between items-start relative z-10">
-                                <div>
-                                    <h3 className="text-3xl font-black text-content-main tracking-tighter uppercase leading-none">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse shadow-[0_0_10px_rgba(14,165,233,0.8)]" />
+                                        <span className="text-[9px] font-black text-sky-500 uppercase tracking-[0.4em]">Temporal Protocol</span>
+                                    </div>
+                                    <h3 className="text-2xl font-black text-content-main tracking-tighter uppercase leading-none">
                                         {editShift ? 'Remaster' : 'Engineer'} <span className="text-sky-500 italic">Temporal</span>
                                     </h3>
-                                    <p className="text-[9px] font-black text-content-muted uppercase tracking-[0.4em] mt-3 opacity-70 text-left">System Timing Calibration Framework</p>
+                                    <p className="text-[9px] font-black text-content-muted uppercase tracking-[0.3em] mt-2 opacity-70 text-left border-l-2 border-sky-500/30 pl-3">Timing Calibration Framework</p>
                                 </div>
-                                <button onClick={() => { setIsCreateMode(false); setEditShift(null); }} className="w-10 h-10 flex items-center justify-center text-content-muted font-black bg-primary-muted/50 rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-border/40">✕</button>
+                                <button onClick={() => { setIsCreateMode(false); setEditShift(null); }} className="w-10 h-10 flex items-center justify-center text-content-muted bg-primary-muted rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-border">
+                                    ✕
+                                </button>
                             </div>
 
                             <form 
@@ -437,60 +442,57 @@ const Shifts = () => {
                                         gracePeriod: parseInt(formData.get('gracePeriod'))
                                     });
                                 }}
-                                className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10"
+                                className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10"
                             >
                                 <div className="col-span-1 md:col-span-2 space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-content-muted ml-2 opacity-60">Pattern Designation</label>
+                                    <label className="text-[9px] font-black uppercase tracking-[0.3em] text-content-muted ml-1">Pattern Designation</label>
                                     <input 
                                         name="name"
                                         defaultValue={editShift?.name}
                                         required
                                         placeholder="E.G. ALPHA CORE OPERATIONS"
-                                        className="w-full bg-primary-muted/30 p-5 rounded-2xl border-2 border-transparent focus:border-sky-500/50 focus:bg-white dark:focus:bg-navy-950 outline-none text-[11px] font-black uppercase tracking-widest transition-all shadow-inner"
+                                        className="w-full bg-primary-muted border-2 border-transparent hover:border-sky-500/30 focus:border-sky-500 focus:bg-white dark:focus:bg-navy-900 rounded-2xl p-4 text-[11px] font-black uppercase tracking-widest text-content-main outline-none transition-all shadow-inner placeholder:text-content-muted/30"
                                     />
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 ml-2 opacity-60">Cycle Start (24h)</label>
+                                    <label className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-500 ml-1">Cycle Start</label>
                                     <input 
                                         name="startTime"
                                         type="time"
                                         defaultValue={editShift?.startTime}
                                         required
-                                        className="w-full bg-primary-muted/30 p-5 rounded-2xl border-2 border-transparent focus:border-emerald-500/50 focus:bg-white dark:focus:bg-navy-950 outline-none text-xs font-black transition-all shadow-inner"
+                                        className="w-full bg-primary-muted border-2 border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-navy-900 rounded-2xl p-4 text-xs font-black text-content-main transition-all [color-scheme:light] dark:[color-scheme:dark]"
                                     />
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500 ml-2 opacity-60">Cycle End (24h)</label>
+                                    <label className="text-[9px] font-black uppercase tracking-[0.3em] text-rose-500 ml-1">Cycle End</label>
                                     <input 
                                         name="endTime"
                                         type="time"
                                         defaultValue={editShift?.endTime}
                                         required
-                                        className="w-full bg-primary-muted/30 p-5 rounded-2xl border-2 border-transparent focus:border-rose-500/50 focus:bg-white dark:focus:bg-navy-950 outline-none text-xs font-black transition-all shadow-inner"
+                                        className="w-full bg-primary-muted border-2 border-transparent focus:border-rose-500 focus:bg-white dark:focus:bg-navy-900 rounded-2xl p-4 text-xs font-black text-content-main transition-all [color-scheme:light] dark:[color-scheme:dark]"
                                     />
                                 </div>
 
                                 <div className="col-span-1 md:col-span-2 space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-content-muted ml-2 opacity-60">Buffer / Grace Period (min)</label>
+                                    <label className="text-[9px] font-black uppercase tracking-[0.3em] text-content-muted ml-1 flex items-center gap-2">Buffer Offset (min)</label>
                                     <input 
                                         name="gracePeriod"
                                         type="number"
                                         defaultValue={editShift?.gracePeriod || 0}
-                                        placeholder="0"
-                                        className="w-full bg-primary-muted/30 p-5 rounded-2xl border-2 border-transparent focus:border-sky-500/50 focus:bg-white dark:focus:bg-navy-950 outline-none text-[11px] font-black transition-all shadow-inner"
+                                        className="w-full bg-primary-muted border-2 border-transparent focus:border-sky-500 focus:bg-white dark:focus:bg-navy-900 rounded-2xl p-4 text-[11px] font-black text-content-main transition-all"
                                     />
                                 </div>
 
                                 <div className="col-span-1 md:col-span-2 pt-4">
                                     <button 
                                         type="submit"
-                                        className="w-full py-6 bg-sky-500 hover:bg-sky-600 text-white font-black rounded-2xl shadow-xl shadow-sky-500/20 transition-all uppercase tracking-[0.3em] text-[10px] flex items-center justify-center gap-4 active:scale-95 group overflow-hidden relative"
+                                        className="w-full py-5 bg-sky-500 hover:bg-sky-600 text-white font-black rounded-2xl shadow-xl transition-all uppercase tracking-[0.3em] text-[10px] flex items-center justify-center gap-4 active:scale-95 group overflow-hidden relative"
                                     >
-                                        <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                                        <span className="relative z-10">Seal Framework</span>
-                                        <IconSync className="w-4 h-4 group-hover:rotate-180 transition-transform duration-700 relative z-10" />
+                                        Confirm Protocol
                                     </button>
                                 </div>
                             </form>
