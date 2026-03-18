@@ -47,7 +47,7 @@ const getUsers = async (req, res) => {
 // @access  Private
 const createUser = async (req, res) => {
   try {
-    const { username, password, email, full_name, role, manager } = req.body;
+    const { username, password, email, full_name, role, manager, department } = req.body;
     
     // Task 3: Hierarchy Protection
     if (manager) {
@@ -73,7 +73,8 @@ const createUser = async (req, res) => {
       email,
       full_name,
       role: role || 'employee',
-      manager: manager || null
+      manager: manager || null,
+      department: department || 'General'
     });
     
     const userResponse = user.toObject();
