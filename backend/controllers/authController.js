@@ -8,10 +8,16 @@ const asyncHandler = require('../utils/asyncHandler');
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
   console.log('Login attempt received:', req.body);
-  const { username, password } = req.body;
+  const { username, password } = req.body; // 'username' here acts as a generic identifier (username or email)
 
-  const user = await User.findOne({ username });
-  console.log('User lookup result:', user ? 'Found' : 'Not Found');
+  // Search for user by either username OR email
+  const user = await User.findOne({ 
+    $or: [
+      { username: username }, 
+      { email: username }
+    ]
+  });
+  console.log('User lookup result:', user ? `Found (${user.username})` : 'Not Found');
 
   if (!user) {
     return res.status(401).json({ success: false, message: 'Invalid username or password' });

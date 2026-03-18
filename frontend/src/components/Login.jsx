@@ -61,14 +61,14 @@ function Login({ setToken }) {
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username / Email</label>
                 <input
                   type="text"
                   className="w-full bg-navy-900/50 border border-slate-800 text-white rounded-2xl py-4 px-6 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all font-bold placeholder:text-slate-700"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  placeholder="admin_opti"
+                  placeholder="admin@optioffice.com"
                 />
               </div>
               
