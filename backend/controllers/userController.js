@@ -34,7 +34,7 @@ const getMe = async (req, res) => {
 // @access  Private
 const getUsers = async (req, res) => {
   try {
-    const filter = getScope(req);
+    const filter = await getScope(req);
     const users = await User.find(filter).select('-hashed_password');
     res.json(users);
   } catch (error) {

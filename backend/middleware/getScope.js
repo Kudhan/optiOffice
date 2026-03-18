@@ -1,47 +1,60 @@
 const User = require('../models/User');
+const Role = require('../models/Role');
 
 /**
  * Security Utility: getScope
- * Returns a basic MongoDB filter for the collection context.
+ * Returns a MongoDB filter based on the Role's scopeType configuration.
+ * Scenarios:
+ * 1. Global (Admin/HR): Sees everyone in tenant.
+ * 2. Departmental (Dept Head): Sees everyone in their department.
+ * 3. DirectReport (Standard Manager): Sees their reporting line.
  */
-const getScope = (req) => {
-  const { role, tenantId, id } = req.user;
-  if (role === 'admin' || role === 'super-admin') return { tenantId };
-  if (role === 'manager') return { tenantId, $or: [{ manager: id }, { _id: id }] };
-  return { tenantId, _id: id };
-};
+const getScope = async (req) => {
+  const { role: roleName, tenantId, id } = req.user;
 
-/**
- * Security Utility: getTeamScope
- * Fetches the IDs or Usernames of everyone in the user's reporting line.
- * Useful for Attendance, Task, and Activity logging.
- */
-const getTeamScope = async (req, type = 'id') => {
-  const { role, tenantId, id, sub } = req.user;
+  // Find role to determine depth of access
+  const roleDoc = await Role.findOne({ name: roleName, tenantId });
+  const scopeType = roleDoc ? roleDoc.scopeType : 'DirectReport';
 
-  // Admins are not scoped by team
-  if (role === 'admin' || role === 'super-admin') {
+  // Admins always have Global access regardless of map
+  if (roleName === 'admin' || roleName === 'super-admin' || scopeType === 'Global') {
     return { tenantId };
   }
 
-  // Managers see their team + themselves
-  if (role === 'manager') {
-    const team = await User.find({
-      tenantId,
-      $or: [{ manager: id }, { _id: id }]
-    }).select('_id username');
+  // Fetch current user details for department/manager context
+  const currentUser = await User.findById(id).select('department_id department');
 
-    if (type === 'username') {
-      return { tenantId, assigned_to: { $in: team.map(u => u.username) } };
-    }
-    return { tenantId, user: { $in: team.map(u => u._id) } };
+  if (scopeType === 'Departmental') {
+    return { 
+      tenantId, 
+      $or: [
+        { department_id: currentUser.department_id },
+        { department: currentUser.department } // Compatibility fallback
+      ]
+    };
   }
 
-  // Employees only see themselves
+  // Default: DirectReport / Standard Manager
+  return { 
+    tenantId, 
+    $or: [{ manager: id }, { _id: id }] 
+  };
+};
+
+/**
+ * Security Utility: getTeamScope (Aggregated Filter)
+ * Used for cross-collection queries (Attendance, Tasks)
+ */
+const getTeamScope = async (req, type = 'id') => {
+  const filter = await getScope(req);
+  
+  // Convert results of getScope into a set of User IDs or Usernames
+  const users = await User.find(filter).select('_id username');
+  
   if (type === 'username') {
-    return { tenantId, assigned_to: sub };
+    return { tenantId: req.user.tenantId, assigned_to: { $in: users.map(u => u.username) } };
   }
-  return { tenantId, user: id };
+  return { tenantId: req.user.tenantId, user: { $in: users.map(u => u._id) } };
 };
 
 module.exports = { getScope, getTeamScope };

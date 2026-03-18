@@ -10,7 +10,7 @@ const { getScope, getTeamScope } = require('../middleware/getScope');
 const getDashboardData = async (req, res) => {
   try {
     const role = req.user.role;
-    const userFilter = getScope(req);
+    const userFilter = await getScope(req);
     const taskScope = await getTeamScope(req, 'username');
     // Note: Leave model likely uses 'user' field (ObjectId), building scope for it
     const idScope = await getTeamScope(req, 'id');

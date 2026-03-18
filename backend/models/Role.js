@@ -17,6 +17,11 @@ const roleSchema = mongoose.Schema({
   permissions: {
     type: [String],
     default: []
+  },
+  scopeType: {
+    type: String,
+    enum: ['Global', 'Departmental', 'DirectReport'],
+    default: 'DirectReport'
   }
 }, {
   collection: 'roles_collection',
