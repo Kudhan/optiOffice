@@ -15,6 +15,10 @@ const departmentSchema = mongoose.Schema({
     type: String,
     required: true,
     index: true
+  },
+  zone: {
+    type: [{ x: Number, y: Number }],
+    default: []
   }
 }, {
   collection: 'departments_collection',
