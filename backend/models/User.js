@@ -80,7 +80,17 @@ const userSchema = mongoose.Schema({
     notifications: { type: String, default: "email" }
   }
 }, {
-  collection: 'users_collection' 
+  collection: 'users_collection',
+  timestamps: true
+});
+
+userSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    ret.id = ret._id.toString();
+    delete ret._id;
+  }
 });
 
 module.exports = mongoose.model('User', userSchema);

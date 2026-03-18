@@ -38,13 +38,37 @@ apiClient.interceptors.response.use(
       const message = response.data.message || response.data.detail || 'An unexpected error occurred';
 
       // Authentication Errors
-      if (status === 401 || status === 403) {
+      if (status === 401) {
         localStorage.removeItem('token');
         toast.error('Session expired. Please login again.');
         setTimeout(() => {
-          window.location.href = '/login';
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
         }, 1500);
       } 
+      // Authorization/Forbidden Errors (Security Warnings)
+      // These triggered accidental logouts before; now they selectively warn the user
+      else if (status === 403) {
+        const securityDetail = response.data?.detail || response.data?.message || 'Access Denied: Security Policy Enforced.';
+        // We do NOT clear the token here.
+        toast.error(securityDetail, {
+          duration: 5000,
+          id: 'security-restriction', // Prevent multiple duplicate toasts
+          style: { 
+            borderRadius: '20px', 
+            background: '#0B1120', 
+            color: '#fff',
+            border: '1px solid rgba(244, 63, 94, 0.4)',
+            fontSize: '12px',
+            fontWeight: '900',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }
+        });
+        // Important: Stop the propagation to prevent handleRoleChange success logic from running
+        return Promise.reject(error);
+      }
       // Validation or Client Errors
       else if (status === 400 || status === 422) {
         toast.error(message);

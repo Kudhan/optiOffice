@@ -7,7 +7,11 @@ import InviteUserModal from './InviteUserModal';
 
 // --- Member Card Sub-Component ---
 const MemberCard = ({ user, onRefresh }) => {
-    const { isAdmin: currentIsAdmin } = useAuth();
+    const { isAdmin: currentIsAdmin, user: currentUser, permissions } = useAuth();
+    // Normalize both IDs to strings for robust comparison
+    const isSelf = String(user._id) === String(currentUser?._id);
+    const canManage = permissions.includes('can_manage_users') && !isSelf;
+    const canEditRoles = permissions.includes('can_edit_roles');
     const [showActions, setShowActions] = useState(false);
     const initials = user.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '??';
     const isOnline = user.status === 'Clocked In' || user.status === 'Online';
@@ -60,7 +64,7 @@ const MemberCard = ({ user, onRefresh }) => {
         <div className="bg-white dark:bg-slate-800/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-2xl hover:border-sky-500/50 transition-all duration-500 group relative flex flex-col h-full">
             
             {/* Admin Action Menu */}
-            {currentIsAdmin && (
+            {canManage && (
                 <div className="absolute top-5 right-5 z-20">
                     <button 
                         onClick={() => setShowActions(!showActions)}
@@ -72,13 +76,15 @@ const MemberCard = ({ user, onRefresh }) => {
                     {showActions && (
                         <div className="absolute right-0 mt-2 w-52 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800/80 overflow-hidden animate-scale-in z-30">
                             <div className="p-1.5 space-y-0.5">
-                                <button onClick={() => handleRoleChange('admin')} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 hover:bg-sky-500/10 hover:text-sky-500 rounded-xl transition-all">
-                                    <span className="text-sm">👑</span>
-                                    Promote to Admin
-                                </button>
+                                {currentIsAdmin && (
+                                    <button onClick={() => handleRoleChange('admin')} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 hover:bg-sky-500/10 hover:text-sky-500 rounded-xl transition-all">
+                                        <span className="text-sm">👑</span>
+                                        Promote to Admin
+                                    </button>
+                                )}
                                 <button onClick={() => handleRoleChange('employee')} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl transition-all">
                                     <span className="text-sm">👤</span>
-                                    Demote to Employee
+                                    Set as Employee
                                 </button>
                             </div>
                             <div className="h-[1px] bg-slate-100 dark:bg-slate-800/80 mx-3"></div>
