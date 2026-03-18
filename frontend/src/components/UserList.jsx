@@ -123,7 +123,12 @@ const MemberCard = ({ user, onRefresh }) => {
                 </div>
                 <div className="bg-slate-50 dark:bg-navy-950/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/50 overflow-hidden">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 opacity-70 truncate">Deployment</p>
-                    <p className="text-[10px] font-black text-slate-900 dark:text-slate-300 uppercase truncate tracking-tighter">{user.department || 'Not Assigned'}</p>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] grayscale group-hover:grayscale-0 transition-all">
+                            {user.department === 'Engineering' ? '⚙️' : user.department === 'HR' ? '👥' : user.department === 'Sales' ? '💰' : '🏢'}
+                        </span>
+                        <p className="text-[10px] font-black text-slate-900 dark:text-slate-300 uppercase truncate tracking-tighter">{user.department || 'Not Assigned'}</p>
+                    </div>
                 </div>
             </div>
 

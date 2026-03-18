@@ -8,7 +8,12 @@ import {
   WeeklyPresence, 
   PriorityTasks,
   QuickActionsRow,
-  FloorDynamics
+  FloorDynamics,
+  HiringPipeline,
+  PendingLeaveApprovals,
+  DailyAttendancePercent,
+  ProjectVelocity,
+  DepartmentHeatmap
 } from './Widgets';
 import { CardSkeleton, ListSkeleton } from './Skeleton';
 import InviteUserModal from './InviteUserModal';
@@ -187,6 +192,37 @@ function Dashboard() {
     </div>
   );
 
+  const HRView = (
+    <div className="grid grid-cols-12 gap-10">
+        <HiringPipeline isLoading={isLoading} />
+        <PendingLeaveApprovals isLoading={isLoading} />
+        <DailyAttendancePercent isLoading={isLoading} />
+        <div className="col-span-12 lg:col-span-8">
+            <StatsWidget stats={data?.stats} isLoading={isLoading} />
+        </div>
+        <div className="col-span-12 lg:col-span-4">
+             <FloorDynamics isLoading={isLoading} />
+        </div>
+    </div>
+  );
+
+  const FunctionalView = (
+    <div className="grid grid-cols-12 gap-10">
+        <div className="col-span-12 lg:col-span-8">
+            <div className="grid grid-cols-2 gap-10 h-full">
+                <ProjectVelocity isLoading={isLoading} />
+                <DepartmentHeatmap isLoading={isLoading} />
+            </div>
+        </div>
+        <div className="col-span-12 lg:col-span-4">
+            <PriorityTasks tasks={data?.tasks} title="Team Priority" isLoading={isLoading} />
+        </div>
+        <div className="col-span-12">
+            <StatsWidget stats={data?.stats} isLoading={isLoading} />
+        </div>
+    </div>
+  );
+
   const EmployeeView = (
     <div className="grid grid-cols-12 gap-10">
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-10">
@@ -271,7 +307,14 @@ function Dashboard() {
         </div>
 
         {/* Dynamic Bento Swap */}
-        {(isAdmin || isManager) ? AdminView : EmployeeView}
+        {(() => {
+            if (isAdmin && user?.department === 'HR') return HRView;
+            if (isAdmin || isManager) {
+                if (['Engineering', 'Sales', 'Operations'].includes(user?.department)) return FunctionalView;
+                return AdminView;
+            }
+            return EmployeeView;
+        })()}
 
         <InviteUserModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
     </div>

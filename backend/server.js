@@ -43,6 +43,7 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const assetRoutes = require('./routes/assetRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
 
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/organization', organizationRoutes);
@@ -55,6 +56,7 @@ app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/leaves', leaveRoutes);
 app.use('/api/v1/assets', assetRoutes);
 app.use('/api/v1/tasks', taskRoutes);
+app.use('/api/v1/departments', departmentRoutes);
 
 // Legacy/Alternative Mounts (Ensuring standard bento boxes work)
 app.use('/dashboard', dashboardRoutes);
@@ -62,6 +64,7 @@ app.use('/organization', organizationRoutes);
 app.use('/users', userRoutes);
 app.use('/attendance', attendanceRoutes);
 app.use('/tasks', taskRoutes);
+app.use('/departments', departmentRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: "Office SaaS APIs (Express) are running" });

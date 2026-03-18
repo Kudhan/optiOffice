@@ -14,6 +14,7 @@ import Leaves from './components/Leaves';
 import Tasks from './components/Tasks';
 import Profile from './components/Profile';
 import Roles from './components/Roles';
+import Departments from './components/Departments';
 import Policies from './components/Policies';
 import Placeholder from './components/Placeholder';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -71,6 +72,11 @@ function App() {
               <Route path="roles" element={
                 <ProtectedRoute requiredPermission="can_manage_users">
                   <Roles />
+                </ProtectedRoute>
+              } />
+              <Route path="departments" element={
+                <ProtectedRoute requiredPermission="can_manage_users">
+                  <Departments />
                 </ProtectedRoute>
               } />
               <Route path="policies" element={
