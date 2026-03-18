@@ -121,57 +121,57 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/20 dark:bg-navy-950/40 backdrop-blur-md animate-fade-in">
-            <div className="bg-primary-surface w-full max-w-xl rounded-[3rem] p-8 lg:p-10 shadow-2xl border border-border animate-scale-in relative overflow-visible">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-6 bg-navy-950/40 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white/80 dark:bg-navy-950/80 backdrop-blur-2xl w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl border border-white/20 dark:border-white/10 animate-scale-in relative overflow-visible">
                 {/* Ambient Decorative Glow */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none"></div>
                 
                 <div className="relative z-10">
-                    <div className="flex justify-between items-center mb-8">
+                    <div className="flex justify-between items-center mb-10">
                         <div>
-                            <h3 className="text-2xl font-black text-content-main tracking-tighter leading-none">Invite Member</h3>
-                            <p className="text-content-muted font-bold text-[10px] uppercase tracking-widest mt-2 opacity-70">Personnel Authorization Hub</p>
+                            <h3 className="text-3xl font-black text-content-main tracking-tighter leading-none uppercase">Invite <span className="text-sky-500 italic">Personnel</span></h3>
+                            <p className="text-content-muted font-black text-[9px] uppercase tracking-[0.4em] mt-3 opacity-70">Authorization Hub</p>
                         </div>
-                        <button onClick={onClose} className="p-3 hover:bg-primary-muted rounded-2xl transition-all font-bold text-content-muted">ESC</button>
+                        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-primary-muted/50 rounded-xl hover:bg-rose-500 hover:text-white transition-all font-black text-content-muted border border-border/40">✕</button>
                     </div>
                     
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="space-y-2 group">
-                                <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.15em] ml-1 group-focus-within:text-sky-500 transition-colors">Full Name</label>
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-3 group">
+                                <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.2em] ml-1 group-focus-within:text-sky-500 transition-colors">Full Name</label>
                                 <input 
                                     required 
-                                    className="w-full bg-primary-surface border-2 border-border/60 hover:border-border focus:border-sky-500/50 rounded-2xl py-3 px-5 text-sm font-bold text-content-main outline-none transition-all shadow-sm focus:shadow-lg focus:shadow-sky-500/5 placeholder:text-content-muted/30"
+                                    className="w-full bg-primary-muted/30 border-2 border-transparent focus:border-sky-500/50 focus:bg-white dark:focus:bg-navy-950 rounded-2xl py-4 px-6 text-[11px] font-black uppercase tracking-widest text-content-main outline-none transition-all shadow-inner placeholder:text-content-muted/30"
                                     value={formData.full_name}
                                     onChange={e => setFormData({...formData, full_name: e.target.value})}
-                                    placeholder="James Wilson"
+                                    placeholder="JAMES WILSON"
                                 />
                             </div>
-                            <div className="space-y-2 group">
-                                <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.15em] ml-1 group-focus-within:text-sky-500 transition-colors">Username</label>
+                            <div className="space-y-3 group">
+                                <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.2em] ml-1 group-focus-within:text-sky-500 transition-colors">Username</label>
                                 <input 
                                     required 
-                                    className="w-full bg-primary-surface border-2 border-border/60 hover:border-border focus:border-sky-500/50 rounded-2xl py-3 px-5 text-sm font-bold text-content-main outline-none transition-all shadow-sm focus:shadow-lg focus:shadow-sky-500/5 placeholder:text-content-muted/30"
+                                    className="w-full bg-primary-muted/30 border-2 border-transparent focus:border-sky-500/50 focus:bg-white dark:focus:bg-navy-950 rounded-2xl py-4 px-6 text-[11px] font-black uppercase tracking-widest text-content-main outline-none transition-all shadow-inner placeholder:text-content-muted/30"
                                     value={formData.username}
                                     onChange={e => setFormData({...formData, username: e.target.value})}
-                                    placeholder="j_wilson"
+                                    placeholder="J_WILSON"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2 group">
-                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.15em] ml-1 group-focus-within:text-sky-500 transition-colors">Corporate Email</label>
+                        <div className="space-y-3 group">
+                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.2em] ml-1 group-focus-within:text-sky-500 transition-colors">Corporate Email</label>
                             <input 
                                 required 
                                 type="email"
-                                className="w-full bg-primary-surface border-2 border-border/60 hover:border-border focus:border-sky-500/50 rounded-2xl py-3 px-5 text-sm font-bold text-content-main outline-none transition-all shadow-sm focus:shadow-lg focus:shadow-sky-500/5 placeholder:text-content-muted/30"
+                                className="w-full bg-primary-muted/30 border-2 border-transparent focus:border-sky-500/50 focus:bg-white dark:focus:bg-navy-950 rounded-2xl py-4 px-6 text-[11px] font-black lowercase tracking-widest text-content-main outline-none transition-all shadow-inner placeholder:text-content-muted/30"
                                 value={formData.email}
                                 onChange={e => setFormData({...formData, email: e.target.value})}
                                 placeholder="james@optioffice.com"
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-2 gap-6">
                             <CustomSelect
                                 label="Authority Level"
                                 value={formData.role}
@@ -186,19 +186,20 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
                             />
                         </div>
 
-                        <div className="pt-2 flex gap-4">
+                        <div className="pt-6 flex gap-4">
                             <button 
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 bg-primary-muted hover:bg-border text-content-muted font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-[10px]"
+                                className="flex-1 bg-primary-muted/50 hover:bg-rose-500/10 hover:text-rose-500 text-content-muted font-black py-5 rounded-2xl transition-all uppercase tracking-widest text-[10px] border border-border/40"
                             >
-                                Cancel
+                                Abort
                             </button>
                             <button 
                                 type="submit" 
                                 disabled={submitting}
-                                className="flex-[2] bg-sky-500 hover:bg-sky-400 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-sky-500/20 active:scale-95 disabled:opacity-50 uppercase tracking-widest text-[10px]"
+                                className="flex-[2] bg-sky-500 hover:bg-sky-600 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-sky-500/20 active:scale-95 disabled:opacity-50 uppercase tracking-widest text-[10px] overflow-hidden relative group"
                             >
+                                <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                 {submitting ? 'Identifying...' : 'Dispatch Invitation'}
                             </button>
                         </div>

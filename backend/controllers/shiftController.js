@@ -118,9 +118,54 @@ const getShifts = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Update a shift template
+ * @route   PUT /api/v1/shifts/:id
+ * @access  Private (Admin Only)
+ */
+const updateShift = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const tenantId = req.user.tenantId;
+
+  let shift = await Shift.findOne({ _id: id, tenantId });
+  if (!shift) {
+    return res.status(404).json({ success: false, message: 'Shift pattern not found.' });
+  }
+
+  shift = await Shift.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true
+  });
+
+  res.json({ success: true, data: shift });
+});
+
+/**
+ * @desc    Delete a shift template
+ * @route   DELETE /api/v1/shifts/:id
+ * @access  Private (Admin Only)
+ */
+const deleteShift = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const tenantId = req.user.tenantId;
+
+  const shift = await Shift.findOne({ _id: id, tenantId });
+  if (!shift) {
+    return res.status(404).json({ success: false, message: 'Shift pattern not found.' });
+  }
+
+  // Unassign users from this shift before deleting?
+  await User.updateMany({ shift_id: id }, { shift_id: null });
+  await Shift.findByIdAndDelete(id);
+
+  res.json({ success: true, message: 'Shift template deleted and personnel unlinked.' });
+});
+
 module.exports = {
   createShift,
   getShifts,
   assignUserToShift,
-  getShiftDetails
+  getShiftDetails,
+  updateShift,
+  deleteShift
 };

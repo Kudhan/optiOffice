@@ -265,3 +265,8 @@ export const IconSunset = ({ className = "" }) => (
     <path d="M20 10h2" />
   </svg>
 );
+export const IconChevronRight = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <path d="m9 18 6-6-6-6" />
+  </svg>
+);
