@@ -171,11 +171,11 @@ function Layout() {
             title={isCollapsed ? 'View Profile' : ''}
           >
             <div className="w-10 h-10 rounded-full bg-primary-muted flex min-w-[40px] items-center justify-center font-bold text-sky-500 shadow-inner">
-              {user?.sub?.charAt(0).toUpperCase()}
+              {(user?.full_name || user?.username || 'U').charAt(0).toUpperCase()}
             </div>
             {!isCollapsed && (
               <div className="flex-1 overflow-hidden text-left">
-                <p className="text-sm font-bold text-content-main truncate uppercase tracking-tight">{user?.sub || 'User Profile'}</p>
+                <p className="text-sm font-bold text-content-main truncate uppercase tracking-tight">{user?.full_name || user?.username || 'User Profile'}</p>
                 <p className="text-xs text-content-muted font-medium">{user?.role || 'Member'}</p>
               </div>
             )}
@@ -309,7 +309,7 @@ function Layout() {
                         description: 'View overall performance',
                         icon: <IconActivity size={16} />,
                         colorClass: 'bg-sky-500/10 text-sky-500',
-                        onClick: () => navigate(`/profile/${user.id}`)
+                        onClick: () => navigate(`/profile/${user.id || user._id}`)
                     },
                     {
                         label: 'Security Core',

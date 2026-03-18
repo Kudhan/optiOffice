@@ -121,7 +121,7 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-6 bg-navy-950/40 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[999] flex items-start justify-center p-6 bg-navy-950/40 backdrop-blur-sm animate-fade-in">
             <div className="bg-white/80 dark:bg-navy-950/80 backdrop-blur-2xl w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl border border-white/20 dark:border-white/10 animate-scale-in relative overflow-visible">
                 {/* Ambient Decorative Glow */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none"></div>

@@ -8,7 +8,7 @@ const { getScope } = require('../middleware/getScope');
 // @access  Private
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-hashed_password').lean();
+    const user = await User.findById(req.user.id).select('-hashed_password');
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -19,8 +19,10 @@ const getMe = async (req, res) => {
       tenantId: user.tenantId 
     }).lean();
 
+    const userObj = user.toObject();
+    
     res.json({
-      ...user,
+      ...userObj,
       permissions: roleDoc ? roleDoc.permissions : []
     });
   } catch (error) {

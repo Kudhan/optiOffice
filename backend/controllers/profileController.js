@@ -11,10 +11,16 @@ const getProfileData = async (req, res) => {
     const targetUserId = req.params.id;
     const currentUser = req.user;
 
+    // Validate ID before querying to avoid 500 CastError
+    if (!mongoose.isValidObjectId(targetUserId)) {
+        return res.status(400).json({ detail: "Invalid Profile Identifier" });
+    }
+
     // Security & Privacy Check
     // Employee can only access their own profile.
     // Admin/Manager can access anyone within their tenantId.
-    if (currentUser.role === 'employee' && currentUser.id !== targetUserId) {
+    const currentUserId = currentUser.id || currentUser._id;
+    if (currentUser.role === 'employee' && currentUserId !== targetUserId) {
       return res.status(403).json({ detail: "Not authorized to view this profile" });
     }
 

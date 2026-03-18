@@ -49,15 +49,18 @@ function Profile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Determine whose profile we're looking at
-  const targetId = id || currentUser?.id;
-  const isOwnProfile = currentUser?.id === targetId;
+  const targetId = id === "undefined" ? currentUser?.id || currentUser?._id : (id || currentUser?.id || currentUser?._id);
+  const isOwnProfile = (currentUser?.id === targetId) || (currentUser?._id === targetId);
   const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
-    fetchProfileData();
+    if (targetId && targetId !== "undefined") {
+        fetchProfileData();
+    }
   }, [targetId]);
 
   const fetchProfileData = async () => {
+    if (!targetId || targetId === "undefined") return;
     setIsLoading(true);
     try {
       const response = await apiClient.get(`users/profile/${targetId}`);
