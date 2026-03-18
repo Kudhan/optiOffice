@@ -47,7 +47,7 @@ function App() {
               <Route index element={<Dashboard />} />
               
               <Route path="users" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute requiredPermission="can_manage_users">
                   <UserList />
                 </ProtectedRoute>
               } />
@@ -55,7 +55,7 @@ function App() {
               <Route path="organization" element={<Hierarchy />} />
               
               <Route path="billing" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute requiredPermission="can_manage_billing">
                   <Billing />
                 </ProtectedRoute>
               } />
@@ -69,12 +69,12 @@ function App() {
               
               {/* Specialized Guards */}
               <Route path="roles" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute requiredPermission="can_manage_users">
                   <Roles />
                 </ProtectedRoute>
               } />
               <Route path="policies" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute requiredPermission="can_manage_users">
                   <Policies />
                 </ProtectedRoute>
               } />

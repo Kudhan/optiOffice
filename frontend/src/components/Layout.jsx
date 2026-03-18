@@ -29,7 +29,7 @@ import {
 } from './Icons';
 
 function Layout() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, hasPermission } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -84,23 +84,24 @@ function Layout() {
   }
 
   // Define navigation items with roles
+
   const navItems = [
     { label: 'Dashboard', path: '/', icon: <IconDashboard className="w-5 h-5" /> },
-    { label: 'Team Hub', path: '/users', icon: <IconUsers className="w-5 h-5" />, roles: ['admin'] },
-    { label: 'Organization', path: '/organization', icon: <IconBriefcase className="w-5 h-5" />, roles: ['admin', 'manager'] },
+    { label: 'Team Hub', path: '/users', icon: <IconUsers className="w-5 h-5" />, permission: 'can_manage_users' },
+    { label: 'Organization', path: '/organization', icon: <IconBriefcase className="w-5 h-5" /> },
     { label: 'Attendance', path: '/attendance', icon: <IconClock className="w-5 h-5" /> },
     { label: 'Tasks', path: '/tasks', icon: <IconFileText className="w-5 h-5" /> },
     { label: 'Assets', path: '/assets', icon: <IconPackage className="w-5 h-5" /> },
-    { label: 'Billing', path: '/billing', icon: <IconCreditCard className="w-5 h-5" />, roles: ['admin'] },
+    { label: 'Billing', path: '/billing', icon: <IconCreditCard className="w-5 h-5" />, permission: 'can_manage_billing' },
     { label: 'Holidays', path: '/holidays', icon: <IconCalendar className="w-5 h-5" /> },
     { label: 'Leaves', path: '/leaves', icon: <IconMail className="w-5 h-5" /> },
-    { label: 'Roles', path: '/roles', icon: <IconShield className="w-5 h-5" />, roles: ['admin'] },
-    { label: 'Policies', path: '/policies', icon: <IconShield className="w-5 h-5" />, roles: ['admin'] },
-    { label: 'Reports', path: '/reports', icon: <IconBarChart className="w-5 h-5" />, roles: ['admin', 'manager'] },
+    { label: 'Roles', path: '/roles', icon: <IconShield className="w-5 h-5" />, permission: 'can_manage_users' }, // Using same permission for now
+    { label: 'Policies', path: '/policies', icon: <IconShield className="w-5 h-5" />, permission: 'can_manage_users' },
+    { label: 'Reports', path: '/reports', icon: <IconBarChart className="w-5 h-5" /> },
   ];
 
   const filteredNavItems = navItems.filter(item => 
-    !item.roles || item.roles.includes(user?.role)
+    !item.permission || hasPermission(item.permission)
   );
 
   return (

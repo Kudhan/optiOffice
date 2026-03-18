@@ -2,14 +2,18 @@ const User = require('../models/User');
 const Task = require('../models/Task');
 const Leave = require('../models/Leave');
 const Asset = require('../models/Asset');
+const { getScope, getTeamScope } = require('../middleware/getScope');
 
 // @desc    Get dashboard metrics using Aggregation Pipelines
 // @route   GET /dashboard
 // @access  Private
 const getDashboardData = async (req, res) => {
   try {
-    const tenantId = req.user.tenantId;
     const role = req.user.role;
+    const userFilter = getScope(req);
+    const taskScope = await getTeamScope(req, 'username');
+    // Note: Leave model likely uses 'user' field (ObjectId), building scope for it
+    const idScope = await getTeamScope(req, 'id');
     
     // Base data to return based on the Python structure expectations
     let dashboardResponse = {
@@ -17,18 +21,14 @@ const getDashboardData = async (req, res) => {
       menu: []
     };
     
-    // Aggregation: Count Total Employees in Tenant
-    const totalEmployees = await User.countDocuments({ tenantId });
-    
-    // Aggregation: Count Active Tasks (not 'Done') in Tenant
-    const activeTasks = await Task.countDocuments({ tenantId, status: { $ne: 'Done' } });
+    // Scoped Counts
+    const totalEmployees = await User.countDocuments(userFilter);
+    const activeTasks = await Task.countDocuments({ ...taskScope, status: { $ne: 'Done' } });
+    const pendingLeaves = await Leave.countDocuments({ ...idScope, status: 'Pending' });
 
-    // Aggregation: Count Pending Leaves in Tenant
-    const pendingLeaves = await Leave.countDocuments({ tenantId, status: 'Pending' });
-
-    // Aggregation: Department Stats
+    // Scoped Department Stats
     const deptStats = await User.aggregate([
-      { $match: { tenantId } },
+      { $match: userFilter },
       { $group: { _id: "$department", count: { $sum: 1 } } }
     ]);
     
@@ -40,8 +40,7 @@ const getDashboardData = async (req, res) => {
         pending_leaves: pendingLeaves
       };
       
-      // Get all active tasks for admin overview
-      dashboardResponse.tasks = await Task.find({ tenantId, status: { $ne: 'Done' } }).sort({ priority: 1 }).limit(10);
+      dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $ne: 'Done' } }).sort({ priority: 1 }).limit(10);
       dashboardResponse.dept_distribution = deptStats;
 
     } else if (role === 'manager') {
@@ -50,16 +49,20 @@ const getDashboardData = async (req, res) => {
         project_progress: "75%",
         active_sprints: 2,
         pending_leaves: pendingLeaves,
-        active_tasks: activeTasks
+        active_tasks: activeTasks,
+        team_count: totalEmployees
       };
-      // Tasks assigned to their team (mocking team as those managed by them)
-      dashboardResponse.tasks = await Task.find({ tenantId, assigned_to: { $in: [req.user.sub] } }).limit(10);
+      // Tasks assigned to their team
+      dashboardResponse.tasks = await Task.find(taskScope).limit(10);
       
     } else {
       dashboardResponse.menu = ["My Tasks", "Attendance", "Leaves", "Profile", "Organization Tree", "Holidays"];
-      
+      dashboardResponse.stats = {
+        active_tasks: activeTasks,
+        pending_leaves: pendingLeaves
+      };
       // Get user specific tasks
-      dashboardResponse.tasks = await Task.find({ tenantId, assigned_to: req.user.username }).limit(10);
+      dashboardResponse.tasks = await Task.find(taskScope).limit(10);
     }
     
     res.json(dashboardResponse);

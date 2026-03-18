@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import apiClient from '../api/client';
 
 /**
  * Custom hook to manage and provide authentication state.
@@ -7,31 +8,36 @@ import { jwtDecode } from 'jwt-decode';
  */
 export const useAuth = () => {
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [user, setUser] = useState(() => {
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      try {
-        return jwtDecode(savedToken);
-      } catch (err) {
-        return null;
-      }
+  const [user, setUser] = useState(null);
+  const [permissions, setPermissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUserProfile = async () => {
+    if (!token) {
+        setLoading(false);
+        return;
     }
-    return null;
-  });
+    try {
+      const response = await apiClient.get('/users/me');
+      setUser(response.data);
+      setPermissions(response.data.permissions || []);
+    } catch (err) {
+      console.error('Failed to fetch user profile', err);
+      if (err.response?.status === 401) {
+        logout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUser(decoded);
-      } catch (err) {
-        console.error('Invalid token', err);
-        localStorage.removeItem('token');
-        setToken(null);
-        setUser(null);
-      }
+      fetchUserProfile();
     } else {
       setUser(null);
+      setPermissions([]);
+      setLoading(false);
     }
   }, [token]);
 
@@ -44,6 +50,7 @@ export const useAuth = () => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    setPermissions([]);
   };
 
   // Helper booleans for RBAC
@@ -51,21 +58,33 @@ export const useAuth = () => {
   const isManager = user?.role === 'manager';
   const isEmployee = user?.role === 'employee';
   
-  // Custom permission check
-  const hasPermission = (allowedRoles) => {
-    return user && allowedRoles.includes(user.role);
+  // Backward compatible permission/role check
+  const hasPermission = (input) => {
+    if (isAdmin) return true;
+    if (Array.isArray(input)) {
+        // Legacy mode: input is array of allowed roles
+        return user && input.includes(user.role);
+    }
+    // New mode: input is a single permission string
+    return permissions.includes(input);
   };
+
+  const hasRole = (roleName) => user?.role === roleName;
 
   return {
     token,
     user,
+    permissions,
     isAdmin,
     isManager,
     isEmployee,
     hasPermission,
+    hasRole,
     login,
     logout,
-    isAuthenticated: !!token && !!user
+    refreshPermissions: fetchUserProfile,
+    isAuthenticated: !!token && !!user,
+    loading
   };
 };
 

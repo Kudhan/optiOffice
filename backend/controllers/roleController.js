@@ -5,9 +5,6 @@ const Role = require('../models/Role');
 // @access  Private
 const getRoles = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ detail: "Not authorized" });
-    }
     const roles = await Role.find({ tenantId: req.user.tenantId });
     res.json(roles);
   } catch (error) {
@@ -20,10 +17,6 @@ const getRoles = async (req, res) => {
 // @access  Private
 const createRole = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ detail: "Not authorized" });
-    }
-    
     const roleExists = await Role.findOne({ name: req.body.name, tenantId: req.user.tenantId });
     if (roleExists) {
        return res.status(400).json({ detail: "Role already exists" });
@@ -46,10 +39,6 @@ const createRole = async (req, res) => {
 // @access  Private
 const updateRole = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ detail: "Not authorized" });
-    }
-    
     const role = await Role.findOneAndUpdate(
       { _id: req.params.id, tenantId: req.user.tenantId },
       req.body,
@@ -71,10 +60,6 @@ const updateRole = async (req, res) => {
 // @access  Private
 const deleteRole = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ detail: "Not authorized" });
-    }
-    
     const role = await Role.findOneAndDelete({ _id: req.params.id, tenantId: req.user.tenantId });
     
     if (role) {

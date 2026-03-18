@@ -57,6 +57,10 @@ const userSchema = mongoose.Schema({
     ref: 'User',
     default: null
   },
+  department: {
+    type: String,
+    default: "General"
+  },
   department_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Department',

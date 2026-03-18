@@ -1,6 +1,7 @@
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
+const { getTeamScope } = require('../middleware/getScope');
 
 // Configurable Late Threshold (Default 9:30 AM)
 const LATE_THRESHOLD = process.env.LATE_THRESHOLD || '09:30';
@@ -124,9 +125,10 @@ const checkOut = asyncHandler(async (req, res) => {
  */
 const getDailyStatus = asyncHandler(async (req, res) => {
   const today = new Date().toISOString().split('T')[0];
+  const scope = await getTeamScope(req);
 
   const currentlyIn = await Attendance.find({
-    tenantId: req.user.tenantId,
+    ...scope,
     date: today,
     checkOut: null
   }).populate('user', 'full_name email profile_photo'); // Note: Model uses profile_photo
@@ -153,9 +155,8 @@ const getMyAttendance = asyncHandler(async (req, res) => {
  * @access  Private (Admin/Manager)
  */
 const getAllAttendance = asyncHandler(async (req, res) => {
-  const attendance = await Attendance.find({ 
-    tenantId: req.user.tenantId 
-  })
+  const scope = await getTeamScope(req);
+  const attendance = await Attendance.find(scope)
   .populate('user', 'full_name username')
   .sort({ createdAt: -1 });
 
@@ -170,11 +171,12 @@ const getAllAttendance = asyncHandler(async (req, res) => {
 const getMonthlyReport = asyncHandler(async (req, res) => {
   const now = new Date();
   const monthPrefix = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+  const scope = await getTeamScope(req);
 
   const report = await Attendance.aggregate([
     { 
       $match: { 
-        tenantId: req.user.tenantId,
+        ...scope,
         date: { $regex: `^${monthPrefix}` } 
       } 
     },

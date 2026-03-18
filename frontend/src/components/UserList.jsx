@@ -136,7 +136,8 @@ const MemberCard = ({ user, onRefresh }) => {
 
 // --- Main User List Component ---
 function UserList() {
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
+    const isManager = user?.role === 'manager';
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -179,11 +180,11 @@ function UserList() {
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-12 gap-10">
                 <div className="space-y-4">
                     <h2 className="text-4xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
-                        Personnel <span className="italic text-sky-500 font-extrabold underline decoration-sky-500/20 underline-offset-8">Directory</span>
+                        {isManager ? 'My' : 'Personnel'} <span className="italic text-sky-500 font-extrabold underline decoration-sky-500/20 underline-offset-8">{isManager ? 'Team' : 'Directory'}</span>
                     </h2>
                     <div className="flex items-center gap-6">
                         <p className="text-slate-500 dark:text-slate-400 font-bold text-sm lg:text-base tracking-tight">
-                            Registered Assets: <span className="text-slate-900 dark:text-white font-black">{users.length}</span>
+                            {isManager ? 'Team Assets' : 'Registered Assets'}: <span className="text-slate-900 dark:text-white font-black">{users.length}</span>
                         </p>
                         <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
                         <p className="text-slate-500 dark:text-slate-400 font-bold text-sm lg:text-base tracking-tight">

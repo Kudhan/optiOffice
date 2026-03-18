@@ -1,13 +1,13 @@
 const Task = require('../models/Task');
+const { getTeamScope } = require('../middleware/getScope');
 
 // @desc    Get tasks mapping by tenantId
 // @route   GET /tasks
 // @access  Private
 const getTasks = async (req, res) => {
   try {
-    let tasks;
-    const filter = req.user.role === 'employee' ? { assigned_to: req.user.sub } : {};
-    tasks = await Task.find({ tenantId: req.user.tenantId, ...filter });
+    const scope = await getTeamScope(req, 'username');
+    const tasks = await Task.find(scope);
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });

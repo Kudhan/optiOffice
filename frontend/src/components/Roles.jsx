@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import useAuth from '../hooks/useAuth';
 
 const Roles = () => {
-    const { isAdmin, isSuperAdmin } = useAuth();
+    const { hasPermission } = useAuth();
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedRole, setSelectedRole] = useState(null);
@@ -125,7 +125,7 @@ const Roles = () => {
                             </div>
 
                             {/* Task 4: Component Protection */}
-                            {(isAdmin || isSuperAdmin) && (
+                            {hasPermission('can_manage_users') && (
                                 <button 
                                     onClick={() => {
                                         setSelectedRole(role);
