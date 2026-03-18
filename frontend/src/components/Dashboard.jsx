@@ -47,6 +47,39 @@ const LiveTimer = ({ startTime }) => {
   return <span className="font-mono text-sm tracking-tighter tabular-nums">{elapsed}</span>;
 };
 
+/**
+ * Countdown: Shows time remaining until shift start
+ */
+const Countdown = ({ targetTime }) => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        const tick = () => {
+            const [h, m] = targetTime.split(':').map(Number);
+            const target = new Date();
+            target.setHours(h, m, 0, 0);
+            
+            const diff = target - new Date();
+            if (diff <= 0) {
+                setTimeLeft('Shift Started');
+                return;
+            }
+
+            const totalMinutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            
+            setTimeLeft(hours > 0 ? `${hours}h ${minutes}m left` : `${minutes}m left`);
+        };
+
+        tick();
+        const interval = setInterval(tick, 60000);
+        return () => clearInterval(interval);
+    }, [targetTime]);
+
+    return <span className="text-[9px] font-black bg-white/20 px-2 py-0.5 rounded ml-2 tracking-widest">{timeLeft}</span>;
+};
+
 function Dashboard() {
   const { isAdmin, isManager, user } = useAuth();
   const { data: layoutData } = useOutletContext();
@@ -57,6 +90,7 @@ function Dashboard() {
   const [checkInTime, setCheckInTime] = useState(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [userShift, setUserShift] = useState(null);
 
   useEffect(() => {
     if (layoutData) {
@@ -82,8 +116,18 @@ function Dashboard() {
             console.error("Status check failed", err);
         }
     };
+    const fetchShift = async () => {
+        try {
+            const res = await apiClient.get(`shifts/user/${user.id}`);
+            setUserShift(res.data.data.shift);
+        } catch (err) {
+            console.error("Shift fetch failed", err);
+        }
+    };
+
     checkStatus();
-  }, []);
+    if (user?.id) fetchShift();
+  }, [user]);
 
   const toggleClockIn = async () => {
     setIsClocking(true);
@@ -186,7 +230,7 @@ function Dashboard() {
             <QuickActionsRow onAction={(title) => title === 'Generate Report' && handleDownloadReport()} isLoading={isLoading} />
         </div>
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-10">
-            <FloorDynamics isLoading={isLoading} />
+            <FloorDynamics isLoading={isLoading} totalEmployees={data?.stats?.total_employees} />
             <PriorityTasks tasks={data?.tasks} title="Company Velocity" isLoading={isLoading} />
         </div>
     </div>
@@ -201,7 +245,7 @@ function Dashboard() {
             <StatsWidget stats={data?.stats} isLoading={isLoading} />
         </div>
         <div className="col-span-12 lg:col-span-4">
-             <FloorDynamics isLoading={isLoading} />
+             <FloorDynamics isLoading={isLoading} totalEmployees={data?.stats?.total_employees} />
         </div>
     </div>
   );
@@ -230,8 +274,10 @@ function Dashboard() {
                 <span className="text-[10px] uppercase font-bold tracking-widest text-content-muted mb-4 block">My Personal Stats</span>
                 <div className="space-y-6">
                     <div className="p-6 bg-sky-500/5 rounded-3xl border border-sky-500/10">
-                        <p className="text-xs font-bold text-sky-500 mb-1">Weekly Focus</p>
-                        <p className="text-3xl font-black text-content-main">92%</p>
+                        <p className="text-xs font-bold text-sky-500 mb-1">Assigned Shift</p>
+                        <p className="text-2xl font-black text-content-main uppercase tracking-tighter">
+                            {userShift ? `${userShift.startTime} - ${userShift.endTime}` : 'No Shift Set'}
+                        </p>
                     </div>
                     <div className="p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10">
                         <p className="text-xs font-bold text-emerald-500 mb-1">Tasks Done</p>
@@ -287,7 +333,9 @@ function Dashboard() {
                     <>
                         {isClockedIn ? (
                             <div className="flex flex-col items-start leading-none gap-0.5">
-                                <span className="uppercase text-[9px] font-bold opacity-80 tracking-widest text-white/90">Work Session Live</span>
+                                <span className="uppercase text-[9px] font-bold opacity-80 tracking-widest text-white/90">
+                                    {userShift ? `Shift: ${userShift.startTime} - ${userShift.endTime}` : 'Work Session Live'}
+                                </span>
                                 <div className="flex items-center gap-2">
                                   <span className="text-lg">🌙</span>
                                   <LiveTimer startTime={checkInTime} />
@@ -295,10 +343,18 @@ function Dashboard() {
                                 </div>
                             </div>
                         ) : (
-                            <>
-                                <span className="text-lg animate-pulse">⏰</span>
-                                <span className="uppercase tracking-widest text-slate-800">Clock In</span>
-                            </>
+                            <div className="flex flex-col items-start leading-none gap-0.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg animate-pulse">⏰</span>
+                                    <span className="uppercase tracking-widest text-slate-800">Clock In</span>
+                                    {userShift && <Countdown targetTime={userShift.startTime} />}
+                                </div>
+                                {userShift && (
+                                    <span className="text-[9px] font-bold text-slate-600 uppercase tracking-tighter mt-1 opacity-60">
+                                        Assigned: {userShift.startTime} - {userShift.endTime}
+                                    </span>
+                                )}
+                            </div>
                         )}
                     </>
                 )}

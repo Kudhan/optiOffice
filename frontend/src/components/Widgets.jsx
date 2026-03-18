@@ -43,19 +43,17 @@ export const StatsWidget = ({ stats, isLoading }) => {
 export { WeeklyPresence };
 
 /**
- * FloorDynamics: Admin Bento card showing office occupancy
+ * FloorDynamics: Admin Bento card showing office occupancy with dynamic presence
  */
-export const FloorDynamics = ({ isLoading }) => {
-  const [data, setData] = useState({ present: 42, absent: 8 });
+export const FloorDynamics = ({ isLoading, totalEmployees = 0 }) => {
+  const [presentUsers, setPresentUsers] = useState([]);
+  const total = totalEmployees || 50; // Fallback to 50 if stats not available
 
   useEffect(() => {
     const fetchDynamics = async () => {
       try {
         const res = await apiClient.get('attendance/daily-status');
-        setData({
-          present: res.data.length,
-          absent: Math.max(0, 50 - res.data.length) // Mocking 50 total for now
-        });
+        setPresentUsers(res.data);
       } catch (err) {
         console.error("Dynamics fetch failed", err);
       }
@@ -63,33 +61,69 @@ export const FloorDynamics = ({ isLoading }) => {
     fetchDynamics();
   }, []);
 
+  const presentCount = presentUsers.length;
+  const awayCount = Math.max(0, total - presentCount);
+
   return (
-    <div className={`col-span-12 lg:col-span-4 ${tileClasses} bg-gradient-to-br from-primary-surface to-sky-500/5`}>
-      <span className="text-[10px] uppercase font-bold tracking-widest text-sky-500 mb-6 block">Floor Dynamics</span>
+    <div className={`col-span-12 lg:col-span-4 ${tileClasses} bg-gradient-to-br from-primary-surface to-sky-500/5 min-h-[400px]`}>
+      <span className="text-[10px] uppercase font-bold tracking-widest text-sky-500 mb-6 block font-black">Office Hub Dynamic</span>
       
-      <div className="flex flex-col flex-1 justify-center">
-        <div className="mb-8">
-          <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none">{data.present}</h2>
-          <p className="text-sm font-bold text-content-muted uppercase tracking-tight mt-2">Currently In Office</p>
+      <div className="flex flex-col flex-1">
+        <div className="mb-6">
+          <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none">{presentCount}</h2>
+          <p className="text-sm font-bold text-content-muted uppercase tracking-tight mt-2 italic opacity-60">Currently Stationed</p>
         </div>
 
-        <div className="space-y-4">
+        {/* Presence Bar */}
+        <div className="space-y-4 mb-8">
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
             <div 
-              className="bg-sky-500 h-full rounded-full transition-all duration-700" 
-              style={{ width: `${(data.present/50)*100}%` }}
+              className="bg-sky-500 h-full rounded-full transition-all duration-1000 ease-out" 
+              style={{ width: `${(presentCount / total) * 100}%` }}
             ></div>
           </div>
-          <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-            <span className="text-sky-500">{data.present} Present</span>
-            <span className="text-content-muted">{data.absent} Away / Leave</span>
+          <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+            <span className="text-sky-500">{presentCount} Active</span>
+            <span className="text-content-muted">{awayCount} Out / Away</span>
           </div>
+        </div>
+
+        {/* Live Presence List */}
+        <div className="flex-1 mt-4">
+            <p className="text-[10px] font-bold text-content-muted uppercase tracking-widest mb-4">Lately Clocked In</p>
+            <div className="flex -space-x-3 overflow-hidden p-2">
+                {presentUsers.slice(0, 8).map((record, idx) => (
+                    <div 
+                        key={record._id || idx} 
+                        className="w-12 h-12 rounded-full border-4 border-white dark:border-navy-950 bg-primary-muted flex items-center justify-center text-xs font-black text-sky-500 shadow-sm relative group cursor-help transition-transform hover:scale-110 hover:z-10"
+                        title={record.user?.full_name}
+                    >
+                        {record.user?.full_name?.charAt(0) || '?'}
+                        <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-navy-950 shadow-sm" />
+                        
+                        {/* Tooltip-like popup */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-navy-950 text-white p-3 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl border border-white/10 w-32">
+                           <p className="text-[10px] font-black uppercase leading-none truncate">{record.user?.full_name}</p>
+                           <p className="text-[8px] font-bold text-sky-400 uppercase mt-1">Clocked {record.checkIn ? new Date(record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Live'}</p>
+                        </div>
+                    </div>
+                ))}
+                {presentUsers.length === 0 && (
+                    <div className="flex items-center gap-3 opacity-30 italic text-[10px] font-bold uppercase tracking-widest py-4">
+                        Waiting for deployments...
+                    </div>
+                )}
+            </div>
         </div>
       </div>
 
-      <button className="mt-10 py-4 px-6 bg-primary-muted border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-sky-500/10 hover:text-sky-500 transition-all">
-        View Floor Map
-      </button>
+      <div className="mt-8 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest leading-none">Live Ops Sync</span>
+        </div>
+        <p className="text-[9px] font-black text-sky-500 uppercase tracking-widest">Synced with Cloud</p>
+      </div>
     </div>
   );
 };

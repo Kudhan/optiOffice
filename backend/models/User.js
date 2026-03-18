@@ -79,6 +79,11 @@ const userSchema = mongoose.Schema({
     timezone: { type: String, default: "UTC" },
     notifications: { type: String, default: "email" }
   },
+  shift_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Shift',
+    default: null
+  }
 
 }, {
   collection: 'users_collection',

@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import UserList from './components/UserList';
 import Hierarchy from './components/Hierarchy';
+import Shifts from './components/Shifts';
 import Billing from './components/Billing';
 import Holidays from './components/Holidays';
 import Assets from './components/Assets';
@@ -54,6 +55,7 @@ function App() {
               } />
               
               <Route path="organization" element={<Hierarchy />} />
+              <Route path="shifts" element={<Shifts />} />
               
               <Route path="billing" element={
                 <ProtectedRoute requiredPermission="can_manage_billing">

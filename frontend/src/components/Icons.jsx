@@ -254,3 +254,14 @@ export const IconBookOpen = ({ className = "" }) => (
     <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
   </svg>
 );
+export const IconSunset = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <path d="M12 10a4 4 0 0 1 0 8" />
+    <path d="M2 20h20" />
+    <path d="M7 10l-2-2" />
+    <path d="M12 4V2" />
+    <path d="M17 10l2-2" />
+    <path d="M2 10h2" />
+    <path d="M20 10h2" />
+  </svg>
+);

@@ -34,14 +34,29 @@ const checkIn = asyncHandler(async (req, res) => {
     });
   }
 
-  // Determine late status
+  // Determine late status based on shift or fallback threshold
   let status = 'Present';
-  const [thresholdH, thresholdM] = LATE_THRESHOLD.split(':').map(Number);
-  const cutoff = new Date(now);
-  cutoff.setHours(thresholdH, thresholdM, 0, 0);
+  const user = await User.findById(req.user.id).populate('shift_id');
+  
+  if (user && user.shift_id) {
+    const { startTime, gracePeriod } = user.shift_id;
+    const [shiftH, shiftM] = startTime.split(':').map(Number);
+    const cutoff = new Date(now);
+    cutoff.setHours(shiftH, shiftM + (gracePeriod || 0), 0, 0);
 
-  if (now > cutoff) {
-    status = 'Late';
+    if (now > cutoff) {
+      status = 'Late';
+      console.log(`[Attendance] Personnel ${user.full_name} is Late. Shift starts at ${startTime} (Grace: ${gracePeriod}m)`);
+    }
+  } else {
+    // Fallback to global threshold
+    const [thresholdH, thresholdM] = LATE_THRESHOLD.split(':').map(Number);
+    const cutoff = new Date(now);
+    cutoff.setHours(thresholdH, thresholdM, 0, 0);
+
+    if (now > cutoff) {
+      status = 'Late';
+    }
   }
 
   try {
