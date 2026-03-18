@@ -1,17 +1,25 @@
 const Leave = require('../models/Leave');
+const User = require('../models/User');
 
 // @desc    Get leaves mapping by tenantId
 // @route   GET /leaves
 // @access  Private
 const getLeaves = async (req, res) => {
   try {
-    let leaves;
-    // Admins and managers see all leaves for the tenant, employees see their own
-    if (['admin', 'manager'].includes(req.user.role)) {
-      leaves = await Leave.find({ tenantId: req.user.tenantId });
+    const role = req.user.role;
+    let filter = { tenantId: req.user.tenantId };
+
+    if (role === 'admin' || role === 'super-admin') {
+      // Admins see everyone
+    } else if (role === 'manager') {
+       // Filter by direct reports or department based on new getScope logic (simplified for now)
+       filter = { tenantId: req.user.tenantId, $or: [{ manager: req.user.id }, { username: req.user.sub }] };
     } else {
-      leaves = await Leave.find({ tenantId: req.user.tenantId, username: req.user.sub });
+      // Employees see their own
+      filter = { tenantId: req.user.tenantId, username: req.user.sub };
     }
+    
+    const leaves = await Leave.find(filter).sort({ createdAt: -1 });
     res.json(leaves);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -23,10 +31,15 @@ const getLeaves = async (req, res) => {
 // @access  Private
 const applyLeave = async (req, res) => {
   try {
+    // Task 1: Smart Route Logic
+    const employee = await User.findById(req.user.id);
+    
     const leaveData = {
       ...req.body,
       tenantId: req.user.tenantId,
-      username: req.user.sub
+      username: req.user.sub,
+      manager: employee.manager || null,
+      hr_notified: true // CC to HR logging
     };
     
     const leave = await Leave.create(leaveData);
@@ -41,21 +54,20 @@ const applyLeave = async (req, res) => {
 // @access  Private
 const approveLeave = async (req, res) => {
   try {
-    if (!['admin', 'manager'].includes(req.user.role)) {
-      return res.status(403).json({ detail: "Not authorized" });
+    const leave = await Leave.findOne({ _id: req.params.id, tenantId: req.user.tenantId });
+    
+    if (!leave) {
+      return res.status(404).json({ detail: "Leave request not found" });
+    }
+
+    // Role-based Verification: Must be the Direct Manager or an Admin
+    if (req.user.role !== 'admin' && req.user.role !== 'super-admin' && leave.manager?.toString() !== req.user.id) {
+        return res.status(403).json({ detail: "You are not authorized to approve this request (Direct Manager only)" });
     }
     
-    const leave = await Leave.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.user.tenantId },
-      { status: "Approved" },
-      { new: true }
-    );
-    
-    if (leave) {
-      res.json(true);
-    } else {
-      res.status(404).json({ detail: "Leave request not found" });
-    }
+    leave.status = "Approved";
+    await leave.save();
+    res.json(true);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
@@ -66,21 +78,21 @@ const approveLeave = async (req, res) => {
 // @access  Private
 const rejectLeave = async (req, res) => {
   try {
-    if (!['admin', 'manager'].includes(req.user.role)) {
-      return res.status(403).json({ detail: "Not authorized" });
+    const leave = await Leave.findOne({ _id: req.params.id, tenantId: req.user.tenantId });
+    
+    if (!leave) {
+      return res.status(404).json({ detail: "Leave request not found" });
+    }
+
+    // Role-based Verification: Direct Manager or Admin
+    if (req.user.role !== 'admin' && req.user.role !== 'super-admin' && leave.manager?.toString() !== req.user.id) {
+        return res.status(403).json({ detail: "Not authorized to reject this request (Direct Manager only)" });
     }
     
-    const leave = await Leave.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.user.tenantId },
-      { status: "Rejected", rejection_reason: req.query.reason || req.body.reason },
-      { new: true }
-    );
-    
-    if (leave) {
-      res.json(true);
-    } else {
-      res.status(404).json({ detail: "Leave request not found" });
-    }
+    leave.status = "Rejected";
+    leave.rejection_reason = req.query.reason || req.body.reason;
+    await leave.save();
+    res.json(true);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }

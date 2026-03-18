@@ -16,8 +16,8 @@ const getScope = async (req) => {
   const roleDoc = await Role.findOne({ name: roleName, tenantId });
   const scopeType = roleDoc ? roleDoc.scopeType : 'DirectReport';
 
-  // Admins always have Global access regardless of map
-  if (roleName === 'admin' || roleName === 'super-admin' || scopeType === 'Global') {
+  // Admins and HR always have Global access regardless of map
+  if (roleName === 'admin' || roleName === 'hr' || roleName === 'super-admin' || scopeType === 'Global') {
     return { tenantId };
   }
 

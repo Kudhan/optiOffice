@@ -30,6 +30,15 @@ const leaveSchema = mongoose.Schema({
     type: String,
     default: "Pending"
   },
+  manager: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  hr_notified: {
+    type: Boolean,
+    default: false
+  },
   rejection_reason: {
     type: String,
     default: null
