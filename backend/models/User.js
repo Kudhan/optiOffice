@@ -79,12 +79,7 @@ const userSchema = mongoose.Schema({
     timezone: { type: String, default: "UTC" },
     notifications: { type: String, default: "email" }
   },
-  desk: {
-    x: { type: Number, default: 0 },
-    y: { type: Number, default: 0 },
-    floor: { type: Number, default: 1 },
-    seatNumber: { type: String, default: "" }
-  }
+
 }, {
   collection: 'users_collection',
   timestamps: true

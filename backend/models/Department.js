@@ -16,10 +16,7 @@ const departmentSchema = mongoose.Schema({
     required: true,
     index: true
   },
-  zone: {
-    type: [{ x: Number, y: Number }],
-    default: []
-  }
+
 }, {
   collection: 'departments_collection',
   timestamps: true
