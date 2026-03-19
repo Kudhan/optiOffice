@@ -195,7 +195,7 @@ function UserList() {
             const matchesDept = departmentFilter === 'All' || usr.department?.toLowerCase() === departmentFilter.toLowerCase();
             return matchesSearch && matchesRole && matchesStatus && matchesDept;
         });
-    }, [users, searchQuery, roleFilter]);
+    }, [users, searchQuery, roleFilter, statusFilter, departmentFilter]);
 
     return (
         <>

@@ -26,15 +26,11 @@ const updateUserStatus = async (req, res) => {
       return res.status(404).json({ detail: "User not found" });
     }
 
-    if (action === 'Block') {
-      user.status = 'blocked';
-    } else if (action === 'Suspend') {
-      user.status = 'suspended';
-    } else {
-      return res.status(400).json({ detail: "Invalid action. Use 'Block' or 'Suspend'." });
-    }
+    const targetStatus = action === 'Block' ? 'blocked' : 'suspended';
+    await User.updateOne({ _id: targetUserId, tenantId: req.user.tenantId }, { status: targetStatus });
 
-    await User.updateOne({ _id: targetUserId, tenantId: req.user.tenantId }, { status: action.toLowerCase() });
+    // Update the local user object for audit logging consistency
+    user.status = targetStatus;
 
     // Verification: Audit log
     const timestamp = new Date().toISOString();
