@@ -10,7 +10,7 @@ import SecurityModal from './SecurityModal';
 const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
     const { isAdmin: currentIsAdmin, user: currentUser, permissions } = useAuth();
     // Normalize both IDs to strings for robust comparison
-    const isSelf = String(user._id) === String(currentUser?._id);
+    const isSelf = String(user.id) === String(currentUser?.id);
     const canManage = permissions.includes('can_manage_users') && !isSelf;
     const canEditRoles = permissions.includes('can_edit_roles');
     const [showActions, setShowActions] = useState(false);
@@ -19,7 +19,7 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
 
     const handleRoleChange = async (newRole) => {
         try {
-            await apiClient.patch(`users/${user._id}`, { role: newRole });
+            await apiClient.patch(`users/${user.id}`, { role: newRole });
             toast.success(`Role updated to ${newRole}`, {
                 style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
             });
@@ -36,7 +36,7 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
                     <button 
                         onClick={async () => {
                             try {
-                                await apiClient.delete(`users/${user._id}`);
+                                await apiClient.delete(`users/${user.id}`);
                                 toast.success("User removed successfully");
                                 onRefresh();
                                 toast.dismiss(t.id);
@@ -68,14 +68,16 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
             {canManage && (
                 <div className="absolute top-5 right-5 z-20">
                     <button 
-                        onClick={() => setShowActions(!showActions)}
-                        className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-navy-950/50 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all text-slate-400 hover:text-sky-500 border border-transparent hover:border-sky-500/30"
+                        onClick={() => onOpenSecurity(user)}
+                        className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-navy-950/50 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all text-slate-400 hover:text-sky-500 border border-transparent hover:border-sky-500/30 group/gear"
+                        title="Secure Access Protocol"
                     >
-                        <span className="text-sm">⚙️</span>
+                        <span className="text-sm transition-transform group-hover/gear:rotate-90">⚙️</span>
                     </button>
                     
-                    {showActions && (
-                        <div className="absolute right-0 mt-2 w-52 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800/80 overflow-hidden animate-scale-in z-30">
+                    {/* Former Dropdown - Removed as per user request to use Modal for all security actions */}
+                    {false && showActions && (
+                         <div className="absolute right-0 mt-2 w-52 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800/80 overflow-hidden animate-scale-in z-30">
                             <div className="p-1.5 space-y-0.5">
                                 {currentIsAdmin && (
                                     <button onClick={() => handleRoleChange('admin')} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 hover:bg-sky-500/10 hover:text-sky-500 rounded-xl transition-all">
@@ -139,12 +141,8 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
                 </div>
             </div>
 
-            <button 
-                onClick={() => onOpenSecurity(user)}
-                className="w-full py-3.5 rounded-2xl bg-slate-900 dark:bg-white/5 text-white dark:text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 transition-all border border-transparent hover:border-sky-500/50 shadow-sm active:scale-95"
-            >
-                Secure Access Protocol
-            </button>
+
+            {/* Action Button Removed - Security Protocol now lives in the Gear icon */}
         </div>
     );
 };
@@ -157,6 +155,8 @@ function UserList() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('All');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [departmentFilter, setDepartmentFilter] = useState('All');
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isSecurityOpen, setIsSecurityOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -190,8 +190,10 @@ function UserList() {
                 usr.email?.toLowerCase().includes(query) ||
                 usr.department?.toLowerCase().includes(query);
             
-            const matchesRole = roleFilter === 'All' || usr.role === roleFilter.toLowerCase();
-            return matchesSearch && matchesRole;
+            const matchesRole = roleFilter === 'All' || usr.role?.toLowerCase() === roleFilter.toLowerCase();
+            const matchesStatus = statusFilter === 'All' || usr.status?.toLowerCase() === statusFilter.toLowerCase();
+            const matchesDept = departmentFilter === 'All' || usr.department?.toLowerCase() === departmentFilter.toLowerCase();
+            return matchesSearch && matchesRole && matchesStatus && matchesDept;
         });
     }, [users, searchQuery, roleFilter]);
 
@@ -247,6 +249,35 @@ function UserList() {
                         ))}
                     </div>
 
+                    {/* Status Filter */}
+                    <div className="flex bg-white dark:bg-navy-950/50 p-1.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
+                        {['All', 'Active', 'Blocked', 'Suspended'].map(status => (
+                            <button
+                                key={status}
+                                onClick={() => setStatusFilter(status)}
+                                className={`px-4 lg:px-6 py-3 rounded-2xl text-[9px] font-black transition-all uppercase tracking-widest ${
+                                    statusFilter === status 
+                                    ? 'bg-amber-500 text-white shadow-xl shadow-amber-500/30' 
+                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                                }`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Department Dropdown */}
+                    <select 
+                        className="bg-white dark:bg-navy-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl px-6 py-3 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase outline-none focus:ring-2 focus:ring-sky-500/20"
+                        value={departmentFilter}
+                        onChange={(e) => setDepartmentFilter(e.target.value)}
+                    >
+                        <option value="All">All Departments</option>
+                        {Array.from(new Set(users.map(u => u.department).filter(Boolean))).map(dept => (
+                            <option key={dept} value={dept}>{dept}</option>
+                        ))}
+                    </select>
+
                     {isAdmin && (
                         <button 
                             onClick={() => setIsInviteOpen(true)}
@@ -268,7 +299,7 @@ function UserList() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                     {filteredUsers.map((usr) => (
                         <MemberCard 
-                            key={usr._id || usr.username} 
+                            key={usr.id || usr.username} 
                             user={usr} 
                             onRefresh={fetchUsers}
                             onOpenSecurity={openSecurity}

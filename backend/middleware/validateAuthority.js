@@ -26,7 +26,10 @@ const validateAuthority = async (req, res, next) => {
     // Role-based Verification: can_edit_roles check for role changes
     const newRole = req.body.role;
     if (newRole) {
-      const requesterRole = await Role.findOne({ name: requester.role, tenantId: requester.tenantId }).lean();
+      const requesterRole = await Role.findOne({ 
+        name: { $regex: new RegExp(`^${requester.role}$`, 'i') }, 
+        tenantId: requester.tenantId 
+      }).lean();
       if (!requesterRole || !requesterRole.permissions?.includes('can_edit_roles')) {
         return res.status(403).json({ detail: "Security Violation: You do not have the required [can_edit_roles] permission." });
       }

@@ -3,6 +3,8 @@ const Attendance = require('../models/Attendance');
 const Task = require('../models/Task');
 const Leave = require('../models/Leave');
 
+const AuditLog = require('../models/AuditLog');
+
 // @desc    Update user status (Block/Suspend)
 // @route   PATCH /admin/users/:id/status
 // @access  Private/Admin
@@ -32,11 +34,22 @@ const updateUserStatus = async (req, res) => {
       return res.status(400).json({ detail: "Invalid action. Use 'Block' or 'Suspend'." });
     }
 
-    await user.save();
+    await User.updateOne({ _id: targetUserId, tenantId: req.user.tenantId }, { status: action.toLowerCase() });
+
+    // Verification: Audit log
+    const timestamp = new Date().toISOString();
+    await AuditLog.create({
+      adminId: req.user.id,
+      userId: targetUserId,
+      action: action,
+      details: `${req.user.id} ${action.toLowerCase()}ed ${targetUserId} at ${timestamp}`,
+      tenantId: req.user.tenantId
+    });
+
     res.json({ message: `User status updated to ${user.status}`, user });
   } catch (error) {
-    console.error('updateUserStatus error:', error);
-    res.status(500).json({ message: "Server Error" });
+    console.error('updateUserStatus Error Details:', error);
+    res.status(500).json({ detail: error.message || "Server Error during status update" });
   }
 };
 
@@ -49,7 +62,6 @@ const manageAuthority = async (req, res) => {
     const targetUserId = req.params.id;
 
     // Security Rule: Prevent an Admin from demoting themselves
-    // If the admin is trying to change their own role to something other than Admin
     if (targetUserId === req.user.id && role !== 'Admin') {
       return res.status(403).json({ 
         detail: "Security Violation: Admins cannot demote themselves or change their own administrative role." 
@@ -63,12 +75,12 @@ const manageAuthority = async (req, res) => {
     }
 
     user.role = role;
-    await user.save();
+    await User.updateOne({ _id: targetUserId, tenantId: req.user.tenantId }, { role: role });
 
     res.json({ message: `User role updated to ${role}`, user });
   } catch (error) {
-    console.error('manageAuthority error:', error);
-    res.status(500).json({ message: "Server Error" });
+    console.error('manageAuthority Error Details:', error);
+    res.status(500).json({ detail: error.message || "Server Error during authority update" });
   }
 };
 
@@ -79,7 +91,7 @@ const terminateUser = async (req, res) => {
   try {
     const targetUserId = req.params.id;
 
-    // Prevent self-termination for safety
+    // Prevent self-termination
     if (targetUserId === req.user.id) {
       return res.status(403).json({ detail: "Security Violation: Admins cannot terminate their own account." });
     }
@@ -91,16 +103,30 @@ const terminateUser = async (req, res) => {
     }
 
     const { username } = user;
+    const timestamp = new Date().toISOString();
 
-    // Hard delete user
-    await User.deleteOne({ _id: targetUserId });
+    // Cascading deletion
+    try {
+      // 1. Log the termination before data purge (Audit Trail Persistence)
+      await AuditLog.create({
+        adminId: req.user.id,
+        userId: targetUserId,
+        action: 'Terminate',
+        details: `${req.user.id} terminated ${targetUserId} at ${timestamp}`,
+        tenantId: req.user.tenantId
+      });
 
-    // Remove associated metadata
-    await Attendance.deleteMany({ user: targetUserId });
-    await Task.deleteMany({ assigned_to: username, tenantId: req.user.tenantId });
-    await Leave.deleteMany({ username: username, tenantId: req.user.tenantId });
+      // 2. Eradicate user lifecycle data
+      await User.deleteOne({ _id: targetUserId });
+      await Attendance.deleteMany({ user: targetUserId });
+      await Task.deleteMany({ assigned_to: username, tenantId: req.user.tenantId });
+      await Leave.deleteMany({ username: username, tenantId: req.user.tenantId });
 
-    res.json({ message: "User and all associated data have been permanently removed." });
+      res.json({ message: "Cascade deletion complete. User and associated metabolic data purged successfully." });
+    } catch (dbErr) {
+      console.error('Data Integrity Violation in terminateUser:', dbErr);
+      res.status(500).json({ detail: "Data integrity violation during cascade deletion." });
+    }
   } catch (error) {
     console.error('terminateUser error:', error);
     res.status(500).json({ message: "Server Error" });

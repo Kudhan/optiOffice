@@ -23,7 +23,7 @@ const authorize = (requiredPermission) => {
       // Lookup the role in the database for the specific tenant
       // Performance Tip: Use .lean() for faster read-only queries
       const roleDoc = await Role.findOne({ 
-        name: req.user.role, 
+        name: { $regex: new RegExp(`^${req.user.role}$`, 'i') }, 
         tenantId: req.user.tenantId 
       }).lean();
 
