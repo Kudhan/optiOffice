@@ -13,33 +13,28 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Real-time Status Verification
+      // Real-time Status Verification: The Live Guard
       const user = await User.findById(decoded.id).select('status');
       
       if (!user) {
-        return res.status(401).json({ detail: 'User no longer exists' });
+        return res.status(401).json({ detail: 'Account Identity Null: Access Denied' });
       }
 
       // 1. Blocked Status: Total Lockout
       if (user.status === 'blocked') {
-        return res.status(401).json({ detail: 'Account Blocked: Access Denied' });
+        return res.status(401).json({ detail: 'Your account has been disabled. Contact Admin.' });
       }
 
-      // 2. Suspended Status: Write-Restricted (Notice Period)
+      // 2. Suspended Status: Global Write-Restrict (Read-only mode)
       if (user.status === 'suspended') {
         const restrictedMethods = ['POST', 'PUT', 'DELETE'];
-        const restrictedPaths = ['attendance', 'tasks', 'profile'];
-        
-        const isRestrictedPath = restrictedPaths.some(path => req.originalUrl.toLowerCase().includes(path));
-        
-        if (restrictedMethods.includes(req.method) && isRestrictedPath) {
-          return res.status(403).json({ detail: 'Account Suspended during Notice Period' });
+        if (restrictedMethods.includes(req.method)) {
+          return res.status(403).json({ detail: 'Account suspended: Read-only mode active' });
         }
       }
 
       // Mutate request to include current user equivalent
       req.user = decoded; 
-
       next();
     } catch (error) {
       console.error('Auth Middleware Error:', error);

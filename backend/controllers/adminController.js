@@ -13,26 +13,28 @@ const updateUserStatus = async (req, res) => {
     const { action } = req.body; // 'Block' or 'Suspend'
     const targetUserId = req.params.id;
 
-    // Security Rule: Prevent an Admin from blocking/suspending their own account
+    // Security Rule: The Suicide Check
     if (targetUserId === req.user.id) {
-      return res.status(403).json({ 
-        detail: "Security Violation: Admins cannot block or suspend their own accounts." 
+      return res.status(400).json({ 
+        detail: "Suicide mission blocked: You cannot disable your own account." 
       });
     }
 
-    const user = await User.findOne({ _id: targetUserId, tenantId: req.user.tenantId });
+    const targetStatus = action === 'Block' ? 'blocked' : 
+                         action === 'Suspend' ? 'suspended' : 'active';
+    
+    // Atomically Update Status with Scope Guard
+    const user = await User.findOneAndUpdate(
+      { _id: targetUserId, tenantId: req.user.tenantId },
+      { $set: { status: targetStatus } },
+      { new: true, runValidators: true }
+    );
 
     if (!user) {
-      return res.status(404).json({ detail: "User not found" });
+      return res.status(404).json({ detail: "Target User not found within your organization." });
     }
 
-    const targetStatus = action === 'Block' ? 'blocked' : 'suspended';
-    await User.updateOne({ _id: targetUserId, tenantId: req.user.tenantId }, { status: targetStatus });
-
-    // Update the local user object for audit logging consistency
-    user.status = targetStatus;
-
-    // Verification: Audit log
+    // Verification: Persist Activity Log
     const timestamp = new Date().toISOString();
     await AuditLog.create({
       adminId: req.user.id,
@@ -42,7 +44,7 @@ const updateUserStatus = async (req, res) => {
       tenantId: req.user.tenantId
     });
 
-    res.json({ message: `User status updated to ${user.status}`, user });
+    res.json({ message: `User status changed to ${targetStatus}`, user });
   } catch (error) {
     console.error('updateUserStatus Error Details:', error);
     res.status(500).json({ detail: error.message || "Server Error during status update" });

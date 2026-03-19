@@ -11,9 +11,14 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
 
   const handleStatusChange = async (action) => {
     try {
-      const loadingToast = toast.loading(`${action}ing user lifecycle...`);
+      const loadingToast = toast.loading(`${action === 'Activate' ? 'Restoring' : action + 'ing'} user lifecycle...`);
       await apiClient.patch(`users/${user.id}/status`, { action });
-      toast.success(`User ${user.full_name} has been ${action === 'Block' ? 'Blocked' : 'Suspended'}.`, { id: loadingToast });
+      
+      const successMsg = action === 'Activate' 
+        ? `User ${user.full_name} has been restored to Active status.` 
+        : `User ${user.full_name} has been ${action === 'Block' ? 'Blocked' : 'Suspended'}.`;
+        
+      toast.success(successMsg, { id: loadingToast });
       onRefresh();
       onClose();
     } catch (err) {
@@ -45,6 +50,9 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
       toast.error(err.response?.data?.detail || 'Termination failed.');
     }
   };
+
+  const isBlocked = user?.status?.toLowerCase().startsWith('block');
+  const isSuspended = user?.status?.toLowerCase().startsWith('suspend');
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -142,19 +150,35 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
             
             <div className="grid grid-cols-2 gap-4">
               <button 
-                onClick={() => handleStatusChange('Block')}
-                className="py-6 rounded-3xl bg-amber-500/5 border border-amber-500/20 hover:bg-amber-500/10 text-amber-500 transition-all flex flex-col items-center justify-center gap-2 group"
+                onClick={() => handleStatusChange(isBlocked ? 'Activate' : 'Block')}
+                className={`py-6 rounded-3xl border transition-all flex flex-col items-center justify-center gap-2 group ${
+                  isBlocked 
+                    ? 'bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10 text-emerald-500' 
+                    : 'bg-amber-500/5 border-amber-500/20 hover:bg-amber-500/10 text-amber-500'
+                }`}
               >
-                <span className="text-2xl group-hover:scale-110 transition-transform">🔒</span>
-                <span className="text-[10px] font-black uppercase tracking-widest">Block Access</span>
+                <span className="text-2xl group-hover:scale-110 transition-transform">
+                  {isBlocked ? '🔓' : '🔒'}
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                  {isBlocked ? 'Unblock Access' : 'Block Access'}
+                </span>
               </button>
 
               <button 
-                onClick={() => handleStatusChange('Suspend')}
-                className="py-6 rounded-3xl bg-yellow-500/5 border border-yellow-500/20 hover:bg-yellow-500/10 text-yellow-500 transition-all flex flex-col items-center justify-center gap-2 group"
+                onClick={() => handleStatusChange(isSuspended ? 'Activate' : 'Suspend')}
+                className={`py-6 rounded-3xl border transition-all flex flex-col items-center justify-center gap-2 group ${
+                  isSuspended 
+                    ? 'bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10 text-emerald-500' 
+                    : 'bg-yellow-500/5 border-yellow-500/20 hover:bg-yellow-500/10 text-yellow-500'
+                }`}
               >
-                <span className="text-2xl group-hover:scale-110 transition-transform">⏳</span>
-                <span className="text-[10px] font-black uppercase tracking-widest">Suspend Account</span>
+                <span className="text-2xl group-hover:scale-110 transition-transform">
+                  {isSuspended ? '✅' : '⏳'}
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                  {isSuspended ? 'Unsuspend Account' : 'Suspend Account'}
+                </span>
               </button>
             </div>
 

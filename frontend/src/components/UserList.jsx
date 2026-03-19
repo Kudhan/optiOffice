@@ -61,12 +61,27 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
         });
     };
 
+    const isBlocked = user.status === 'blocked';
+    const isSuspended = user.status === 'suspended';
+
     return (
-        <div className="bg-white dark:bg-slate-800/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-2xl hover:border-sky-500/50 transition-all duration-500 group relative flex flex-col h-full">
+        <div className={`bg-white dark:bg-slate-800/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-2xl hover:border-sky-500/50 transition-all duration-500 group relative flex flex-col h-full ${isBlocked ? 'opacity-50 grayscale-[0.5]' : ''}`}>
             
             {/* Admin Action Menu */}
             {canManage && (
-                <div className="absolute top-5 right-5 z-20">
+                <div className="absolute top-5 right-5 z-20 flex gap-2">
+                    {/* Locked Status Indicators */}
+                    {isBlocked && (
+                        <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 animate-pulse" title="Account Locked">
+                            <span className="text-sm">🔒</span>
+                        </div>
+                    )}
+                    {isSuspended && (
+                        <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500" title="Account Suspended">
+                            <span className="text-sm">⏳</span>
+                        </div>
+                    )}
+                    
                     <button 
                         onClick={() => onOpenSecurity(user)}
                         className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-navy-950/50 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all text-slate-400 hover:text-sky-500 border border-transparent hover:border-sky-500/30 group/gear"
@@ -103,17 +118,17 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
             )}
 
             <div className="flex flex-col items-center text-center mb-6">
-                <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-slate-100 dark:bg-slate-700 border-4 border-white dark:border-slate-800 flex items-center justify-center shadow-xl relative mb-4 transition-transform group-hover:scale-105">
+                <div className={`w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-slate-100 dark:bg-slate-700 border-4 border-white dark:border-slate-800 flex items-center justify-center shadow-xl relative mb-4 transition-transform group-hover:scale-105 ${isBlocked ? 'border-rose-500/30 shadow-rose-500/5' : ''}`}>
                     <span className="text-xl lg:text-2xl font-black text-slate-400 dark:text-slate-300 tracking-tighter">{initials}</span>
                 </div>
 
                 <div className="flex items-center gap-2.5 w-full">
                     <div className="flex-1 min-w-0 overflow-hidden whitespace-nowrap group/name">
-                        <h3 className="inline-block text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tighter group-hover/name:text-sky-500 transition-colors leading-none truncate group-hover/name:animate-marquee-hover cursor-default pb-1">
+                        <h3 className={`inline-block text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tighter transition-colors leading-none truncate group-hover/name:animate-marquee-hover cursor-default pb-1 ${isBlocked ? 'text-rose-500' : 'group-hover/name:text-sky-500'}`}>
                             {user.full_name}
                         </h3>
                     </div>
-                    {isOnline && (
+                    {isOnline && !isBlocked && (
                         <span className="relative flex h-2.5 w-2.5 shrink-0">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border-2 border-white dark:border-slate-800"></span>
@@ -131,12 +146,10 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
                     <p className={`text-[10px] font-black ${user.role === 'admin' ? 'text-sky-500' : 'text-slate-500 dark:text-slate-300'} uppercase tracking-tighter truncate`}>{user.role || 'Member'}</p>
                 </div>
                 <div className="bg-slate-50 dark:bg-navy-950/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/50 overflow-hidden">
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 opacity-70 truncate">Deployment</p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 opacity-70 truncate">Lifecycle</p>
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] grayscale group-hover:grayscale-0 transition-all">
-                            {user.department === 'Engineering' ? '⚙️' : user.department === 'HR' ? '👥' : user.department === 'Sales' ? '💰' : '🏢'}
-                        </span>
-                        <p className="text-[10px] font-black text-slate-900 dark:text-slate-300 uppercase truncate tracking-tighter">{user.department || 'Not Assigned'}</p>
+                        <span className={`w-2 h-2 rounded-full ${isBlocked ? 'bg-rose-500 animate-pulse' : isSuspended ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                        <p className={`text-[10px] font-black uppercase truncate tracking-tighter ${isBlocked ? 'text-rose-500' : isSuspended ? 'text-amber-500' : 'text-emerald-500'}`}>{user.status || 'Active'}</p>
                     </div>
                 </div>
             </div>
@@ -159,6 +172,7 @@ function UserList() {
     const [departmentFilter, setDepartmentFilter] = useState('All');
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isSecurityOpen, setIsSecurityOpen] = useState(false);
+    const [isDeptOpen, setIsDeptOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
 
     const openSecurity = (user) => {
@@ -170,6 +184,8 @@ function UserList() {
         try {
             setLoading(true);
             const response = await apiClient.get('users');
+            // Diagnostic Sync Check
+            // console.debug('Personnel Intelligence Sync:', response.data);
             setUsers(response.data);
         } catch (err) {
             toast.error('Intelligence breach: Failed to synchronize team.');
@@ -191,7 +207,15 @@ function UserList() {
                 usr.department?.toLowerCase().includes(query);
             
             const matchesRole = roleFilter === 'All' || usr.role?.toLowerCase() === roleFilter.toLowerCase();
-            const matchesStatus = statusFilter === 'All' || usr.status?.toLowerCase() === statusFilter.toLowerCase();
+            const matchesStatus = statusFilter === 'All' || 
+                (statusFilter === 'Active' 
+                    ? (!usr.status?.toLowerCase().startsWith('block') && !usr.status?.toLowerCase().startsWith('suspend'))
+                    : usr.status?.toLowerCase().startsWith(statusFilter.toLowerCase().substring(0, 5)));
+            
+            // Debugging visibility
+            if (statusFilter !== 'All' && !matchesStatus) {
+                // console.debug(`User ${usr.full_name} excluded by Status Filter: ${statusFilter} (User Status: ${usr.status})`);
+            }
             const matchesDept = departmentFilter === 'All' || usr.department?.toLowerCase() === departmentFilter.toLowerCase();
             return matchesSearch && matchesRole && matchesStatus && matchesDept;
         });
@@ -201,7 +225,7 @@ function UserList() {
         <>
             <div className="p-6 lg:p-12 max-w-[1600px] mx-auto animate-fade-in pb-32">
             {/* Command Header */}
-            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-12 gap-10">
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-12 gap-10 relative z-[30]">
                 <div className="space-y-4">
                     <h2 className="text-4xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
                         {isManager ? 'My' : 'Personnel'} <span className="italic text-sky-500 font-extrabold underline decoration-sky-500/20 underline-offset-8">{isManager ? 'Team' : 'Directory'}</span>
@@ -233,55 +257,90 @@ function UserList() {
                     </div>
 
                     {/* Authority Switcher */}
-                    <div className="flex bg-white dark:bg-navy-950/50 p-1.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
+                    <div className="flex bg-white dark:bg-navy-950/50 p-2 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar max-w-full">
                         {['All', 'Admin', 'Employee'].map(role => (
                             <button
                                 key={role}
                                 onClick={() => setRoleFilter(role)}
-                                className={`px-5 lg:px-8 py-3 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest ${
+                                className={`px-6 py-3.5 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest flex items-center gap-2 whitespace-nowrap ${
                                     roleFilter === role 
-                                    ? 'bg-sky-500 text-white shadow-xl shadow-sky-500/30' 
-                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                                    ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' 
+                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                 }`}
                             >
+                                <span>{role === 'Admin' ? '👑' : role === 'Employee' ? '👤' : '🌐'}</span>
                                 {role}
                             </button>
                         ))}
                     </div>
 
                     {/* Status Filter */}
-                    <div className="flex bg-white dark:bg-navy-950/50 p-1.5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
+                    <div className="flex bg-white dark:bg-navy-950/50 p-2 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar max-w-full">
                         {['All', 'Active', 'Blocked', 'Suspended'].map(status => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
-                                className={`px-4 lg:px-6 py-3 rounded-2xl text-[9px] font-black transition-all uppercase tracking-widest ${
+                                className={`px-5 py-3.5 rounded-2xl text-[9px] font-black transition-all uppercase tracking-widest flex items-center gap-2 whitespace-nowrap ${
                                     statusFilter === status 
-                                    ? 'bg-amber-500 text-white shadow-xl shadow-amber-500/30' 
-                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' 
+                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                 }`}
                             >
+                                <span>{status === 'Active' ? '✅' : status === 'Blocked' ? '🔒' : status === 'Suspended' ? '⏳' : '🏁'}</span>
                                 {status}
                             </button>
                         ))}
                     </div>
 
-                    {/* Department Dropdown */}
-                    <select 
-                        className="bg-white dark:bg-navy-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl px-6 py-3 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase outline-none focus:ring-2 focus:ring-sky-500/20"
-                        value={departmentFilter}
-                        onChange={(e) => setDepartmentFilter(e.target.value)}
-                    >
-                        <option value="All">All Departments</option>
-                        {Array.from(new Set(users.map(u => u.department).filter(Boolean))).map(dept => (
-                            <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                    </select>
+                    {/* Premium Department Dropdown */}
+                    <div className="relative z-[60]">
+                        <button 
+                            onClick={() => setIsDeptOpen(!isDeptOpen)}
+                            className="bg-white dark:bg-navy-950/50 border border-slate-200 dark:border-slate-800 rounded-[2rem] px-8 py-4 text-[10px] font-black text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase outline-none transition-all flex items-center gap-3 shadow-xl group/dept min-w-[220px]"
+                        >
+                            <span className="text-sm">🏢</span>
+                            <span className="flex-1 text-left truncate">{departmentFilter === 'All' ? 'All Departments' : departmentFilter}</span>
+                            <span className={`transition-transform duration-300 ${isDeptOpen ? 'rotate-180' : ''}`}>▼</span>
+                        </button>
+
+                        {isDeptOpen && (
+                            <>
+                                <div className="fixed inset-0 z-40" onClick={() => setIsDeptOpen(false)}></div>
+                                <div className="absolute top-full mt-3 left-0 w-full min-w-[240px] bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-slate-200 dark:border-slate-800/80 overflow-hidden animate-scale-in z-50 p-2 space-y-1">
+                                    <button 
+                                        onClick={() => { setDepartmentFilter('All'); setIsDeptOpen(false); }}
+                                        className={`w-full text-left px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 ${
+                                            departmentFilter === 'All' 
+                                            ? 'bg-sky-500/10 text-sky-500' 
+                                            : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        🌐 All Departments
+                                    </button>
+                                    <div className="h-[1px] bg-slate-100 dark:bg-slate-800/50 mx-4 my-1"></div>
+                                    {Array.from(new Set(users.map(u => u.department).filter(Boolean))).map(dept => (
+                                        <button 
+                                            key={dept}
+                                            onClick={() => { setDepartmentFilter(dept); setIsDeptOpen(false); }}
+                                            className={`w-full text-left px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 ${
+                                                departmentFilter === dept 
+                                                ? 'bg-sky-500/10 text-sky-500' 
+                                                : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                                            }`}
+                                        >
+                                            {dept === 'Engineering' ? '⚙️' : dept === 'HR' ? '👥' : dept === 'Sales' ? '💰' : '🏢'}
+                                            {dept}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
 
                     {isAdmin && (
                         <button 
                             onClick={() => setIsInviteOpen(true)}
-                            className="bg-slate-900 dark:bg-white dark:text-navy-950 text-white font-black py-8.5 px-10  rounded-3xl transition-all shadow-xl hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-white active:scale-95 text-xs lg:text-sm flex items-center gap-3"
+                            className="bg-slate-900 dark:bg-white dark:text-navy-950 text-white font-black py-4.5 px-10 rounded-3xl transition-all shadow-xl hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-white active:scale-95 text-xs flex items-center gap-3"
                         >
                             <span className="text-lg">➕</span>
                             Authorize
