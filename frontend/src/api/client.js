@@ -51,22 +51,33 @@ apiClient.interceptors.response.use(
       // These triggered accidental logouts before; now they selectively warn the user
       else if (status === 403) {
         const securityDetail = response.data?.detail || response.data?.message || 'Access Denied: Security Policy Enforced.';
-        // We do NOT clear the token here.
-        toast.error(securityDetail, {
-          duration: 5000,
-          id: 'security-restriction', // Prevent multiple duplicate toasts
-          style: { 
-            borderRadius: '20px', 
-            background: '#0B1120', 
-            color: '#fff',
-            border: '1px solid rgba(244, 63, 94, 0.4)',
-            fontSize: '12px',
-            fontWeight: '900',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em'
-          }
-        });
-        // Important: Stop the propagation to prevent handleRoleChange success logic from running
+        
+        // Immediate Session Termination for Blocked Accounts
+        if (securityDetail.toLowerCase().includes('disabled')) {
+          localStorage.removeItem('token');
+          toast.error(securityDetail, { 
+            id: 'security-lockout', 
+            duration: 5000, 
+            style: { background: '#9f1239', color: '#fff' } 
+          });
+          setTimeout(() => { window.location.href = '/login'; }, 2000);
+        } else {
+          // Warning Toast for Suspended (Read-only) or other 403s
+          toast.error(securityDetail, {
+            duration: 5000,
+            id: 'security-restriction',
+            style: { 
+              borderRadius: '20px', 
+              background: '#0B1120', 
+              color: '#fff',
+              border: '1px solid rgba(244, 63, 94, 0.4)',
+              fontSize: '12px',
+              fontWeight: '900',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }
+          });
+        }
         return Promise.reject(error);
       }
       // Validation or Client Errors

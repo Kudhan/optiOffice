@@ -22,11 +22,12 @@ const updateUserStatus = async (req, res) => {
 
     const targetStatus = action === 'Block' ? 'blocked' : 
                          action === 'Suspend' ? 'suspended' : 'active';
-    
+    const isDisabled = action === 'Block'; // Sync with legacy field
+
     // Atomically Update Status with Scope Guard
     const user = await User.findOneAndUpdate(
       { _id: targetUserId, tenantId: req.user.tenantId },
-      { $set: { status: targetStatus } },
+      { $set: { status: targetStatus, disabled: isDisabled } },
       { new: true, runValidators: true }
     );
 

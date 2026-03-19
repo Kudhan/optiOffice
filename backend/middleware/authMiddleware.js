@@ -14,15 +14,15 @@ const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Real-time Status Verification: The Live Guard
-      const user = await User.findById(decoded.id).select('status');
+      const user = await User.findById(decoded.id).select('status disabled');
       
       if (!user) {
         return res.status(401).json({ detail: 'Account Identity Null: Access Denied' });
       }
 
-      // 1. Blocked Status: Total Lockout
-      if (user.status === 'blocked') {
-        return res.status(401).json({ detail: 'Your account has been disabled. Contact Admin.' });
+      // 1. Blocked Status: Total Lockout (with legacy fallback)
+      if (user.disabled || user.status?.toLowerCase() === 'blocked') {
+        return res.status(403).json({ detail: 'Your account has been disabled. Contact Admin.' });
       }
 
       // 2. Suspended Status: Global Write-Restrict (Read-only mode)

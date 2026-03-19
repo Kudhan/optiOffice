@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { 
+    Users, ShieldCheck, UserCircle, Globe, Search, 
+    Settings, ChevronDown, Briefcase, Cpu, Landmark, 
+    UserPlus, Lock, Clock, Ban, CheckCircle2, Shield, User, Radar 
+} from 'lucide-react';
 import apiClient from '../api/client';
 import useAuth from '../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -73,12 +78,12 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
                     {/* Locked Status Indicators */}
                     {isBlocked && (
                         <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 animate-pulse" title="Account Locked">
-                            <span className="text-sm">🔒</span>
+                            <Lock className="w-4 h-4" />
                         </div>
                     )}
                     {isSuspended && (
                         <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500" title="Account Suspended">
-                            <span className="text-sm">⏳</span>
+                            <Clock className="w-4 h-4" />
                         </div>
                     )}
                     
@@ -87,7 +92,7 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
                         className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-navy-950/50 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all text-slate-400 hover:text-sky-500 border border-transparent hover:border-sky-500/30 group/gear"
                         title="Secure Access Protocol"
                     >
-                        <span className="text-sm transition-transform group-hover/gear:rotate-90">⚙️</span>
+                        <Settings className="w-4 h-4 transition-transform group-hover/gear:rotate-90" />
                     </button>
                     
                     {/* Former Dropdown - Removed as per user request to use Modal for all security actions */}
@@ -244,9 +249,7 @@ function UserList() {
                 <div className="flex flex-wrap items-center gap-6 w-full xl:w-auto">
                     {/* Search Engine */}
                     <div className="relative group flex-1 md:min-w-[400px]">
-                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors font-black flex items-center gap-2">
-                            <span>🔍</span>
-                        </span>
+                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
                         <input 
                             type="text"
                             placeholder="Identify assets..."
@@ -268,7 +271,9 @@ function UserList() {
                                     : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                 }`}
                             >
-                                <span>{role === 'Admin' ? '👑' : role === 'Employee' ? '👤' : '🌐'}</span>
+                                {role === 'Admin' ? <ShieldCheck className="w-4 h-4" /> : 
+                                 role === 'Employee' ? <UserCircle className="w-4 h-4" /> : 
+                                 <Users className="w-4 h-4" />}
                                 {role}
                             </button>
                         ))}
@@ -286,7 +291,10 @@ function UserList() {
                                     : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                 }`}
                             >
-                                <span>{status === 'Active' ? '✅' : status === 'Blocked' ? '🔒' : status === 'Suspended' ? '⏳' : '🏁'}</span>
+                                {status === 'Active' ? <CheckCircle2 className="w-3.5 h-3.5" /> : 
+                                 status === 'Blocked' ? <Lock className="w-3.5 h-3.5" /> : 
+                                 status === 'Suspended' ? <Clock className="w-3.5 h-3.5" /> : 
+                                 <Ban className="w-3.5 h-3.5" />}
                                 {status}
                             </button>
                         ))}
@@ -298,9 +306,9 @@ function UserList() {
                             onClick={() => setIsDeptOpen(!isDeptOpen)}
                             className="bg-white dark:bg-navy-950/50 border border-slate-200 dark:border-slate-800 rounded-[2rem] px-8 py-4 text-[10px] font-black text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase outline-none transition-all flex items-center gap-3 shadow-xl group/dept min-w-[220px]"
                         >
-                            <span className="text-sm">🏢</span>
+                            <Briefcase className="w-4 h-4 text-sky-500" />
                             <span className="flex-1 text-left truncate">{departmentFilter === 'All' ? 'All Departments' : departmentFilter}</span>
-                            <span className={`transition-transform duration-300 ${isDeptOpen ? 'rotate-180' : ''}`}>▼</span>
+                            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isDeptOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {isDeptOpen && (
@@ -315,7 +323,7 @@ function UserList() {
                                             : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                         }`}
                                     >
-                                        🌐 All Departments
+                                        <Globe className="w-4 h-4" /> All Departments
                                     </button>
                                     <div className="h-[1px] bg-slate-100 dark:bg-slate-800/50 mx-4 my-1"></div>
                                     {Array.from(new Set(users.map(u => u.department).filter(Boolean))).map(dept => (
@@ -328,7 +336,10 @@ function UserList() {
                                                 : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                             }`}
                                         >
-                                            {dept === 'Engineering' ? '⚙️' : dept === 'HR' ? '👥' : dept === 'Sales' ? '💰' : '🏢'}
+                                            {dept === 'Engineering' ? <Cpu className="w-4 h-4" /> : 
+                                             dept === 'HR' ? <Users className="w-4 h-4" /> : 
+                                             dept === 'Finance' ? <Landmark className="w-4 h-4" /> : 
+                                             <Briefcase className="w-4 h-4" />}
                                             {dept}
                                         </button>
                                     ))}
@@ -342,7 +353,7 @@ function UserList() {
                             onClick={() => setIsInviteOpen(true)}
                             className="bg-slate-900 dark:bg-white dark:text-navy-950 text-white font-black py-4.5 px-10 rounded-3xl transition-all shadow-xl hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-white active:scale-95 text-xs flex items-center gap-3"
                         >
-                            <span className="text-lg">➕</span>
+                            <UserPlus className="w-5 h-5" />
                             Authorize
                         </button>
                     )}
@@ -369,7 +380,7 @@ function UserList() {
 
             {!loading && filteredUsers.length === 0 && (
                 <div className="mt-20 text-center py-40 bg-slate-50 dark:bg-navy-950/20 rounded-[4rem] border-4 border-dashed border-slate-200 dark:border-slate-800">
-                    <div className="text-8xl mb-8 group-hover:animate-bounce transition-transform">🛰️</div>
+                    <Radar className="w-20 h-20 text-slate-300 dark:text-slate-700 animate-pulse mx-auto mb-8" />
                     <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">Zero Contacts.</h3>
                 </div>
             )}

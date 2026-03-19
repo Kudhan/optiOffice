@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { 
+  ShieldAlert, UserCog, Unlock, Lock, Clock, 
+  Trash2, X, Radiation, ShieldCheck, ChevronRight, CheckCircle2 
+} from 'lucide-react';
 import apiClient from '../api/client';
 import toast from 'react-hot-toast';
 
@@ -69,15 +73,16 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
         <div className="p-8 border-b border-border bg-primary/50">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-2xl font-black text-content-main tracking-tighter uppercase">
+              <h3 className="text-2xl font-black text-content-main tracking-tighter uppercase flex items-center gap-3">
+                <ShieldAlert className="w-8 h-8 text-sky-500" />
                 Secure Access Protocol
               </h3>
               <p className="text-content-muted text-[10px] font-bold tracking-[0.2em] uppercase mt-1">
                 Asset Identity: {user?.full_name}
               </p>
             </div>
-            <button onClick={onClose} className="w-10 h-10 rounded-full bg-primary-muted flex items-center justify-center text-content-main hover:bg-sky-500 hover:text-white transition-all">
-              ✕
+            <button onClick={onClose} className="w-10 h-10 rounded-full bg-primary-muted flex items-center justify-center text-content-main hover:bg-sky-500 hover:text-white transition-all shadow-inner">
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -88,7 +93,7 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
           {/* Section 1: Role Escalation */}
           <section className="space-y-4">
             <h4 className="text-xs font-black text-sky-500 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+              <UserCog className="w-4 h-4 animate-pulse" />
               Authority Controller
             </h4>
             
@@ -98,12 +103,13 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
                   <button
                     key={role}
                     onClick={() => setSelectedRole(role)}
-                    className={`flex-1 min-w-[120px] px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    className={`flex-1 min-w-[120px] px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                       selectedRole.toLowerCase() === role.toLowerCase() 
                         ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' 
                         : 'bg-primary-surface text-content-muted hover:bg-primary-muted border border-border'
                     }`}
                   >
+                    {role === 'Admin' && <ShieldCheck className="w-3.5 h-3.5" />}
                     {role}
                   </button>
                 ))}
@@ -113,9 +119,10 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
                 <button 
                   onClick={() => setShowConfirm(true)}
                   disabled={selectedRole.toLowerCase() === user?.role?.toLowerCase()}
-                  className="w-full py-4 rounded-2xl bg-primary-surface border border-border text-content-main text-xs font-black uppercase tracking-widest hover:bg-sky-500 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-full py-4 rounded-2xl bg-primary-surface border border-border text-content-main text-xs font-black uppercase tracking-widest hover:bg-sky-500 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
                 >
                   Initiate Role Change
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               ) : (
                 <div className="space-y-4 animate-fade-in">
@@ -144,7 +151,7 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
           {/* Section 2: Lifecycle Actions */}
           <section className="space-y-4">
             <h4 className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <ShieldAlert className="w-4 h-4 animate-pulse" />
               Lifecycle Management
             </h4>
             
@@ -157,9 +164,9 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
                     : 'bg-amber-500/5 border-amber-500/20 hover:bg-amber-500/10 text-amber-500'
                 }`}
               >
-                <span className="text-2xl group-hover:scale-110 transition-transform">
-                  {isBlocked ? '🔓' : '🔒'}
-                </span>
+                <div className="w-12 h-12 rounded-2xl bg-current/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  {isBlocked ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+                </div>
                 <span className="text-[10px] font-black uppercase tracking-widest">
                   {isBlocked ? 'Unblock Access' : 'Block Access'}
                 </span>
@@ -173,9 +180,9 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
                     : 'bg-yellow-500/5 border-yellow-500/20 hover:bg-yellow-500/10 text-yellow-500'
                 }`}
               >
-                <span className="text-2xl group-hover:scale-110 transition-transform">
-                  {isSuspended ? '✅' : '⏳'}
-                </span>
+                <div className="w-12 h-12 rounded-2xl bg-current/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  {isSuspended ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+                </div>
                 <span className="text-[10px] font-black uppercase tracking-widest">
                   {isSuspended ? 'Unsuspend Account' : 'Suspend Account'}
                 </span>
@@ -187,11 +194,11 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
               <div className="p-1 rounded-[2.2rem] bg-rose-500/10 border border-rose-500/30">
                 <button 
                   onClick={handleTerminate}
-                  className="w-full py-6 rounded-[1.8rem] bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.25em] hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/20 flex items-center justify-center gap-3 active:scale-95"
+                  className="w-full py-6 rounded-[1.8rem] bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.25em] hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/20 flex items-center justify-center gap-4 active:scale-95 group"
                 >
-                  <span>☢️</span>
+                  <Radiation className="w-5 h-5 group-hover:rotate-180 transition-transform duration-1000" />
                   Terminate User Lifecycle
-                  <span>☢️</span>
+                  <Radiation className="w-5 h-5 group-hover:rotate-180 transition-transform duration-1000" />
                 </button>
               </div>
               <p className="text-center text-[8px] text-rose-500/60 font-black uppercase tracking-[0.3em] mt-3 animate-pulse">

@@ -27,6 +27,7 @@ import {
   IconActivity,
   IconZap
 } from './Icons';
+import { ShieldAlert, AlertTriangle } from 'lucide-react';
 
 function Layout() {
   const { user, logout, isAdmin, hasPermission } = useAuth();
@@ -338,7 +339,27 @@ function Layout() {
         </header>
 
         {/* Dynamic Canvas */}
-        <main className="flex-1 bg-transparent relative">
+        <main className="flex-1 bg-transparent relative p-6 lg:p-10 pt-20">
+           {/* Global Suspension Banner */}
+           {user?.status === 'suspended' && (
+             <div className="max-w-[1600px] mx-auto mb-8 animate-fade-in">
+               <div className="bg-amber-500/10 border border-amber-500/20 backdrop-blur-xl p-6 rounded-[2.5rem] flex items-center justify-between gap-6 shadow-2xl shadow-amber-500/5">
+                 <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-500 shadow-inner">
+                     <ShieldAlert className="w-6 h-6 animate-pulse" />
+                   </div>
+                   <div>
+                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 mb-1">Access Restricted</h4>
+                     <p className="text-slate-500 dark:text-slate-400 text-sm font-bold tracking-tight">Your account is currently suspended. <span className="text-amber-500/80">Read-only mode</span> is active across all systems.</p>
+                   </div>
+                 </div>
+                 <div className="hidden md:flex flex-col items-end opacity-40">
+                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Security Node: Active</span>
+                   <span className="text-[8px] font-black uppercase tracking-widest text-amber-500">Limited Clearance</span>
+                 </div>
+               </div>
+             </div>
+           )}
            <Outlet context={{ user, data }} />
         </main>
       </div>

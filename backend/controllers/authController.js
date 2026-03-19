@@ -31,8 +31,9 @@ const loginUser = asyncHandler(async (req, res) => {
     return res.status(401).json({ success: false, message: 'Invalid username or password' });
   }
 
-  if (user.disabled) {
-    return res.status(403).json({ success: false, message: 'User is disabled' });
+  // Security Guard: Lifecycle Block
+  if (user.disabled || user.status?.toLowerCase() === 'blocked') {
+    return res.status(403).json({ success: false, message: 'Your account has been disabled. Contact Admin.' });
   }
 
   // Generate JWT mirroring python payload {"sub": user["username"], "role": user["role"]} and added tenantId and userId
