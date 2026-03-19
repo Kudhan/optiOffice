@@ -4,9 +4,10 @@ import useAuth from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { CardSkeleton } from './Skeleton';
 import InviteUserModal from './InviteUserModal';
+import SecurityModal from './SecurityModal';
 
 // --- Member Card Sub-Component ---
-const MemberCard = ({ user, onRefresh }) => {
+const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
     const { isAdmin: currentIsAdmin, user: currentUser, permissions } = useAuth();
     // Normalize both IDs to strings for robust comparison
     const isSelf = String(user._id) === String(currentUser?._id);
@@ -138,8 +139,11 @@ const MemberCard = ({ user, onRefresh }) => {
                 </div>
             </div>
 
-            <button className="w-full py-3.5 rounded-2xl bg-slate-900 dark:bg-white/5 text-white dark:text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 transition-all border border-transparent hover:border-sky-500/50 shadow-sm active:scale-95">
-                Secure Access Profile
+            <button 
+                onClick={() => onOpenSecurity(user)}
+                className="w-full py-3.5 rounded-2xl bg-slate-900 dark:bg-white/5 text-white dark:text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 transition-all border border-transparent hover:border-sky-500/50 shadow-sm active:scale-95"
+            >
+                Secure Access Protocol
             </button>
         </div>
     );
@@ -154,6 +158,13 @@ function UserList() {
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('All');
     const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [isSecurityOpen, setIsSecurityOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+
+    const openSecurity = (user) => {
+        setSelectedUser(user);
+        setIsSecurityOpen(true);
+    };
 
     const fetchUsers = async () => {
         try {
@@ -260,6 +271,7 @@ function UserList() {
                             key={usr._id || usr.username} 
                             user={usr} 
                             onRefresh={fetchUsers}
+                            onOpenSecurity={openSecurity}
                         />
                     ))}
                 </div>
@@ -277,6 +289,13 @@ function UserList() {
             isOpen={isInviteOpen} 
             onClose={() => setIsInviteOpen(false)} 
             onSuccess={fetchUsers}
+        />
+
+        <SecurityModal 
+            isOpen={isSecurityOpen}
+            onClose={() => setIsSecurityOpen(false)}
+            user={selectedUser}
+            onRefresh={fetchUsers}
         />
     </>
 );
