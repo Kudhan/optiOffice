@@ -23,10 +23,10 @@ app.use(express.json());
 app.use('/api/v1/auth', require('./routes/authRoutes'));
 
 // Fallback for variant auth pathing
-app.use('/auth', require('./routes/authRoutes')); 
+app.use('/auth', require('./routes/authRoutes'));
 
 // Fallback for legacy /token if needed (optional based on user request " correttamente hits /api/v1/auth/token")
-app.use('/', require('./routes/authRoutes')); 
+app.use('/', require('./routes/authRoutes'));
 
 // Check subscription status before allowing any write requests
 app.use(checkActiveSubscription);
@@ -45,6 +45,7 @@ const assetRoutes = require('./routes/assetRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const shiftRoutes = require('./routes/shiftRoutes');
+const migrateRoutes = require('./routes/migrate');
 
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/organization', organizationRoutes);
@@ -53,6 +54,7 @@ app.use('/api/v1/holidays', holidayRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/policies', policyRoutes);
 app.use('/api/v1/billing', billingRoutes);
+app.use('/api/run-migrate', migrateRoutes);
 app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/leaves', leaveRoutes);
 app.use('/api/v1/assets', assetRoutes);
