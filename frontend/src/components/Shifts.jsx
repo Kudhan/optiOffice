@@ -3,6 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 import useAuth from '../hooks/useAuth';
 import toast from 'react-hot-toast';
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "./ui/select";
+import { cn } from "../lib/utils";
 import { 
     IconSun, 
     IconMoon, 
@@ -446,44 +457,44 @@ const Shifts = () => {
                             >
                                 <div className="col-span-1 md:col-span-2 space-y-3">
                                     <label className="text-[9px] font-black uppercase tracking-[0.3em] text-content-muted ml-1">Pattern Designation</label>
-                                    <input 
+                                    <Input 
                                         name="name"
                                         defaultValue={editShift?.name}
                                         required
                                         placeholder="E.G. ALPHA CORE OPERATIONS"
-                                        className="w-full bg-primary-muted border-2 border-transparent hover:border-sky-500/30 focus:border-sky-500 focus:bg-white dark:focus:bg-navy-900 rounded-2xl p-4 text-[11px] font-black uppercase tracking-widest text-content-main outline-none transition-all shadow-inner placeholder:text-content-muted/30"
+                                        className="h-12 bg-primary-muted border-border rounded-2xl px-5 text-[11px] font-black uppercase tracking-widest text-content-main outline-none transition-all shadow-inner placeholder:text-content-muted/30 focus:ring-4 focus:ring-sky-500/10"
                                     />
                                 </div>
 
                                 <div className="space-y-3">
                                     <label className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-500 ml-1">Cycle Start</label>
-                                    <input 
+                                    <Input 
                                         name="startTime"
                                         type="time"
                                         defaultValue={editShift?.startTime}
                                         required
-                                        className="w-full bg-primary-muted border-2 border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-navy-900 rounded-2xl p-4 text-xs font-black text-content-main transition-all [color-scheme:light] dark:[color-scheme:dark]"
+                                        className="h-12 bg-primary-muted border-border rounded-2xl px-5 font-black text-xs [color-scheme:light] dark:[color-scheme:dark] transition-all focus:ring-2 focus:ring-emerald-500/20"
                                     />
                                 </div>
 
                                 <div className="space-y-3">
                                     <label className="text-[9px] font-black uppercase tracking-[0.3em] text-rose-500 ml-1">Cycle End</label>
-                                    <input 
+                                    <Input 
                                         name="endTime"
                                         type="time"
                                         defaultValue={editShift?.endTime}
                                         required
-                                        className="w-full bg-primary-muted border-2 border-transparent focus:border-rose-500 focus:bg-white dark:focus:bg-navy-900 rounded-2xl p-4 text-xs font-black text-content-main transition-all [color-scheme:light] dark:[color-scheme:dark]"
+                                        className="h-12 bg-primary-muted border-border rounded-2xl px-5 font-black text-xs [color-scheme:light] dark:[color-scheme:dark] transition-all focus:ring-2 focus:ring-rose-500/20"
                                     />
                                 </div>
 
                                 <div className="col-span-1 md:col-span-2 space-y-3">
                                     <label className="text-[9px] font-black uppercase tracking-[0.3em] text-content-muted ml-1 flex items-center gap-2">Buffer Offset (min)</label>
-                                    <input 
+                                    <Input 
                                         name="gracePeriod"
                                         type="number"
                                         defaultValue={editShift?.gracePeriod || 0}
-                                        className="w-full bg-primary-muted border-2 border-transparent focus:border-sky-500 focus:bg-white dark:focus:bg-navy-900 rounded-2xl p-4 text-[11px] font-black text-content-main transition-all"
+                                        className="h-12 bg-primary-muted border-border rounded-2xl px-5 text-[11px] font-black text-content-main transition-all focus:ring-4 focus:ring-sky-500/10"
                                     />
                                 </div>
 

@@ -11,6 +11,28 @@
   --text-muted: #64748b;
   --border-color: #e2e8f0;
   --accent: #0ea5e9;
+  
+  /* Shadcn Overrides */
+  --background: var(--bg-primary);
+  --foreground: var(--text-main);
+  --card: var(--bg-secondary);
+  --card-foreground: var(--text-main);
+  --popover: var(--bg-secondary);
+  --popover-foreground: var(--text-main);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--bg-tertiary);
+  --secondary-foreground: var(--text-main);
+  --muted: var(--bg-tertiary);
+  --muted-foreground: var(--text-muted);
+  --accent-shad: var(--bg-tertiary);
+  --accent-foreground: var(--text-main);
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: var(--accent);
+  --radius: 1rem;
 }
 
 .dark {
@@ -22,6 +44,27 @@
   --text-muted: #94a3b8;
   --border-color: #1e293b;
   --accent: #38bdf8;
+
+  /* Shadcn Overrides - Dark */
+  --background: var(--bg-primary);
+  --foreground: var(--text-main);
+  --card: var(--bg-secondary);
+  --card-foreground: var(--text-main);
+  --popover: var(--bg-secondary);
+  --popover-foreground: var(--text-main);
+  --primary: var(--accent);
+  --primary-foreground: #0f172a;
+  --secondary: var(--bg-tertiary);
+  --secondary-foreground: var(--text-main);
+  --muted: var(--bg-tertiary);
+  --muted-foreground: var(--text-muted);
+  --accent-shad: var(--bg-tertiary);
+  --accent-foreground: var(--text-main);
+  --destructive: #7f1d1d;
+  --destructive-foreground: #f8fafc;
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: var(--accent);
 }
 
 @layer base {

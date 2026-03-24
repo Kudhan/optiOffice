@@ -3,6 +3,20 @@ import apiClient from '../api/client';
 import useAuth from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { CardSkeleton } from './Skeleton';
+import { Calendar } from "./ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { cn } from "../lib/utils";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { 
   IconTrash, 
   IconCalendar, 
@@ -186,40 +200,60 @@ function Holidays() {
           <h3 className="text-2xl font-black text-content-main mb-6 uppercase tracking-tighter">New Holiday Event</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Event Name</label>
-              <input 
-                className="bg-primary-muted border border-border rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none"
-                placeholder="e.g. Annual Retreat"
+              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Event Designation</label>
+              <Input 
+                className="h-12 bg-primary-muted border-border rounded-2xl px-5 text-[11px] font-black uppercase tracking-widest text-content-main focus:ring-4 focus:ring-sky-500/10 transition-all placeholder:text-content-muted/30"
+                placeholder="E.G. ANNUAL OPERATIONS SUMMIT"
                 value={newHoliday.name}
                 onChange={(e) => setNewHoliday({...newHoliday, name: e.target.value})}
                 required
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Date</label>
-              <input 
-                type="date"
-                className="bg-primary-muted border border-border rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none text-content-main"
-                value={newHoliday.date}
-                onChange={(e) => setNewHoliday({...newHoliday, date: e.target.value})}
-                required
-              />
+              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Event Date</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-black h-12 rounded-2xl bg-primary-muted border-border hover:bg-primary-muted/80 text-[11px] uppercase tracking-widest px-5 shadow-inner",
+                      !newHoliday.date && "text-content-muted/40"
+                    )}
+                  >
+                    <IconCalendar className="mr-3 h-4 w-4 text-sky-500" />
+                    {newHoliday.date ? format(new Date(newHoliday.date), "PPP") : <span>Target Date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 rounded-2xl border-border shadow-2xl bg-white dark:bg-navy-950" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={newHoliday.date ? new Date(newHoliday.date) : undefined}
+                    onSelect={(date) => setNewHoliday({...newHoliday, date: date ? date.toISOString().split('T')[0] : ''})}
+                    initialFocus
+                    className="rounded-2xl"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Type</label>
-              <select 
-                className="bg-primary-muted border border-border rounded-2xl py-3 px-5 text-sm font-bold focus:ring-2 focus:ring-sky-500/20 outline-none appearance-none text-content-main"
+              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Classification</label>
+              <Select 
+                onValueChange={(val) => setNewHoliday({...newHoliday, type: val})}
                 value={newHoliday.type}
-                onChange={(e) => setNewHoliday({...newHoliday, type: e.target.value})}
               >
-                <option value="Public">Public</option>
-                <option value="Optional">Optional</option>
-                <option value="Company-Specific">Company-Specific</option>
-              </select>
+                <SelectTrigger className="w-full h-12 rounded-2xl bg-primary-muted border-border text-[11px] font-black uppercase tracking-widest px-5 shadow-inner">
+                  <SelectValue placeholder="Protocol Type" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-border bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl shadow-2xl">
+                  <SelectItem value="Public" className="text-[10px] font-black uppercase tracking-widest">Public Roster</SelectItem>
+                  <SelectItem value="Optional" className="text-[10px] font-black uppercase tracking-widest">Optional Entry</SelectItem>
+                  <SelectItem value="Company-Specific" className="text-[10px] font-black uppercase tracking-widest">Internal Sector</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-end">
-              <button type="submit" className="w-full bg-emerald-500 text-white font-black py-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 hover:brightness-110 transition-all">
-                Save Holiday
+              <button type="submit" className="w-full bg-emerald-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 hover:brightness-110 active:scale-95 transition-all text-[10px] uppercase tracking-widest">
+                Save & Synchronize
               </button>
             </div>
           </form>
