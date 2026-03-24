@@ -8,6 +8,7 @@ const {
   deleteUser,
   getUserDossier,
   updateUserHierarchy,
+  updateUserDepartment,
   accountControl
 } = require('../controllers/userController');
 const { getProfileData, updateProfile } = require('../controllers/profileController');
@@ -26,6 +27,7 @@ router.put('/profile', protect, updateProfile);
 // Management Routes
 router.post('/', protect, authorize('can_manage_users'), createUser);
 router.patch('/:id/hierarchy', protect, authorize('can_manage_users'), updateUserHierarchy);
+router.patch('/:id/department', protect, authorize('can_manage_users'), updateUserDepartment);
 router.post('/:id/kill-switch', protect, authorize('can_manage_users'), accountControl);
 router.patch('/:id/status', protect, authorize('can_manage_users'), validateAuthority, updateUserStatus);
 router.patch('/:id/authority', protect, authorize('can_manage_users'), validateAuthority, manageAuthority);

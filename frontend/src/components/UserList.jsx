@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
     Users, ShieldCheck, UserCircle, Globe, Search, 
     Settings, ChevronDown, Briefcase, Cpu, Landmark, 
-    UserPlus, Lock, Clock, Ban, CheckCircle2, Shield, User, Radar, ArrowRightLeft 
+    UserPlus, Lock, Clock, Ban, CheckCircle2, Shield, User, Radar, ArrowRightLeft, Building2
 } from 'lucide-react';
 import apiClient from '../api/client';
 import useAuth from '../hooks/useAuth';
@@ -12,9 +12,10 @@ import InviteUserModal from './InviteUserModal';
 import SecurityModal from './SecurityModal';
 import DossierModal from './DossierModal';
 import ManagerTransferModal from './ManagerTransferModal';
+import DepartmentShiftModal from './DepartmentShiftModal';
 
 // --- Member Card Sub-Component ---
-const MemberCard = ({ user, onRefresh, onOpenSecurity, onOpenDossier, onOpenTransfer }) => {
+const MemberCard = ({ user, onRefresh, onOpenSecurity, onOpenDossier, onOpenTransfer, onOpenDeptShift }) => {
     const { isAdmin: currentIsAdmin, user: currentUser, permissions } = useAuth();
     // Normalize both IDs to strings for robust comparison
     const isSelf = String(user.id) === String(currentUser?.id);
@@ -137,13 +138,22 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity, onOpenDossier, onOpenTran
                     </button>
 
                     {currentIsAdmin && (
-                        <button 
-                            onClick={() => onOpenTransfer(user)}
-                            className="w-11 h-11 rounded-xl bg-amber-500/10 hover:bg-amber-500 flex items-center justify-center transition-all text-amber-500 hover:text-white border border-amber-500/20 group/transfer"
-                            title="Personnel Transfer Protocol"
-                        >
-                            <ArrowRightLeft className="w-4 h-4 group-hover/transfer:rotate-180 transition-transform" />
-                        </button>
+                        <>
+                            <button 
+                                onClick={() => onOpenTransfer(user)}
+                                className="w-11 h-11 rounded-xl bg-amber-500/10 hover:bg-amber-500 flex items-center justify-center transition-all text-amber-500 hover:text-white border border-amber-500/20 group/transfer"
+                                title="Personnel Transfer Protocol"
+                            >
+                                <ArrowRightLeft className="w-4 h-4 group-hover/transfer:rotate-180 transition-transform" />
+                            </button>
+                            <button 
+                                onClick={() => onOpenDeptShift(user)}
+                                className="w-11 h-11 rounded-xl bg-indigo-500/10 hover:bg-indigo-500 flex items-center justify-center transition-all text-indigo-500 hover:text-white border border-indigo-500/20 group/dept"
+                                title="Department Shifting Protocol"
+                            >
+                                <Building2 className="w-4 h-4 group-dept:scale-110 transition-transform" />
+                            </button>
+                        </>
                     )}
 
                     <button 
@@ -177,6 +187,7 @@ function UserList() {
     const [isDossierOpen, setIsDossierOpen] = useState(false);
     const [isTransferOpen, setIsTransferOpen] = useState(false);
     const [isDeptOpen, setIsDeptOpen] = useState(false);
+    const [isShiftOpen, setIsShiftOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
 
     const openSecurity = (user) => {
@@ -192,6 +203,11 @@ function UserList() {
     const openTransfer = (user) => {
         setSelectedUser(user);
         setIsTransferOpen(true);
+    };
+
+    const openShift = (user) => {
+        setSelectedUser(user);
+        setIsShiftOpen(true);
     };
 
     const fetchUsers = async () => {
@@ -309,10 +325,9 @@ function UserList() {
                         ))}
                     </div>
 
-                    {/* Premium Department Dropdown */}
                     <div className="relative z-[60]">
                         <button 
-                            onClick={() => setIsDeptOpen(!isDeptOpen)}
+                            onClick={(e) => { e.stopPropagation(); setIsDeptOpen(!isDeptOpen); }}
                             className="bg-white dark:bg-navy-950/50 border border-slate-200 dark:border-slate-800 rounded-[2rem] px-8 py-4 text-[10px] font-black text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase outline-none transition-all flex items-center gap-3 shadow-xl group/dept min-w-[220px]"
                         >
                             <Briefcase className="w-4 h-4 text-sky-500" />
@@ -384,6 +399,7 @@ function UserList() {
                             onOpenSecurity={openSecurity}
                             onOpenDossier={openDossier}
                             onOpenTransfer={openTransfer}
+                            onOpenDeptShift={openShift}
                         />
                     ))}
                 </div>
@@ -420,6 +436,13 @@ function UserList() {
         <ManagerTransferModal 
             isOpen={isTransferOpen}
             onClose={() => setIsTransferOpen(false)}
+            user={selectedUser}
+            onRefresh={fetchUsers}
+        />
+
+        <DepartmentShiftModal 
+            isOpen={isShiftOpen}
+            onClose={() => setIsShiftOpen(false)}
             user={selectedUser}
             onRefresh={fetchUsers}
         />

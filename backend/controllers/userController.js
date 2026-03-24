@@ -295,6 +295,47 @@ const accountControl = async (req, res) => {
   }
 };
 
+// @desc    Update User Department
+// @route   PATCH /users/:id/department
+// @access  Private/Admin/HR
+const updateUserDepartment = async (req, res) => {
+  try {
+    const { departmentId } = req.body;
+    const targetUserId = req.params.id;
+
+    // Validate Department
+    const Department = mongoose.model('Department');
+    const department = await Department.findOne({ _id: departmentId, tenantId: req.user.tenantId });
+    if (!department) {
+      return res.status(404).json({ detail: "Department not found in your organization." });
+    }
+
+    // Update User
+    const user = await User.findById(targetUserId);
+    if (!user) return res.status(404).json({ detail: "User not found" });
+
+    const oldDept = user.department;
+    user.department = department.name;
+    user.department_id = department._id;
+    await user.save();
+
+    console.log(`[HIERARCHY] User ${user.username} shifted: ${oldDept} -> ${department.name}`);
+
+    res.json({ 
+      success: true, 
+      message: `Personnel Deployment Successful: Realigned to ${department.name}`,
+      user: {
+        id: user.id,
+        department: user.department,
+        department_id: user.department_id
+      }
+    });
+  } catch (error) {
+    console.error('[ERROR] Department Shift Failure:', error);
+    res.status(500).json({ message: "Department Shift Failed" });
+  }
+};
+
 module.exports = {
   getMe,
   getUsers,
@@ -303,5 +344,6 @@ module.exports = {
   deleteUser,
   getUserDossier,
   updateUserHierarchy,
+  updateUserDepartment,
   accountControl
 };
