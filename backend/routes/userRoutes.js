@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { getMe, getUsers, createUser, updateUser, deleteUser } = require('../controllers/userController');
+const { 
+  getMe, 
+  getUsers, 
+  createUser, 
+  updateUser, 
+  deleteUser,
+  getUserDossier,
+  updateUserHierarchy,
+  accountControl
+} = require('../controllers/userController');
 const { getProfileData, updateProfile } = require('../controllers/profileController');
 const { protect } = require('../middleware/authMiddleware');
 const authorize = require('../middleware/authorize');
@@ -10,9 +19,14 @@ const { updateUserStatus, manageAuthority, terminateUser } = require('../control
 
 router.get('/me', protect, getMe);
 router.get('/', protect, getUsers);
+router.get('/:id/dossier', protect, getUserDossier);
 router.get('/profile/:id', protect, getProfileData);
 router.put('/profile', protect, updateProfile);
+
+// Management Routes
 router.post('/', protect, authorize('can_manage_users'), createUser);
+router.patch('/:id/hierarchy', protect, authorize('can_manage_users'), updateUserHierarchy);
+router.post('/:id/kill-switch', protect, authorize('can_manage_users'), accountControl);
 router.patch('/:id/status', protect, authorize('can_manage_users'), validateAuthority, updateUserStatus);
 router.patch('/:id/authority', protect, authorize('can_manage_users'), validateAuthority, manageAuthority);
 router.delete('/:id/terminate', protect, authorize('can_manage_users'), validateAuthority, terminateUser);

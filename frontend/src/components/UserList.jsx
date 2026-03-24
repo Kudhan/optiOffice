@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
     Users, ShieldCheck, UserCircle, Globe, Search, 
     Settings, ChevronDown, Briefcase, Cpu, Landmark, 
-    UserPlus, Lock, Clock, Ban, CheckCircle2, Shield, User, Radar 
+    UserPlus, Lock, Clock, Ban, CheckCircle2, Shield, User, Radar, ArrowRightLeft 
 } from 'lucide-react';
 import apiClient from '../api/client';
 import useAuth from '../hooks/useAuth';
@@ -10,9 +10,11 @@ import toast from 'react-hot-toast';
 import { CardSkeleton } from './Skeleton';
 import InviteUserModal from './InviteUserModal';
 import SecurityModal from './SecurityModal';
+import DossierModal from './DossierModal';
+import ManagerTransferModal from './ManagerTransferModal';
 
 // --- Member Card Sub-Component ---
-const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
+const MemberCard = ({ user, onRefresh, onOpenSecurity, onOpenDossier, onOpenTransfer }) => {
     const { isAdmin: currentIsAdmin, user: currentUser, permissions } = useAuth();
     // Normalize both IDs to strings for robust comparison
     const isSelf = String(user.id) === String(currentUser?.id);
@@ -72,63 +74,27 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
     return (
         <div className={`bg-white dark:bg-slate-800/40 backdrop-blur-md rounded-[2.5rem] p-6 border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-2xl hover:border-sky-500/50 transition-all duration-500 group relative flex flex-col h-full ${isBlocked ? 'opacity-50 grayscale-[0.5]' : ''}`}>
             
-            {/* Admin Action Menu */}
-            {canManage && (
-                <div className="absolute top-5 right-5 z-20 flex gap-2">
-                    {/* Locked Status Indicators */}
-                    {isBlocked && (
-                        <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 animate-pulse" title="Account Locked">
-                            <Lock className="w-4 h-4" />
-                        </div>
-                    )}
-                    {isSuspended && (
-                        <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500" title="Account Suspended">
-                            <Clock className="w-4 h-4" />
-                        </div>
-                    )}
-                    
-                    <button 
-                        onClick={() => onOpenSecurity(user)}
-                        className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-navy-950/50 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all text-slate-400 hover:text-sky-500 border border-transparent hover:border-sky-500/30 group/gear"
-                        title="Secure Access Protocol"
-                    >
-                        <Settings className="w-4 h-4 transition-transform group-hover/gear:rotate-90" />
-                    </button>
-                    
-                    {/* Former Dropdown - Removed as per user request to use Modal for all security actions */}
-                    {false && showActions && (
-                         <div className="absolute right-0 mt-2 w-52 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800/80 overflow-hidden animate-scale-in z-30">
-                            <div className="p-1.5 space-y-0.5">
-                                {currentIsAdmin && (
-                                    <button onClick={() => handleRoleChange('admin')} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 hover:bg-sky-500/10 hover:text-sky-500 rounded-xl transition-all">
-                                        <span className="text-sm">👑</span>
-                                        Promote to Admin
-                                    </button>
-                                )}
-                                <button onClick={() => handleRoleChange('employee')} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl transition-all">
-                                    <span className="text-sm">👤</span>
-                                    Set as Employee
-                                </button>
-                            </div>
-                            <div className="h-[1px] bg-slate-100 dark:bg-slate-800/80 mx-3"></div>
-                            <div className="p-1.5">
-                                <button onClick={handleRemove} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 rounded-xl transition-all">
-                                    <span className="text-sm">⛔</span>
-                                    Terminate Access
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
+            {/* Status Indicators (Top Left) */}
+            <div className="absolute top-6 left-6 z-10 flex gap-2">
+                {isBlocked && (
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 animate-pulse" title="Account Locked">
+                        <Lock className="w-3.5 h-3.5" />
+                    </div>
+                )}
+                {isSuspended && (
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500" title="Account Suspended">
+                        <Clock className="w-3.5 h-3.5" />
+                    </div>
+                )}
+            </div>
 
-            <div className="flex flex-col items-center text-center mb-6">
+            <div className="flex flex-col items-center text-center mt-4 mb-6">
                 <div className={`w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-slate-100 dark:bg-slate-700 border-4 border-white dark:border-slate-800 flex items-center justify-center shadow-xl relative mb-4 transition-transform group-hover:scale-105 ${isBlocked ? 'border-rose-500/30 shadow-rose-500/5' : ''}`}>
                     <span className="text-xl lg:text-2xl font-black text-slate-400 dark:text-slate-300 tracking-tighter">{initials}</span>
                 </div>
 
-                <div className="flex items-center gap-2.5 w-full">
-                    <div className="flex-1 min-w-0 overflow-hidden whitespace-nowrap group/name">
+                <div className="flex items-center justify-center gap-2.5 w-full px-2">
+                    <div className="max-w-full overflow-hidden whitespace-nowrap group/name">
                         <h3 className={`inline-block text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tighter transition-colors leading-none truncate group-hover/name:animate-marquee-hover cursor-default pb-1 ${isBlocked ? 'text-rose-500' : 'group-hover/name:text-sky-500'}`}>
                             {user.full_name}
                         </h3>
@@ -140,12 +106,12 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
                         </span>
                     )}
                 </div>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.15em] opacity-60 mt-2">
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.15em] opacity-60 mt-2 truncate w-full px-4">
                     {user.email}
                 </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-6 flex-1">
+            <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-slate-50 dark:bg-navy-950/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/50 overflow-hidden">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 opacity-70 truncate">Authorization</p>
                     <p className={`text-[10px] font-black ${user.role === 'admin' ? 'text-sky-500' : 'text-slate-500 dark:text-slate-300'} uppercase tracking-tighter truncate`}>{user.role || 'Member'}</p>
@@ -158,6 +124,37 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Command Modules (Bottom Actions) */}
+            {canManage && (
+                <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-2">
+                    <button 
+                        onClick={() => onOpenDossier(user)}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-sky-500/10 hover:bg-sky-500 text-sky-500 hover:text-white transition-all font-black text-[9px] uppercase tracking-wider group/dossier border border-sky-500/20"
+                    >
+                        <Radar className="w-3.5 h-3.5 group-hover/dossier:animate-pulse" />
+                        Dossier
+                    </button>
+
+                    {currentIsAdmin && (
+                        <button 
+                            onClick={() => onOpenTransfer(user)}
+                            className="w-11 h-11 rounded-xl bg-amber-500/10 hover:bg-amber-500 flex items-center justify-center transition-all text-amber-500 hover:text-white border border-amber-500/20 group/transfer"
+                            title="Personnel Transfer Protocol"
+                        >
+                            <ArrowRightLeft className="w-4 h-4 group-hover/transfer:rotate-180 transition-transform" />
+                        </button>
+                    )}
+
+                    <button 
+                        onClick={() => onOpenSecurity(user)}
+                        className="w-11 h-11 rounded-xl bg-slate-50 dark:bg-navy-950/50 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all text-slate-400 hover:text-sky-500 border border-transparent hover:border-sky-500/30 group/gear"
+                        title="Secure Access Protocol"
+                    >
+                        <Settings className="w-4 h-4 transition-transform group-hover/gear:rotate-90" />
+                    </button>
+                </div>
+            )}
 
 
             {/* Action Button Removed - Security Protocol now lives in the Gear icon */}
@@ -177,12 +174,24 @@ function UserList() {
     const [departmentFilter, setDepartmentFilter] = useState('All');
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isSecurityOpen, setIsSecurityOpen] = useState(false);
+    const [isDossierOpen, setIsDossierOpen] = useState(false);
+    const [isTransferOpen, setIsTransferOpen] = useState(false);
     const [isDeptOpen, setIsDeptOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
 
     const openSecurity = (user) => {
         setSelectedUser(user);
         setIsSecurityOpen(true);
+    };
+
+    const openDossier = (user) => {
+        setSelectedUser(user);
+        setIsDossierOpen(true);
+    };
+
+    const openTransfer = (user) => {
+        setSelectedUser(user);
+        setIsTransferOpen(true);
     };
 
     const fetchUsers = async () => {
@@ -373,6 +382,8 @@ function UserList() {
                             user={usr} 
                             onRefresh={fetchUsers}
                             onOpenSecurity={openSecurity}
+                            onOpenDossier={openDossier}
+                            onOpenTransfer={openTransfer}
                         />
                     ))}
                 </div>
@@ -395,6 +406,20 @@ function UserList() {
         <SecurityModal 
             isOpen={isSecurityOpen}
             onClose={() => setIsSecurityOpen(false)}
+            user={selectedUser}
+            onRefresh={fetchUsers}
+        />
+
+        <DossierModal 
+            isOpen={isDossierOpen}
+            onClose={() => setIsDossierOpen(false)}
+            user={selectedUser}
+            onRefresh={fetchUsers}
+        />
+
+        <ManagerTransferModal 
+            isOpen={isTransferOpen}
+            onClose={() => setIsTransferOpen(false)}
             user={selectedUser}
             onRefresh={fetchUsers}
         />

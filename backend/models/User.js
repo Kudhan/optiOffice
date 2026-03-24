@@ -68,13 +68,17 @@ const userSchema = mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'blocked', 'suspended', 'Active'],
+    enum: ['active', 'blocked', 'suspended', 'Active', 'frozen'],
     default: 'active',
     set: v => v.toLowerCase()
   },
   joining_date: {
     type: String,
     default: ""
+  },
+  sessionVersion: {
+    type: Number,
+    default: 0
   },
   preferences: {
     language: { type: String, default: "en" },

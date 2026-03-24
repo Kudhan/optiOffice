@@ -45,6 +45,16 @@ const authorize = (requiredPermission) => {
         });
       }
 
+      // Task: Self-Management Restriction
+      // Admins/HR cannot edit their own critical roles or permissions
+      const isSelfEdit = req.params.id && String(req.params.id) === String(req.user.id);
+      if (isSelfEdit && (req.body.role || req.body.permissions)) {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'Security Policy: Self-management of roles or permissions is restricted. Please contact another administrator.' 
+        });
+      }
+
       next();
     } catch (error) {
       console.error('Authorization Error:', error);
