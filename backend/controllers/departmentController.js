@@ -6,8 +6,21 @@ const User = require('../models/User');
 // @access  Private
 const getDepartments = async (req, res) => {
   try {
-    const departments = await Department.find({ tenantId: req.user.tenantId })
+    let departments = await Department.find({ tenantId: req.user.tenantId })
       .populate('head', 'full_name username email');
+
+    // Auto-Provision "General" if missing
+    const hasGeneral = departments.some(d => d.name?.toLowerCase() === 'general');
+    if (!hasGeneral) {
+      const generalDept = await Department.create({
+        name: 'General',
+        tenantId: req.user.tenantId,
+        head: null
+      });
+      departments.push(generalDept);
+      console.log(`[PROVISION] General Unit established for tenant: ${req.user.tenantId}`);
+    }
+
     res.json(departments);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
