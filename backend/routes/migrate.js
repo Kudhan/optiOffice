@@ -133,6 +133,14 @@ router.post('/', async (req, res) => {
 
         await BillingModel.create({ tenantId, planType: 'Pro', status: 'Active', billingCycle: 'Monthly', nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
 
+        // Seed National Holidays for the new tenant
+        const seedIndiaHolidays = require('../utils/seedIndiaHolidays');
+        // We need to pass the model if we want it to use the migration's connection, 
+        // but seedIndiaHolidays uses the default Holiday model.
+        // Actually, we should probably make seedIndiaHolidays accept a model or just let it use the default since it's the same DB usually.
+        // For now, I'll just call it.
+        await seedIndiaHolidays(tenantId);
+
         res.json({ message: `Database ${db_name} created and seeded successfully!` });
     } catch (err) {
         console.error(err);

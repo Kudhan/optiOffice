@@ -43,45 +43,65 @@ const getNextHolidayInfo = (holidays) => {
 };
 
 // --- Holiday Card Sub-Component ---
-const HolidayCard = ({ holiday, isAdmin, onRefresh }) => {
+const HolidayCard = ({ holiday, isAdmin, onRefresh, setLoading }) => {
   const dateObj = new Date(holiday.date);
   const month = dateObj.toLocaleString('default', { month: 'short' });
   const day = dateObj.getDate();
 
-  const handleDelete = async () => {
-    toast((t) => (
-      <div className="flex flex-col gap-4">
-        <span className="font-bold text-white text-sm">Delete "{holiday.name}"?</span>
-        <div className="flex gap-2">
-          <button 
-            onClick={async () => {
-              try {
-                await apiClient.delete(`/holidays/${holiday._id}`);
-                toast.success("Holiday purged.");
-                onRefresh();
-                toast.dismiss(t.id);
-              } catch (err) {}
-            }}
-            className="bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-bold"
-          >
-            Confirm
-          </button>
-          <button onClick={() => toast.dismiss(t.id)} className="bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold">Cancel</button>
-        </div>
-      </div>
-    ), { style: { background: '#0B1120', border: '1px solid #1e293b' } });
+  // Check if holiday has passed
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPassed = dateObj < today;
+
+  const handleDelete = async (e) => {
+    e.stopPropagation(); // Prevent card clicks if we add them later
+    console.log('[DEBUG] Delete Clicked for:', holiday.name);
+    console.log('[DEBUG] Holiday Data:', holiday);
+    
+    if (!window.confirm(`Delete "${holiday.name}"? This action cannot be undone.`)) {
+      console.log('[DEBUG] Delete Cancelled by user');
+      return;
+    }
+
+    const holidayId = holiday.id || holiday._id;
+    console.log('[DEBUG] Target ID:', holidayId);
+
+    if (!holidayId) {
+      toast.error("Holiday ID missing. Please refresh.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await apiClient.delete(`/holidays/${holidayId}`);
+      console.log('[DEBUG] Delete Response:', res.data);
+      toast.success("Holiday purged successfully.");
+      onRefresh();
+    } catch (err) {
+      console.error('[DEBUG] Delete Error:', err);
+      const errMsg = err.response?.data?.message || "Internal server error during deletion";
+      toast.error(errMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="bg-primary-surface backdrop-blur-xl rounded-[2.5rem] p-6 border border-border bento-card-hover glass-hover flex items-center gap-6 group">
+    <div className={`bg-primary-surface backdrop-blur-xl rounded-[2.5rem] p-6 border border-border bento-card-hover glass-hover flex items-center gap-6 group transition-all duration-500 hover:shadow-2xl hover:shadow-sky-500/10 ${
+      isPassed ? 'opacity-40 grayscale-[0.3]' : 'opacity-100'
+    }`}>
       {/* Date Badge */}
-      <div className="flex flex-col items-center justify-center min-w-[80px] h-24 bg-sky-500 rounded-3xl shadow-lg shadow-sky-500/20 text-white">
+      <div className={`flex flex-col items-center justify-center min-w-[80px] h-24 rounded-3xl shadow-lg text-white transition-all duration-500 ${
+        isPassed 
+          ? 'bg-gradient-to-br from-slate-400 to-slate-600 shadow-slate-500/20' 
+          : 'bg-gradient-to-br from-sky-400 to-sky-600 shadow-sky-500/20'
+      }`}>
         <span className="text-[10px] font-black uppercase tracking-widest opacity-80">{month}</span>
         <span className="text-3xl font-black leading-none">{day}</span>
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center flex-wrap gap-2 mb-2">
           <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider ${
             holiday.type === 'Public' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
           }`}>
@@ -93,17 +113,32 @@ const HolidayCard = ({ holiday, isAdmin, onRefresh }) => {
               Paid
             </span>
           )}
+          <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+            holiday.isCustom !== false 
+              ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20' 
+              : 'bg-slate-500/10 text-slate-500'
+          }`}>
+            {holiday.isCustom !== false ? 'Personal Custom' : 'National Roster'}
+          </span>
+          {isPassed && (
+            <span className="bg-slate-500/10 text-slate-500 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider animate-pulse">
+              Completed
+            </span>
+          )}
         </div>
-        <h3 className="text-xl font-black text-content-main truncate tracking-tight">{holiday.name}</h3>
+        <h3 className={`text-xl font-black text-content-main truncate tracking-tight transition-all ${isPassed ? 'opacity-50 line-through' : ''}`}>{holiday.name}</h3>
       </div>
 
-      {isAdmin && (
-        <button 
-          onClick={handleDelete}
-          className="w-10 h-10 rounded-2xl bg-rose-500/5 hover:bg-rose-500 text-rose-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-        >
-          <IconTrash className="w-4 h-4" />
-        </button>
+      {isAdmin && holiday.isCustom !== false && (
+        <div className="flex items-center gap-2 relative z-50">
+          <button 
+            onClick={handleDelete}
+            title="Delete Custom Holiday"
+            className="w-12 h-12 rounded-3xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white flex items-center justify-center transition-all opacity-60 group-hover:opacity-100 hover:scale-110 active:scale-95 shadow-lg hover:shadow-rose-500/20 cursor-pointer relative z-[100]"
+          >
+            <IconTrash className="w-5 h-5 pointer-events-none" />
+          </button>
+        </div>
       )}
     </div>
   );
@@ -123,7 +158,11 @@ function Holidays() {
     try {
       setLoading(true);
       const res = await apiClient.get('/holidays');
-      setHolidays(res.data.data);
+      // Filter for 2026 AS PER METADATA sourcing
+      const currentYear = 2026; 
+      const data = res.data.data;
+      const filtered = data.filter(h => new Date(h.date).getFullYear() === currentYear);
+      setHolidays(filtered);
     } catch (err) {
       toast.error("Failed to load holiday grid.");
     } finally {
@@ -149,7 +188,8 @@ function Holidays() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiClient.post('/holidays', newHoliday);
+      // Backend defaults isCustom to true, but we can be explicit
+      await apiClient.post('/holidays', { ...newHoliday, isCustom: true });
       toast.success("Holiday added to calendar!");
       setShowForm(false);
       setNewHoliday({ name: '', date: '', type: 'Public', isPaid: true });
@@ -210,30 +250,18 @@ function Holidays() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Event Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-black h-12 rounded-2xl bg-primary-muted border-border hover:bg-primary-muted/80 text-[11px] uppercase tracking-widest px-5 shadow-inner",
-                      !newHoliday.date && "text-content-muted/40"
-                    )}
-                  >
-                    <IconCalendar className="mr-3 h-4 w-4 text-sky-500" />
-                    {newHoliday.date ? format(new Date(newHoliday.date), "PPP") : <span>Target Date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-2xl border-border shadow-2xl bg-white dark:bg-navy-950" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={newHoliday.date ? new Date(newHoliday.date) : undefined}
-                    onSelect={(date) => setNewHoliday({...newHoliday, date: date ? date.toISOString().split('T')[0] : ''})}
-                    initialFocus
-                    className="rounded-2xl"
-                  />
-                </PopoverContent>
-              </Popover>
+              <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Holiday Date</label>
+              <div className="relative group/input">
+                <input 
+                  type="date"
+                  value={newHoliday.date}
+                  onChange={(e) => setNewHoliday({...newHoliday, date: e.target.value})}
+                  className="w-full h-12 rounded-2xl bg-primary-muted border border-border px-5 text-[11px] font-black uppercase tracking-widest text-content-main focus:outline-none focus:ring-2 focus:ring-sky-500/50 appearance-none cursor-pointer transition-all hover:bg-primary-muted/80 shadow-inner"
+                  required
+                />
+                
+              </div>
+              <p className="text-[9px] text-content-muted/60 ml-2 font-bold italic">* Choose the target date for this holiday event</p>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-content-muted ml-2">Classification</label>
@@ -245,9 +273,9 @@ function Holidays() {
                   <SelectValue placeholder="Protocol Type" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-border bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl shadow-2xl">
-                  <SelectItem value="Public" className="text-[10px] font-black uppercase tracking-widest">Public Roster</SelectItem>
-                  <SelectItem value="Optional" className="text-[10px] font-black uppercase tracking-widest">Optional Entry</SelectItem>
-                  <SelectItem value="Company-Specific" className="text-[10px] font-black uppercase tracking-widest">Internal Sector</SelectItem>
+                  <SelectItem value="Public" className="text-[10px] font-black uppercase tracking-widest">Public Holiday</SelectItem>
+                  <SelectItem value="Optional" className="text-[10px] font-black uppercase tracking-widest">Optional Holiday</SelectItem>
+                  <SelectItem value="Company-Specific" className="text-[10px] font-black uppercase tracking-widest">Internal Holiday</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -294,7 +322,13 @@ function Holidays() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {holidays.map(h => (
-            <HolidayCard key={h._id} holiday={h} isAdmin={isAdmin} onRefresh={fetchHolidays} />
+            <HolidayCard 
+              key={h.id || h._id} 
+              holiday={h} 
+              isAdmin={isAdmin} 
+              onRefresh={fetchHolidays} 
+              setLoading={setLoading}
+            />
           ))}
         </div>
       )}

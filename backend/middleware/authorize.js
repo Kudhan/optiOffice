@@ -20,17 +20,20 @@ const authorize = (requiredPermission) => {
     }
 
     try {
+      // Robust tenant check: normalize both to string
+      const searchTenantId = String(req.user.tenantId);
+      
       // Lookup the role in the database for the specific tenant
-      // Performance Tip: Use .lean() for faster read-only queries
       const roleDoc = await Role.findOne({ 
         name: { $regex: new RegExp(`^${req.user.role}$`, 'i') }, 
-        tenantId: req.user.tenantId 
+        tenantId: searchTenantId 
       }).lean();
 
       if (!roleDoc) {
+        console.log(`[AUTH DEBUG] Role [${req.user.role}] not found for Tenant [${searchTenantId}]`);
         return res.status(403).json({ 
           success: false, 
-          message: 'Access Denied: Role not found for this tenant' 
+          message: 'Access Denied: Role permissions not initialized for your tenant. Please contact support.' 
         });
       }
 

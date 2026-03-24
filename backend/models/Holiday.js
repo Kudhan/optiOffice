@@ -23,9 +23,23 @@ const holidaySchema = new mongoose.Schema({
     type: String,
     required: true,
     index: true
+  },
+  isCustom: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true
+});
+
+// Transform output to match expected frontend structure (id instead of _id)
+holidaySchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    ret.id = ret._id.toString();
+    delete ret._id;
+  }
 });
 
 // Unique composite index to prevent duplicate holidays for the same company on the same date
