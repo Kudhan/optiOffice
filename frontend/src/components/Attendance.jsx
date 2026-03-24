@@ -95,6 +95,13 @@ function Attendance({ token }) {
             >
               STOP SESSION
             </button>
+          ) : (new Date().getDay() === 0 || new Date().getDay() === 6 || new Date().getDay() === 2) ? (
+            <button 
+              className="bg-slate-200 text-slate-400 font-black py-4 px-10 rounded-2xl cursor-not-allowed border border-border" 
+              disabled
+            >
+              WEEKOFF
+            </button>
           ) : (
             <button 
               className="bg-[#7DD3FC] hover:brightness-110 text-slate-800 font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-sky-300/20 active:scale-95" 

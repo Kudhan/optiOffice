@@ -24,8 +24,17 @@ const calculateWorkHours = (checkIn, checkOut) => {
  */
 const checkIn = asyncHandler(async (req, res) => {
   const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 is Sunday, 6 is Saturday
+
+  // Block clock-in on weekends (Temporarily including Tuesday for verification)
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Today is a weekoff. Clock-in is not allowed during weekends.' 
+    });
+  }
+
   const today = now.toISOString().split('T')[0];
-  const dayOfWeek = now.getDay(); // 0 is Sunday, 1 is Monday...
 
   // Debugging identity
   if (!req.user || !req.user.id) {
