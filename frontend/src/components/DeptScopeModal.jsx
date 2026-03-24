@@ -36,7 +36,7 @@ const DeptScopeModal = ({ isOpen, onClose, department, users }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex justify-center items-start pt-20 p-4">
+    <div className="fixed inset-0 z-[110] flex justify-center items-center  p-4">
       <div className="absolute inset-0 bg-navy-950/60 backdrop-blur-xl animate-fade-in" onClick={onClose} />
       
       {/* Container - Reduced width and padding for a 'compact' look */}

@@ -189,6 +189,7 @@ function UserList() {
     const [isDeptOpen, setIsDeptOpen] = useState(false);
     const [isShiftOpen, setIsShiftOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [availableDepartments, setAvailableDepartments] = useState([]);
 
     const openSecurity = (user) => {
         setSelectedUser(user);
@@ -224,8 +225,18 @@ function UserList() {
         }
     };
 
+    const fetchDepartments = async () => {
+        try {
+            const res = await apiClient.get('/departments');
+            setAvailableDepartments(res.data);
+        } catch (err) {
+            console.error("Filter sync failed.");
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
+        fetchDepartments();
     }, []);
 
     const filteredUsers = useMemo(() => {
@@ -350,21 +361,22 @@ function UserList() {
                                         <Globe className="w-4 h-4" /> All Departments
                                     </button>
                                     <div className="h-[1px] bg-slate-100 dark:bg-slate-800/50 mx-4 my-1"></div>
-                                    {Array.from(new Set(users.map(u => u.department).filter(Boolean))).map(dept => (
+                                    {availableDepartments.map(dept => (
                                         <button 
-                                            key={dept}
-                                            onClick={() => { setDepartmentFilter(dept); setIsDeptOpen(false); }}
+                                            key={dept.id || dept._id}
+                                            onClick={() => { setDepartmentFilter(dept.name); setIsDeptOpen(false); }}
                                             className={`w-full text-left px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 ${
-                                                departmentFilter === dept 
+                                                departmentFilter === dept.name 
                                                 ? 'bg-sky-500/10 text-sky-500' 
                                                 : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                             }`}
                                         >
-                                            {dept === 'Engineering' ? <Cpu className="w-4 h-4" /> : 
-                                             dept === 'HR' ? <Users className="w-4 h-4" /> : 
-                                             dept === 'Finance' ? <Landmark className="w-4 h-4" /> : 
+                                            {dept.name === 'Engineering' ? <Cpu className="w-4 h-4" /> : 
+                                             dept.name === 'HR' ? <Users className="w-4 h-4" /> : 
+                                             dept.name === 'Finance' ? <Landmark className="w-4 h-4" /> : 
+                                             dept.name === 'General' ? <Globe className="w-4 h-4" /> : 
                                              <Briefcase className="w-4 h-4" />}
-                                            {dept}
+                                            {dept.name}
                                         </button>
                                     ))}
                                 </div>

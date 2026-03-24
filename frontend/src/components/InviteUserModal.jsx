@@ -80,15 +80,9 @@ const ROLES = [
     { value: 'admin', label: 'Administrator', icon: '👑', desc: 'Full access · System control' },
 ];
 
-const DEPARTMENTS = [
-    { value: 'General', label: 'General', icon: '🌐' },
-    { value: 'Engineering', label: 'Engineering', icon: '⚙️' },
-    { value: 'Design', label: 'Design', icon: '🎨' },
-    { value: 'Operations', label: 'Operations', icon: '📊' },
-    { value: 'Finance', label: 'Finance', icon: '💰' },
-];
-
 const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
+    const [departments, setDepartments] = useState([]);
+    const [loadingDepts, setLoadingDepts] = useState(false);
     const [formData, setFormData] = useState({ 
         full_name: '', 
         username: '', 
@@ -96,6 +90,29 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
         role: 'employee',
         department: 'General'
     });
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchDepts();
+        }
+    }, [isOpen]);
+
+    const fetchDepts = async () => {
+        try {
+            setLoadingDepts(true);
+            const res = await apiClient.get('/departments');
+            const mapped = res.data.map(d => ({
+                value: d.name,
+                label: d.name,
+                icon: d.name === 'Engineering' ? '⚙️' : d.name === 'HR' ? '👤' : d.name === 'Finance' ? '💰' : d.name === 'General' ? '🌐' : '🏢'
+            }));
+            setDepartments(mapped);
+        } catch (err) {
+            console.error("Failed to load departments");
+        } finally {
+            setLoadingDepts(false);
+        }
+    };
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -182,7 +199,7 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
                                 label="Department"
                                 value={formData.department}
                                 onChange={val => setFormData({...formData, department: val})}
-                                options={DEPARTMENTS}
+                                options={departments.length > 0 ? departments : [{ value: 'General', label: 'General', icon: '🌐' }]}
                             />
                         </div>
 
