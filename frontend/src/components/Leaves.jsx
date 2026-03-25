@@ -25,6 +25,8 @@ const Leaves = () => {
     const [showModal, setShowModal] = useState(false);
     const [activeTab, setActiveTab] = useState('personal'); // 'personal' | 'team'
 
+    const [rejectionReason, setRejectionReason] = useState({});
+
     const fetchData = async () => {
         try {
             setLoading(true);
@@ -151,8 +153,6 @@ const Leaves = () => {
             total: leaves.length
         }), [leaves]);
 
-        const [rejectionReason, setRejectionReason] = useState({});
-
         return (
             <div className="space-y-12 animate-fade-in">
                 {/* Stats Oversight */}
@@ -202,8 +202,16 @@ const Leaves = () => {
                                                 <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest">{request.user?.role} Role</p>
                                             </div>
                                         </div>
-                                        <div className="bg-slate-100 dark:bg-slate-700 px-6 py-2 rounded-xl text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest border border-slate-200 dark:border-slate-600">
-                                            {request.type} Strategy | {Math.ceil(Math.abs(new Date(request.endDate) - new Date(request.startDate)) / (1000 * 60 * 60 * 24)) + 1} Days
+                                        <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-700 px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-600">
+                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 dark:text-slate-300 uppercase tracking-widest border-r border-slate-300 dark:border-slate-500 pr-4">
+                                                <IconCalendar className="w-3.5 h-3.5 text-sky-500" />
+                                                {new Date(request.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                <IconChevronRight className="w-2.5 h-2.5 opacity-30" />
+                                                {new Date(request.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            </div>
+                                            <div className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">
+                                                {request.type} | {Math.ceil(Math.abs(new Date(request.endDate) - new Date(request.startDate)) / (1000 * 60 * 60 * 24)) + 1}D
+                                            </div>
                                         </div>
                                     </div>
 
@@ -422,34 +430,49 @@ const Leaves = () => {
                                                         key={request.id}
                                                         className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[2rem] p-6 shadow-sm hover:shadow-xl transition-all relative group overflow-hidden"
                                                     >
-                                                        <div className="flex items-center gap-4 mb-6">
-                                                            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-slate-500 uppercase tracking-tighter">
-                                                                {request.user?.full_name?.charAt(0) || 'U'}
+                                                        <div className="flex items-center justify-between mb-6">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-slate-500 uppercase tracking-tighter">
+                                                                    {request.user?.full_name?.charAt(0) || 'U'}
+                                                                </div>
+                                                                <div>
+                                                                    <h5 className="font-bold text-slate-900 dark:text-white uppercase tracking-tight">{request.user?.full_name}</h5>
+                                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{request.type} Strategy</p>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <h5 className="font-bold text-slate-900 dark:text-white uppercase tracking-tight">{request.user?.full_name}</h5>
-                                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{request.type} Strategy</p>
-                                                            </div>
-                                                            <div className="ml-auto bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-600 text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+                                                            <div className="bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-600 text-[9px] font-black text-slate-500 uppercase tracking-tighter text-center">
+                                                                <div className="flex items-center gap-1.5 justify-center mb-0.5 opacity-60">
+                                                                    <IconCalendar className="w-2.5 h-2.5" />
+                                                                    <span>{new Date(request.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                                </div>
                                                                 {Math.ceil(Math.abs(new Date(request.endDate) - new Date(request.startDate)) / (1000 * 60 * 60 * 24)) + 1}D
                                                             </div>
                                                         </div>
 
                                                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mb-6 h-8 italic">"{request.reason || 'No reason provided'}"</p>
 
-                                                        <div className="flex gap-3">
-                                                            <button 
-                                                                onClick={() => handleManage(request.id, 'Rejected')}
-                                                                className="flex-1 py-3 rounded-xl bg-rose-500/10 text-rose-500 font-black text-[9px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
-                                                            >
-                                                                Deny
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleManage(request.id, 'Approved')}
-                                                                className="flex-2 py-3 rounded-xl bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all"
-                                                            >
-                                                                Authorise
-                                                            </button>
+                                                        <div className="space-y-3">
+                                                            <input 
+                                                                type="text"
+                                                                placeholder="FEEDBACK / RATIONALE..."
+                                                                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 focus:border-sky-500 outline-none text-[9px] font-black uppercase tracking-widest transition-all"
+                                                                onChange={(e) => setRejectionReason({ ...rejectionReason, [request.id]: e.target.value })}
+                                                                value={rejectionReason[request.id] || ""}
+                                                            />
+                                                            <div className="flex gap-3">
+                                                                <button 
+                                                                    onClick={() => handleManage(request.id, 'Rejected', rejectionReason[request.id])}
+                                                                    className="flex-1 py-3 rounded-xl bg-rose-500/10 text-rose-500 font-black text-[9px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
+                                                                >
+                                                                    Deny
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleManage(request.id, 'Approved', rejectionReason[request.id])}
+                                                                    className="flex-2 py-3 rounded-xl bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all"
+                                                                >
+                                                                    Authorise
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </motion.div>
                                                 ))}

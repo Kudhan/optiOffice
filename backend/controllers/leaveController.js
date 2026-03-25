@@ -78,7 +78,7 @@ const getLeaves = async (req, res) => {
         {
           $project: {
             user: { _id: '$userDoc._id', id: '$userDoc._id', full_name: '$userDoc.full_name', role: '$userDoc.role' },
-            type: 1, startDate: 1, endDate: 1, status: 1, reason: 1, appliedTo: 1, createdAt: 1
+            type: 1, startDate: 1, endDate: 1, status: 1, reason: 1, rejection_reason: 1, appliedTo: 1, createdAt: 1
           }
         }
       ]);
