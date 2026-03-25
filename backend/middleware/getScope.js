@@ -45,16 +45,17 @@ const getScope = async (req) => {
  * Security Utility: getTeamScope (Aggregated Filter)
  * Used for cross-collection queries (Attendance, Tasks)
  */
-const getTeamScope = async (req, type = 'id') => {
+const getTeamScope = async (req, fieldName = 'user') => {
   const filter = await getScope(req);
+  const users = await User.find(filter).select('_id');
+  const userIds = users.map(u => u._id);
   
-  // Convert results of getScope into a set of User IDs or Usernames
-  const users = await User.find(filter).select('_id username');
-  
-  if (type === 'username') {
-    return { tenantId: req.user.tenantId, assigned_to: { $in: users.map(u => u.username) } };
+  if (fieldName === 'assigned_to') {
+    // For tasks, we check if ANY assigned user is in our scoped list
+    return { tenantId: req.user.tenantId, assigned_to: { $in: userIds } };
   }
-  return { tenantId: req.user.tenantId, user: { $in: users.map(u => u._id) } };
+  
+  return { tenantId: req.user.tenantId, [fieldName]: { $in: userIds } };
 };
 
 module.exports = { getScope, getTeamScope };

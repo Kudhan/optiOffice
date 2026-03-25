@@ -15,8 +15,9 @@ const taskSchema = mongoose.Schema({
     default: null
   },
   assigned_to: {
-    type: String,
-    default: null
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'User',
+    default: []
   },
   status: {
     type: String,

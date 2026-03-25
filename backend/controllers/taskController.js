@@ -7,8 +7,8 @@ const { recordActivity } = require('../utils/activityLogger');
 // @access  Private
 const getTasks = async (req, res) => {
   try {
-    const scope = await getTeamScope(req, 'username');
-    const tasks = await Task.find(scope);
+    const scope = await getTeamScope(req, 'assigned_to');
+    const tasks = await Task.find(scope).populate('assigned_to', 'full_name username profile_photo');
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -47,7 +47,8 @@ const updateTask = async (req, res) => {
     );
     
     if (task) {
-      res.json(true);
+      const populatedTask = await task.populate('assigned_to', 'full_name username profile_photo');
+      res.json(populatedTask);
       // Record activity
       await recordActivity(req, 'Task', 'Task Updated', `Title: ${task.title}, Status: ${task.status}`);
     } else {
