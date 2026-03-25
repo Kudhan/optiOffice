@@ -55,10 +55,17 @@ const TeamCalendar = () => {
 
     const getLeavesForDay = (day) => {
         if (!day) return [];
+        // Normalize calendar date to local midnight
         const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-        return teamLeaves.filter(l => {
+        date.setHours(0, 0, 0, 0);
+
+        return filteredLeaves.filter(l => {
+            // Normalize start/end dates to local midnight for comparison
             const start = new Date(l.startDate);
+            start.setHours(0, 0, 0, 0);
             const end = new Date(l.endDate);
+            end.setHours(0, 0, 0, 0);
+            
             return date >= start && date <= end && l.status !== 'Rejected';
         });
     };
@@ -148,11 +155,11 @@ const TeamCalendar = () => {
                                     </span>
                                 )}
                                 
-                                <div className="space-y-1.5 overflow-y-auto max-h-[100px] scrollbar-hide">
-                                    {dayLeaves.map(l => (
+                                <div className="space-y-1 overflow-y-auto max-h-[110px] scrollbar-hide">
+                                    {dayLeaves.slice(0, 3).map(l => (
                                         <div 
                                             key={l.id}
-                                            className={`px-2 py-1 rounded-md text-[8.5px] font-black uppercase tracking-tighter truncate border ${
+                                            className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter truncate border ${
                                                 l.status === 'Approved' 
                                                 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
                                                 : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
@@ -162,6 +169,11 @@ const TeamCalendar = () => {
                                             {l.user?.full_name}
                                         </div>
                                     ))}
+                                    {dayLeaves.length > 3 && (
+                                        <div className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter border bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 text-center">
+                                            + {dayLeaves.length - 3} OTHERS
+                                        </div>
+                                    )}
                                 </div>
 
                                 {isToday && <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-sky-500 rounded-full shadow-lg shadow-sky-500/50 animate-pulse" />}
