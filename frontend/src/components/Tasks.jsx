@@ -257,9 +257,12 @@ function Tasks({ token }) {
                       )}
                     </div>
                     
-                    <h4 className="font-black text-content-main text-xl mb-2 tracking-tighter leading-tight group-hover:text-sky-500 transition-colors uppercase italic">{task.title}</h4>
-                    <p className="text-content-muted text-xs font-medium line-clamp-2 mb-8 leading-relaxed italic opacity-70">
-                        {task.description || "Experimental protocol in progress..."}
+                    <h4 className="font-black text-content-main text-xl mb-1 tracking-tighter leading-tight group-hover:text-sky-500 transition-colors uppercase italic">{task.title}</h4>
+                    <p className="text-sky-500 text-[10px] font-black uppercase tracking-widest mb-3 opacity-80 decoration-sky-500/30 underline">
+                        {task.assigned_to?.map(u => u.full_name.split(' ')[0]).join(' & ') || 'Pending Assignment'}
+                    </p>
+                    <p className="text-content-muted text-[11px] font-medium line-clamp-2 mb-8 leading-relaxed opacity-70">
+                        {task.description || "Standard operation parameters enforced."}
                     </p>
                     
                     <div className="flex items-center justify-between pt-6 border-t border-border">
