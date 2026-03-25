@@ -1,19 +1,22 @@
 const User = require('../models/User');
 const Task = require('../models/Task');
-const Leave = require('../models/Leave');
+const { Leave } = require('../models/Leave');
 const Asset = require('../models/Asset');
 const { getScope, getTeamScope } = require('../middleware/getScope');
 
-// @desc    Get dashboard metrics using Aggregation Pipelines
-// @route   GET /dashboard
-// @access  Private
+/**
+ * @desc    Get dashboard metrics using Aggregation Pipelines
+ * @route   GET /dashboard
+ * @access  Private
+ */
 const getDashboardData = async (req, res) => {
   try {
     const role = req.user.role;
     const userFilter = await getScope(req);
-    const taskScope = await getTeamScope(req, 'username');
-    // Note: Leave model likely uses 'user' field (ObjectId), building scope for it
-    const idScope = await getTeamScope(req, 'id');
+    
+    // Task 1: Fix - use 'assigned_to' for tasks and 'user' for leaves
+    const taskScope = await getTeamScope(req, 'assigned_to');
+    const leaveScope = await getTeamScope(req, 'user');
     
     // Base data to return based on the Python structure expectations
     let dashboardResponse = {
@@ -24,7 +27,7 @@ const getDashboardData = async (req, res) => {
     // Scoped Counts
     const totalEmployees = await User.countDocuments(userFilter);
     const activeTasks = await Task.countDocuments({ ...taskScope, status: { $ne: 'Done' } });
-    const pendingLeaves = await Leave.countDocuments({ ...idScope, status: 'Pending' });
+    const pendingLeaves = await Leave.countDocuments({ ...leaveScope, status: 'Pending' });
 
     // Scoped Department Stats
     const deptStats = await User.aggregate([
@@ -40,7 +43,10 @@ const getDashboardData = async (req, res) => {
         pending_leaves: pendingLeaves
       };
       
-      dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $ne: 'Done' } }).sort({ priority: 1 }).limit(10);
+      dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $ne: 'Done' } })
+        .populate('assigned_to', 'full_name profile_photo')
+        .sort({ priority: 1 })
+        .limit(10);
       dashboardResponse.dept_distribution = deptStats;
 
     } else if (role === 'manager') {
@@ -53,7 +59,9 @@ const getDashboardData = async (req, res) => {
         team_count: totalEmployees
       };
       // Tasks assigned to their team
-      dashboardResponse.tasks = await Task.find(taskScope).limit(10);
+      dashboardResponse.tasks = await Task.find(taskScope)
+        .populate('assigned_to', 'full_name profile_photo')
+        .limit(10);
       
     } else {
       dashboardResponse.menu = ["My Tasks", "Attendance", "Leaves", "Profile", "Organization Tree", "Holidays"];
@@ -62,12 +70,14 @@ const getDashboardData = async (req, res) => {
         pending_leaves: pendingLeaves
       };
       // Get user specific tasks
-      dashboardResponse.tasks = await Task.find(taskScope).limit(10);
+      dashboardResponse.tasks = await Task.find(taskScope)
+        .populate('assigned_to', 'full_name profile_photo')
+        .limit(10);
     }
     
     res.json(dashboardResponse);
   } catch (error) {
-    console.error(error);
+    console.error("Dashboard Sector Failure:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };

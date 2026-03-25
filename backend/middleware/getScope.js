@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Role = require('../models/Role');
 
@@ -37,7 +38,7 @@ const getScope = async (req) => {
   // Default: DirectReport / Standard Manager
   return { 
     tenantId, 
-    $or: [{ manager: id }, { _id: id }] 
+    $or: [{ manager: new mongoose.Types.ObjectId(id) }, { _id: new mongoose.Types.ObjectId(id) }] 
   };
 };
 

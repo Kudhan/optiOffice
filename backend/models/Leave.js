@@ -1,10 +1,16 @@
 const mongoose = require('mongoose');
 
+// Task 1: The Leave Schema
 const leaveSchema = mongoose.Schema({
   tenantId: {
     type: String,
     required: true,
     default: 'default_tenant'
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   username: {
     type: String,
@@ -12,14 +18,15 @@ const leaveSchema = mongoose.Schema({
   },
   type: {
     type: String,
+    enum: ['EL', 'SL', 'CL', 'LWP'],
     required: true
   },
-  start_date: {
-    type: String,
+  startDate: {
+    type: Date,
     required: true
   },
-  end_date: {
-    type: String,
+  endDate: {
+    type: Date,
     required: true
   },
   reason: {
@@ -28,16 +35,13 @@ const leaveSchema = mongoose.Schema({
   },
   status: {
     type: String,
+    enum: ['Pending', 'Approved', 'Rejected'],
     default: "Pending"
   },
-  manager: {
+  appliedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: null
-  },
-  hr_notified: {
-    type: Boolean,
-    default: false
   },
   rejection_reason: {
     type: String,
@@ -48,13 +52,48 @@ const leaveSchema = mongoose.Schema({
   timestamps: true
 });
 
-leaveSchema.set('toJSON', {
+// Balance Model per User
+const leaveBalanceSchema = mongoose.Schema({
+  tenantId: {
+    type: String,
+    required: true
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true
+  },
+  annual_total: {
+    type: Number,
+    default: 30
+  },
+  used: {
+    type: Number,
+    default: 0
+  },
+  remaining: {
+    type: Number,
+    default: 30
+  }
+}, {
+  collection: 'leave_balances',
+  timestamps: true
+});
+
+const transforms = {
   virtuals: true,
   versionKey: false,
   transform: function (doc, ret) {
     ret.id = ret._id.toString();
     delete ret._id;
   }
-});
+};
 
-module.exports = mongoose.model('Leave', leaveSchema);
+leaveSchema.set('toJSON', transforms);
+leaveBalanceSchema.set('toJSON', transforms);
+
+const Leave = mongoose.model('Leave', leaveSchema);
+const LeaveBalance = mongoose.model('LeaveBalance', leaveBalanceSchema);
+
+module.exports = { Leave, LeaveBalance };

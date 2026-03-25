@@ -178,10 +178,22 @@ export const PriorityTasks = ({ tasks, isLoading, title = 'Priority Tasks' }) =>
                 {task.title}
             </h4>
             <div className="mt-4 flex justify-between items-center">
-                <div className="flex -space-x-2">
-                    <div className="w-8 h-8 rounded-full border-2 border-white dark:border-navy-950 bg-sky-500 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
-                        {task.assigned_to ? task.assigned_to.charAt(0).toUpperCase() : '?'}
-                    </div>
+                <div className="flex -space-x-2 overflow-hidden">
+                    {Array.isArray(task.assigned_to) && task.assigned_to.length > 0 ? (
+                        task.assigned_to.map((user, uIdx) => (
+                            <div 
+                                key={user.id || uIdx}
+                                className="w-8 h-8 rounded-full border-2 border-white dark:border-navy-950 bg-sky-500 flex items-center justify-center text-[10px] font-black text-white shadow-sm transition-transform hover:scale-110 hover:z-10 cursor-help"
+                                title={user.full_name}
+                            >
+                                {user.full_name?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="w-8 h-8 rounded-full border-2 border-white dark:border-navy-950 bg-slate-200 flex items-center justify-center text-[10px] font-black text-slate-400 shadow-sm">
+                            ?
+                        </div>
+                    )}
                 </div>
                 <span className="text-[9px] text-content-muted font-bold italic group-hover:text-sky-500 transition-colors">Toggle Status ➡️</span>
             </div>

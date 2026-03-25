@@ -54,7 +54,8 @@ export const useAuth = () => {
   };
 
   // Helper booleans for RBAC
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const isSuperAdmin = user?.role === 'super-admin';
   const isManager = user?.role === 'manager';
   const isEmployee = user?.role === 'employee';
   
@@ -76,6 +77,7 @@ export const useAuth = () => {
     user,
     permissions,
     isAdmin,
+    isSuperAdmin,
     isManager,
     isEmployee,
     hasPermission,

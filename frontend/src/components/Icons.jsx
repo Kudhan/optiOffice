@@ -52,8 +52,6 @@ export const IconGlobe = ({ className = "" }) => (
   </svg>
 );
 
-
-
 export const IconPaid = ({ className = "" }) => (
   <svg {...iconProps} className={className}>
     <circle cx="12" cy="12" r="10" />
@@ -69,6 +67,13 @@ export const IconUsers = ({ className = "" }) => (
     <circle cx="9" cy="7" r="4" />
     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+export const IconUser = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
   </svg>
 );
 
@@ -254,6 +259,7 @@ export const IconBookOpen = ({ className = "" }) => (
     <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
   </svg>
 );
+
 export const IconSunset = ({ className = "" }) => (
   <svg {...iconProps} className={className}>
     <path d="M12 10a4 4 0 0 1 0 8" />
@@ -265,8 +271,15 @@ export const IconSunset = ({ className = "" }) => (
     <path d="M20 10h2" />
   </svg>
 );
+
 export const IconChevronRight = ({ className = "" }) => (
   <svg {...iconProps} className={className}>
     <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+
+export const IconFilter = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
   </svg>
 );

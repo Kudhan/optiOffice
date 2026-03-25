@@ -1,106 +1,379 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import apiClient from '../api/client';
+import toast from 'react-hot-toast';
+import useAuth from '../hooks/useAuth';
+import { 
+  IconPlus, 
+  IconCheck, 
+  IconX, 
+  IconCalendar, 
+  IconUser, 
+  IconAlertCircle,
+  IconChevronRight,
+  IconClock,
+  IconInfo
+} from './Icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import LeaveRequestModal from './LeaveRequestModal';
+import TeamCalendar from './TeamCalendar';
 
-function Leaves({ token }) {
-  const [leaves, setLeaves] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [newLeave, setNewLeave] = useState({
-    type: 'Annual', start_date: '', end_date: '', reason: ''
-  });
-  const [isAdmin, setIsAdmin] = useState(false);
+const Leaves = () => {
+    const { user, isManager, isAdmin } = useAuth();
+    const [leaves, setLeaves] = useState([]);
+    const [balance, setBalance] = useState({ annual_total: 30, used: 0, remaining: 30 });
+    const [loading, setLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+    const [activeTab, setActiveTab] = useState('personal'); // 'personal' | 'team'
 
-  useEffect(() => {
-    fetchLeaves();
-    checkRole();
-  }, []);
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [leavesRes, balanceRes] = await Promise.all([
+                apiClient.get('/leaves'),
+                apiClient.get('/leaves/balance')
+            ]);
+            setLeaves(leavesRes.data);
+            setBalance(balanceRes.data);
+        } catch (err) {
+            console.error("Signal fragmentation in tactical data link");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const checkRole = async () => {
-    try {
-        const userRes = await apiClient.get('/users/me');
-        setIsAdmin(['admin', 'manager'].includes(userRes.data.role));
-    } catch (e) {}
-  };
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-  const fetchLeaves = async () => {
-    try {
-      const response = await apiClient.get('/leaves');
-      setLeaves(response.data);
-    } catch (err) {
-      console.error("Failed to fetch leaves", err);
-    }
-  };
+    const handleApply = async (formData) => {
+        try {
+            await apiClient.post('/leaves', formData);
+            setShowModal(false);
+            toast.success("Extraction Request Broadcasted Successfully", {
+                style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
+            });
+            fetchData();
+        } catch (err) {
+            console.error("Request crystalisation failed", err);
+            const message = err.response?.data?.message || err.response?.data?.detail || "Request protocol failure";
+            toast.error(message, {
+                style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
+            });
+        }
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await apiClient.post('/leaves', newLeave);
-      fetchLeaves();
-      setShowForm(false);
-      setNewLeave({ type: 'Annual', start_date: '', end_date: '', reason: '' });
-    } catch (err) {
-      // apiClient handles toast
-    }
-  };
+    const handleManage = async (id, status, reason = "") => {
+        try {
+            await apiClient.put(`/leaves/${id}/manage`, { status, reason });
+            toast.success(`Deployment Protocol: Request ${status}`, {
+                style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
+            });
+            fetchData();
+        } catch (err) {
+            console.error("Approval protocol failure", err);
+            const message = err.response?.data?.detail || "Authorization link failure";
+            toast.error(message, {
+                style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
+            });
+        }
+    };
 
-  const handleAction = async (id, action) => {
-    try {
-      await apiClient.put(`/leaves/${id}/${action}`, {});
-      fetchLeaves();
-    } catch (err) {
-      // Handled by client interceptor
-    }
-  };
+    const pendingApprovals = useMemo(() => {
+        return leaves.filter(l => {
+            if (l.status !== 'Pending') return false;
+            if (isAdmin) return true; // Admins see everything pending
+            return l.appliedTo === user?.id || (typeof l.appliedTo === 'object' && l.appliedTo?._id === user?.id);
+        });
+    }, [leaves, user, isAdmin]);
 
-  return (
-    <div className="leaves-container">
-      <div className="header-actions">
-        <h2>Leave Management</h2>
-        <button className="add-btn" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Apply Leave'}
-        </button>
-      </div>
+    const myRequests = useMemo(() => {
+        const currentUserId = user?.id || user?._id;
+        return leaves.filter(l => {
+            const leaveUserId = (typeof l.user === 'object') ? (l.user?.id || l.user?._id) : l.user;
+            return leaveUserId?.toString() === currentUserId?.toString();
+        });
+    }, [leaves, user]);
 
-      {showForm && (
-        <form className="leave-form" onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <select name="type" value={newLeave.type} onChange={(e) => setNewLeave({...newLeave, type: e.target.value})}>
-              <option value="Annual">Annual Leave</option>
-              <option value="Sick">Sick Leave</option>
-              <option value="Casual">Casual Leave</option>
-            </select>
-            <input type="date" value={newLeave.start_date} onChange={(e) => setNewLeave({...newLeave, start_date: e.target.value})} required />
-            <input type="date" value={newLeave.end_date} onChange={(e) => setNewLeave({...newLeave, end_date: e.target.value})} required />
-            <input placeholder="Reason" value={newLeave.reason} onChange={(e) => setNewLeave({...newLeave, reason: e.target.value})} />
-          </div>
-          <button type="submit" className="submit-btn">Submit Request</button>
-        </form>
-      )}
+    const ProgressRing = ({ percentage, color = "sky", label, value }) => {
+        const radius = 36;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (percentage / 100) * circumference;
 
-      <div className="leaves-list">
-        {leaves.map(leave => (
-          <div key={leave.id} className="leave-card">
-            <div className="leave-info">
-              <div className="leave-header">
-                <span className="leave-type">{leave.type}</span>
-                <span className={`status-badge ${leave.status.toLowerCase()}`}>{leave.status}</span>
-              </div>
-              <div className="leave-dates">
-                {leave.start_date} to {leave.end_date}
-              </div>
-              <div className="leave-reason">{leave.reason}</div>
-              {isAdmin && <div className="applicant">Applied by: {leave.username}</div>}
+        return (
+            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-6 rounded-[2rem] flex items-center justify-between shadow-sm group hover:shadow-xl transition-all relative overflow-hidden">
+                <div className="space-y-1 relative z-10">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+                    <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">{value} <span className="text-[10px] text-slate-400">Days</span></h4>
+                </div>
+                
+                <div className="relative flex items-center justify-center z-10">
+                    <svg className="w-20 h-20 transform -rotate-90">
+                        <circle
+                            className="text-slate-100 dark:text-slate-700"
+                            strokeWidth="8"
+                            stroke="currentColor"
+                            fill="transparent"
+                            r={radius}
+                            cx="40"
+                            cy="40"
+                        />
+                        <circle
+                            className={`text-${color}-500 transition-all duration-1000 ease-out`}
+                            strokeWidth="8"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={offset}
+                            strokeLinecap="round"
+                            stroke="currentColor"
+                            fill="transparent"
+                            r={radius}
+                            cx="40"
+                            cy="40"
+                        />
+                    </svg>
+                    <span className="absolute text-[10px] font-black text-slate-600 dark:text-slate-300">{Math.round(percentage)}%</span>
+                </div>
+                <div className={`absolute bottom-0 right-0 w-24 h-24 bg-${color}-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-${color}-500/10 transition-colors`} />
             </div>
-            {isAdmin && leave.status === 'Pending' && (
-              <div className="leave-actions">
-                <button className="approve-btn" onClick={() => handleAction(leave.id, 'approve')}>Approve</button>
-                <button className="reject-btn" onClick={() => handleAction(leave.id, 'reject')}>Reject</button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+        );
+    };
+
+    if (loading) return (
+        <div className="flex h-[80vh] items-center justify-center animate-pulse text-slate-400 font-black uppercase tracking-[0.3em] text-[10px]">
+            Calibrating Personnel Trajectories...
+        </div>
+    );
+
+    return (
+        <div className="p-6 md:p-10 max-w-[1700px] mx-auto space-y-10 animate-fade-in flex flex-col min-h-screen">
+            
+            {/* Strategy Header */}
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8 shrink-0">
+                <div className="space-y-2">
+                    <h2 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter leading-none uppercase">
+                        Leave <span className="text-sky-500 italic">Command</span>
+                    </h2>
+                    <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 w-fit">
+                        <IconClock className="w-3.5 h-3.5 text-sky-500" />
+                        <p className="text-slate-500 font-black text-[9px] uppercase tracking-[0.25em]">Operational Downtime Management</p>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+                    {(isManager || isAdmin) && (
+                        <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <button 
+                                onClick={() => setActiveTab('personal')}
+                                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'personal' ? 'bg-white dark:bg-slate-700 text-sky-500 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Personal
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('team')}
+                                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'team' ? 'bg-white dark:bg-slate-700 text-sky-500 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Team Hub
+                            </button>
+                        </div>
+                    )}
+                    {!isAdmin && (
+                        <button 
+                            onClick={() => setShowModal(true)}
+                            className="bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-black py-4 px-8 rounded-2xl shadow-xl transition-all flex items-center gap-3 active:scale-95 uppercase tracking-[0.2em] text-[10px]"
+                        >
+                            <IconPlus className="w-4 h-4" />
+                            Request Extraction
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+                {activeTab === 'personal' ? (
+                    <motion.div 
+                        key="personal-view"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-10"
+                    >
+                        {/* Task 1: Balance Bento Widgets */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <ProgressRing 
+                                label="Earned Leave Balance" 
+                                value={balance.remaining} 
+                                percentage={(balance.remaining / balance.annual_total) * 100} 
+                                color="sky"
+                            />
+                            <ProgressRing 
+                                label="Sick Leave Utilisation" 
+                                value={balance.used} 
+                                percentage={(balance.used / balance.annual_total) * 100} 
+                                color="amber"
+                            />
+                            <div className="bg-slate-900 rounded-[2rem] p-8 flex flex-col justify-between relative overflow-hidden shadow-xl text-white">
+                                <div className="relative z-10">
+                                    <p className="text-[10px] font-black opacity-50 uppercase tracking-widest">Total Remaining Allowance</p>
+                                    <h4 className="text-4xl font-black tracking-tighter mt-2">{balance.remaining} <span className="text-xs opacity-50 uppercase tracking-widest ml-2">Days Clear</span></h4>
+                                </div>
+                                <div className="flex items-center gap-2 mt-4 relative z-10">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-70">Quota Re-filling in 124 Days</p>
+                                </div>
+                                <IconInfo className="absolute top-8 right-8 w-12 h-12 text-white/5" />
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/20 rounded-full blur-[60px] -mr-16 -mt-16" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+                            {/* Pending Approvals */}
+                            {(isManager || isAdmin) && pendingApprovals.length > 0 && (
+                                <div className="xl:col-span-12 space-y-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
+                                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] whitespace-nowrap">
+                                            Pending Deployment <span className="text-sky-500">Approvals</span>
+                                        </h3>
+                                        <div className="h-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <AnimatePresence>
+                                            {pendingApprovals.map(request => (
+                                                <motion.div 
+                                                    layout
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.95 }}
+                                                    key={request.id}
+                                                    className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[2rem] p-6 shadow-sm hover:shadow-xl transition-all relative group overflow-hidden"
+                                                >
+                                                    <div className="flex items-center gap-4 mb-6">
+                                                        <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-black text-slate-500 uppercase tracking-tighter">
+                                                            {request.user?.full_name?.charAt(0) || 'U'}
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="font-bold text-slate-900 dark:text-white uppercase tracking-tight">{request.user?.full_name}</h5>
+                                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{request.type} Strategy</p>
+                                                        </div>
+                                                        <div className="ml-auto bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-600 text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+                                                            {Math.ceil(Math.abs(new Date(request.endDate) - new Date(request.startDate)) / (1000 * 60 * 60 * 24)) + 1}D
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mb-6 h-8 italic">"{request.reason || 'No reason provided'}"</p>
+
+                                                    <div className="flex gap-3">
+                                                        <button 
+                                                            onClick={() => handleManage(request.id, 'Rejected')}
+                                                            className="flex-1 py-3 rounded-xl bg-rose-500/10 text-rose-500 font-black text-[9px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
+                                                        >
+                                                            Deny
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleManage(request.id, 'Approved')}
+                                                            className="flex-2 py-3 rounded-xl bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all"
+                                                        >
+                                                            Authorise
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </AnimatePresence>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* My Requests Tracker */}
+                            <div className="xl:col-span-12 space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] whitespace-nowrap">
+                                        Incident <span className="text-sky-500">History</span>
+                                    </h3>
+                                    <div className="h-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
+                                </div>
+
+                                <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-md rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol Type</th>
+                                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Deployment Period</th>
+                                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Duration</th>
+                                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Hub</th>
+                                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rationale</th>
+                                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Manager Feedback</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                                            {myRequests.map(request => (
+                                                <tr key={request.id} className="group hover:bg-sky-500/5 transition-all">
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-2 h-2 rounded-full ${request.type === 'EL' ? 'bg-sky-500' : 'bg-amber-500'} animate-pulse`} />
+                                                            <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">{request.type} Strategy</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                                                            <IconCalendar className="w-3.5 h-3.5 text-sky-500/50" />
+                                                            {new Date(request.startDate).toLocaleDateString()}
+                                                            <IconChevronRight className="w-3 h-3 text-slate-300" />
+                                                            {new Date(request.endDate).toLocaleDateString()}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-center">
+                                                        <span className="text-xs font-black text-slate-900 dark:text-white uppercase">
+                                                            {Math.ceil(Math.abs(new Date(request.endDate) - new Date(request.startDate)) / (1000 * 60 * 60 * 24)) + 1}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className={`w-fit px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                                            request.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 
+                                                            request.status === 'Rejected' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 
+                                                            'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                                                        }`}>
+                                                            {request.status}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 max-w-xs transition-all">
+                                                        <p className="text-[10px] font-bold text-slate-400 truncate group-hover:text-slate-600 transition-colors uppercase tracking-tight">
+                                                            {request.reason || 'Strategic extraction protocol - No context provided.'}
+                                                        </p>
+                                                    </td>
+                                                    <td className="px-8 py-6 max-w-xs transition-all">
+                                                        <p className={`text-[10px] font-bold uppercase tracking-tight ${request.status === 'Rejected' ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                            {request.status === 'Rejected' ? (request.rejection_reason || 'No specific protocol feedback provided.') : '---'}
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="team-view"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <TeamCalendar />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <LeaveRequestModal 
+                isOpen={showModal} 
+                onClose={() => setShowModal(false)} 
+                onSubmit={handleApply}
+                user={user}
+            />
+        </div>
+    );
+};
 
 export default Leaves;
