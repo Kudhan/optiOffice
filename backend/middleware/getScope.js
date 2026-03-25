@@ -45,18 +45,16 @@ const getScope = async (req) => {
  * Security Utility: getTeamScope (Aggregated Filter)
  * Used for cross-collection queries (Attendance, Tasks)
  */
-const getTeamScope = async (req, fieldName = 'user') => {
+const getTeamScope = async (req, type = 'id') => {
   const filter = await getScope(req);
   
-  // Convert results of getScope into a set of User IDs
-  const users = await User.find(filter).select('_id');
-  const userIds = users.map(u => u._id);
+  // Convert results of getScope into a set of User IDs or Usernames
+  const users = await User.find(filter).select('_id username');
   
-  // Mongoose handles $in across arrays automatically, so this works for both single IDs and arrays
-  return { 
-    tenantId: req.user.tenantId, 
-    [fieldName]: { $in: userIds } 
-  };
+  if (type === 'username') {
+    return { tenantId: req.user.tenantId, assigned_to: { $in: users.map(u => u.username) } };
+  }
+  return { tenantId: req.user.tenantId, user: { $in: users.map(u => u._id) } };
 };
 
 module.exports = { getScope, getTeamScope };

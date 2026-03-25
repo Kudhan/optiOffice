@@ -14,11 +14,10 @@ const taskSchema = mongoose.Schema({
     type: String,
     default: null
   },
-  assigned_to: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    default: []
-  }],
+  assigned_to: {
+    type: String,
+    default: null
+  },
   status: {
     type: String,
     default: "To Do"
