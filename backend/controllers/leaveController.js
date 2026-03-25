@@ -197,6 +197,10 @@ const applyLeave = async (req, res) => {
 const manageRequest = async (req, res) => {
   try {
     const { status, reason } = req.body; // status: Approved | Rejected
+    if (status === 'Rejected' && (!reason || reason.trim() === '')) {
+      return res.status(400).json({ detail: "Strategic Requirement: A formal reason must be provided for all tactical denials." });
+    }
+
     const leave = await Leave.findOne({ _id: req.params.id, tenantId: req.user.tenantId })
       .populate('user', 'role full_name'); // Populate to check requester role
 
