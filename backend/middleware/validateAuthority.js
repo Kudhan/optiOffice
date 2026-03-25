@@ -23,6 +23,12 @@ const validateAuthority = async (req, res, next) => {
       });
     }
 
+    // Task 2: Admin Bypass for Hierarchy/Ceiling
+    // If the requester is an Admin, they can manage any user except themselves (Rule 1)
+    if (requester.role.toLowerCase() === 'admin' || requester.role.toLowerCase() === 'super-admin') {
+      return next();
+    }
+
     // Role-based Verification: can_edit_roles check for role changes
     const newRole = req.body.role;
     if (newRole) {
@@ -33,12 +39,6 @@ const validateAuthority = async (req, res, next) => {
       if (!requesterRole || !requesterRole.permissions?.includes('can_edit_roles')) {
         return res.status(403).json({ detail: "Security Violation: You do not have the required [can_edit_roles] permission." });
       }
-    }
-
-    // Task 2: Admin Bypass for Hierarchy/Ceiling
-    // If the requester is an Admin, they can manage any user except themselves (Rule 1)
-    if (requester.role === 'admin' || requester.role === 'super-admin') {
-      return next();
     }
 
     // Fetch Target User details

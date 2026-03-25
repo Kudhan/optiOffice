@@ -4,6 +4,7 @@ const Task = require('../models/Task');
 const Leave = require('../models/Leave');
 
 const AuditLog = require('../models/AuditLog');
+const ActivityLog = require('../models/ActivityLog');
 
 // @desc    Update user status (Block/Suspend)
 // @route   PATCH /admin/users/:id/status
@@ -132,8 +133,58 @@ const terminateUser = async (req, res) => {
   }
 };
 
+// @desc    Get activity logs with filters and pagination
+// @route   GET /admin/activity-logs
+// @access  Private/Admin
+const getActivityLogs = async (req, res) => {
+  try {
+    const { startDate, endDate, type, page = 1, limit = 10 } = req.query;
+    
+    const query = { tenantId: req.user.tenantId };
+    
+    if (type && type !== 'All') {
+      query.type = type;
+    }
+    
+    if (startDate || endDate) {
+      query.timestamp = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        query.timestamp.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.timestamp.$lte = end;
+      }
+    }
+    
+    const skip = (page - 1) * limit;
+    
+    const logs = await ActivityLog.find(query)
+      .populate('userId', 'full_name username email')
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+      
+    const total = await ActivityLog.countDocuments(query);
+    
+    res.json({
+      logs,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error('getActivityLogs Error:', error);
+    res.status(500).json({ detail: "Server Error fetching activity logs" });
+  }
+};
+
 module.exports = {
   updateUserStatus,
   manageAuthority,
-  terminateUser
+  terminateUser,
+  getActivityLogs
 };

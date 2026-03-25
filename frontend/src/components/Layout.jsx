@@ -100,6 +100,7 @@ function Layout() {
     { label: 'Departments', path: '/departments', icon: <IconBriefcase className="w-5 h-5" />, permission: 'can_manage_users' },
     { label: 'Roles', path: '/roles', icon: <IconShield className="w-5 h-5" />, permission: 'can_manage_users' }, // Using same permission for now
     { label: 'Policies', path: '/policies', icon: <IconShield className="w-5 h-5" />, permission: 'can_manage_users' },
+    { label: 'Activity Logs', path: '/activity-logs', icon: <IconActivity className="w-5 h-5" />, permission: 'can_manage_users' },
     { label: 'Reports', path: '/reports', icon: <IconBarChart className="w-5 h-5" /> },
   ];
 

@@ -17,6 +17,7 @@ import Profile from './components/Profile';
 import Roles from './components/Roles';
 import Departments from './components/Departments';
 import Policies from './components/Policies';
+import ActivityLogs from './components/ActivityLogs';
 import Placeholder from './components/Placeholder';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
@@ -84,6 +85,12 @@ function App() {
               <Route path="policies" element={
                 <ProtectedRoute requiredPermission="can_manage_users">
                   <Policies />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="activity-logs" element={
+                <ProtectedRoute requiredPermission="can_manage_users">
+                  <ActivityLogs />
                 </ProtectedRoute>
               } />
               

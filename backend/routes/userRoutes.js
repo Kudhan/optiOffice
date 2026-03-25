@@ -16,10 +16,11 @@ const { protect } = require('../middleware/authMiddleware');
 const authorize = require('../middleware/authorize');
 const validateAuthority = require('../middleware/validateAuthority');
 
-const { updateUserStatus, manageAuthority, terminateUser } = require('../controllers/adminController');
+const { updateUserStatus, manageAuthority, terminateUser, getActivityLogs } = require('../controllers/adminController');
 
 router.get('/me', protect, getMe);
 router.get('/', protect, getUsers);
+router.get('/activity-logs', protect, authorize('can_manage_users'), getActivityLogs);
 router.get('/:id/dossier', protect, getUserDossier);
 router.get('/profile/:id', protect, getProfileData);
 router.put('/profile', protect, updateProfile);

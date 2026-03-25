@@ -10,8 +10,9 @@ const authorize = (requiredPermission) => {
       return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
 
-    // Task 1: Super Admin Bypass
-    if (req.user.role === 'super-admin') {
+    // Task 1: Super Admin & Admin Bypass
+    const currentRole = req.user.role?.toLowerCase();
+    if (currentRole === 'super-admin' || currentRole === 'admin') {
       return next();
     }
 

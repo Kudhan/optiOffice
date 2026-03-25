@@ -1,5 +1,6 @@
 const Task = require('../models/Task');
 const { getTeamScope } = require('../middleware/getScope');
+const { recordActivity } = require('../utils/activityLogger');
 
 // @desc    Get tasks mapping by tenantId
 // @route   GET /tasks
@@ -26,6 +27,9 @@ const createTask = async (req, res) => {
     
     const task = await Task.create(taskData);
     res.json(task);
+
+    // Record activity
+    await recordActivity(req, 'Task', 'Task Created', `Title: ${task.title}`);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
@@ -44,6 +48,8 @@ const updateTask = async (req, res) => {
     
     if (task) {
       res.json(true);
+      // Record activity
+      await recordActivity(req, 'Task', 'Task Updated', `Title: ${task.title}, Status: ${task.status}`);
     } else {
       res.status(404).json({ detail: "Task not found" });
     }
@@ -61,6 +67,8 @@ const deleteTask = async (req, res) => {
     
     if (task) {
       res.json(true);
+      // Record activity
+      await recordActivity(req, 'Task', 'Task Deleted', `Title: ${task.title}`);
     } else {
       res.status(404).json({ detail: "Task not found" });
     }

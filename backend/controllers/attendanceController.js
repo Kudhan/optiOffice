@@ -2,6 +2,7 @@ const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTeamScope } = require('../middleware/getScope');
+const { recordActivity } = require('../utils/activityLogger');
 
 // Configurable Late Threshold (Default 9:30 AM)
 const LATE_THRESHOLD = process.env.LATE_THRESHOLD || '09:30';
@@ -50,28 +51,54 @@ const checkIn = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id).populate('shift_id');
   
   if (user && user.shift_id) {
-    const { startTime, gracePeriod, workDays, name } = user.shift_id;
+    const { startTime, endTime, gracePeriod, workDays, name } = user.shift_id;
     
-    // 1. Check if today is a scheduled work day
+    // 1. Strict Work Day Check
     if (workDays && !workDays.includes(dayOfWeek)) {
-      warning = `Note: Today is not a scheduled work day for the '${name}' shift.`;
+      return res.status(400).json({ 
+        success: false, 
+        message: `Clock-in Blocked: Today is not a scheduled work day for the '${name}' shift.` 
+      });
     }
 
     const [shiftH, shiftM] = startTime.split(':').map(Number);
-    const cutoff = new Date(now);
-    cutoff.setHours(shiftH, shiftM + (gracePeriod || 0), 0, 0);
+    const [endH, endM] = endTime.split(':').map(Number);
 
     const shiftStart = new Date(now);
     shiftStart.setHours(shiftH, shiftM, 0, 0);
 
-    // 2. Identify Lateness
+    const shiftEnd = new Date(now);
+    shiftEnd.setHours(endH, endM, 0, 0);
+
+    // Handle overnight shifts
+    if (shiftEnd < shiftStart) {
+      shiftEnd.setDate(shiftEnd.getDate() + 1);
+    }
+
+    const cutoff = new Date(shiftStart);
+    cutoff.setMinutes(shiftStart.getMinutes() + (gracePeriod || 0));
+
+    // 2. Strict Early Check (Allow only 1 hour before)
+    const earlyLimit = new Date(shiftStart.getTime() - 60 * 60 * 1000);
+    if (now < earlyLimit) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Clock-in Blocked: Too early. You can only clock in from ${earlyLimit.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (1 hour before shift).` 
+      });
+    }
+
+    // 3. Strict Late Check (Block if shift has already ended)
+    if (now > shiftEnd) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Clock-in Blocked: The '${name}' shift ended at ${endTime}.` 
+      });
+    }
+
+    // 4. Identify Lateness for record status
     if (now > cutoff) {
       status = 'Late';
       console.log(`[Attendance] Personnel ${user.full_name} is Late. Shift starts at ${startTime} (Grace: ${gracePeriod}m)`);
-    } 
-    // 3. Identify if checking in too early (e.g., more than 4 hours before shift)
-    else if (now < new Date(shiftStart.getTime() - 4 * 60 * 60 * 1000)) {
-      warning = warning || `Note: You are checking in significantly earlier than your scheduled '${startTime}' start time.`;
     }
   } else {
     // Fallback to global threshold
@@ -102,6 +129,9 @@ const checkIn = asyncHandler(async (req, res) => {
       formattedTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       warning // Frontend can use this to show a toast or alert
     });
+
+    // Record activity
+    await recordActivity(req, 'Attendance', 'Checked In', `Status: ${status}`);
   } catch (error) {
     // Handling MongoDB duplicate key error (11000) for { user, date }
     if (error.code === 11000) {
@@ -157,6 +187,9 @@ const checkOut = asyncHandler(async (req, res) => {
 
   await attendance.save();
   res.json(attendance);
+
+  // Record activity
+  await recordActivity(req, 'Attendance', 'Checked Out', `Work Hours: ${attendance.workHours}`);
 });
 
 /**
