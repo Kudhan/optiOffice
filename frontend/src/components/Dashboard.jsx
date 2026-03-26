@@ -12,8 +12,8 @@ import {
   HiringPipeline,
   PendingLeaveApprovals,
   DailyAttendancePercent,
-  ProjectVelocity,
-  DepartmentHeatmap
+  StrategicBillingPulse,
+  AssetValuationPulse
 } from './Widgets';
 import { CardSkeleton, ListSkeleton } from './Skeleton';
 import InviteUserModal from './InviteUserModal';
@@ -254,9 +254,9 @@ function Dashboard() {
   const FunctionalView = (
     <div className="grid grid-cols-12 gap-10">
         <div className="col-span-12 lg:col-span-8">
-            <div className="grid grid-cols-2 gap-10 h-full">
-                <ProjectVelocity isLoading={isLoading} />
-                <DepartmentHeatmap isLoading={isLoading} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 h-full">
+                <StrategicBillingPulse stats={data?.stats} isLoading={isLoading} />
+                <AssetValuationPulse stats={data?.stats} isLoading={isLoading} />
             </div>
         </div>
         <div className="col-span-12 lg:col-span-4">

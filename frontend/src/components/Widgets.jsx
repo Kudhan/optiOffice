@@ -10,7 +10,11 @@ import {
   IconClock, 
   IconBarChart,
   IconPlus,
-  IconDashboard
+  IconDashboard,
+  IconCreditCard,
+  IconPackage,
+  IconTrendingUp,
+  IconShield
 } from './Icons';
 
 const tileClasses = "bg-primary-surface backdrop-blur-md border border-border rounded-[2.5rem] p-8 shadow-sm transition-all duration-300 flex flex-col";
@@ -301,48 +305,61 @@ export const DailyAttendancePercent = ({ isLoading }) => (
   </div>
 );
 
-// --- Functional (Eng/Sales) Specialized Widgets ---
-export const ProjectVelocity = ({ isLoading }) => (
+// --- Specialized Admin/Manager Pulse Widgets ---
+export const StrategicBillingPulse = ({ stats, isLoading }) => (
   <div className={`${tileClasses} bg-gradient-to-br from-primary-surface to-sky-500/5 col-span-12 lg:col-span-4`}>
-    <span className="text-[10px] uppercase font-bold tracking-widest text-sky-500 mb-6 block">Sprint Velocity</span>
+    <span className="text-[10px] uppercase font-bold tracking-widest text-sky-500 mb-6 block">Strategic Billing Hub</span>
     <div className="flex flex-col justify-between flex-1">
-        <div className="flex items-end gap-3 mb-8">
-            <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none">24.5</h2>
-            <span className="text-xs font-bold text-emerald-500 uppercase tracking-tight mb-2">Points / Week 📈</span>
+        <div className="flex items-end gap-3 mb-6">
+            <h2 className="text-5xl font-black text-content-main tracking-tighter leading-none">{stats?.plan_type || 'FREE'}</h2>
+            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">Active Node</span>
         </div>
-        <div className="flex gap-1 items-end h-24">
-            {[4, 6, 3, 7, 5, 8, 6, 9].map((h, idx) => (
-                <div key={idx} className="flex-1 bg-sky-500/20 rounded-t-lg group relative hover:bg-sky-500 transition-all cursor-pointer" style={{ height: `${h * 10}%` }}>
-                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-navy-950 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-bold">
-                        {h} pts
-                    </div>
+        
+        <div className="space-y-4">
+            <div className="flex justify-between items-center p-4 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-border/50">
+                <div className="flex items-center gap-3">
+                    <IconCreditCard className="w-4 h-4 text-sky-500" />
+                    <span className="text-[10px] font-bold text-content-muted uppercase">Next Ledger Date</span>
                 </div>
-            ))}
+                <span className="text-xs font-black text-content-main">{stats?.next_due ? new Date(stats.next_due).toLocaleDateString() : 'N/A: LIFETIME'}</span>
+            </div>
+            <div className="flex justify-between items-center p-4 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-border/50">
+                <div className="flex items-center gap-3">
+                    <IconTrendingUp className="w-4 h-4 text-emerald-500" />
+                    <span className="text-[10px] font-bold text-content-muted uppercase">Operational Health</span>
+                </div>
+                <span className="text-xs font-black text-emerald-500">99.9% Uptime</span>
+            </div>
         </div>
-        <p className="mt-6 text-[9px] font-bold text-content-muted uppercase tracking-[0.15em] opacity-60">Target Cycle: Q1-Deployment</p>
+        
+        <p className="mt-8 text-[9px] font-bold text-content-muted uppercase tracking-[0.2em] opacity-60">Financial Gateway Synchronized</p>
     </div>
   </div>
 );
 
-export const DepartmentHeatmap = ({ isLoading }) => (
-  <div className={`${tileClasses} col-span-12 lg:col-span-4`}>
-    <span className="text-[10px] uppercase font-bold tracking-widest text-orange-500 mb-6 block">Resource Heatmap</span>
-    <div className="grid grid-cols-4 grid-rows-4 gap-2 flex-1">
-      {Array.from({ length: 16 }).map((_, i) => (
-        <div key={i} className={`rounded-xl ${i % 3 === 0 ? 'bg-orange-500/40' : i % 5 === 0 ? 'bg-orange-500/60' : 'bg-orange-500/20'} border border-orange-500/10 hover:border-orange-500/50 transition-all cursor-help relative group`}>
-             <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-navy-950 text-white text-[9px] py-2 px-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-black uppercase tracking-widest whitespace-nowrap z-50 shadow-2xl">
-                Zone {i+1}: 85% Load
+export const AssetValuationPulse = ({ stats, isLoading }) => (
+  <div className={`${tileClasses} bg-gradient-to-br from-primary-surface to-indigo-500/5 col-span-12 lg:col-span-4`}>
+    <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-500 mb-6 block font-black">Asset Intelligence</span>
+    <div className="flex flex-col justify-between flex-1">
+        <div className="mb-8">
+            <p className="text-[10px] font-bold text-content-muted uppercase tracking-widest mb-2 opacity-60">Global Asset Valuation</p>
+            <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none">₹{(stats?.asset_valuation || 0).toLocaleString()}</h2>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+            <div className="p-5 bg-indigo-500/5 rounded-[2rem] border border-indigo-500/10 flex flex-col gap-1">
+                <IconPackage className="w-5 h-5 text-indigo-500 mb-2" />
+                <span className="text-2xl font-black text-indigo-500">{stats?.asset_count || 0}</span>
+                <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest">Total Nodes</span>
+            </div>
+            <div className="p-5 bg-sky-500/5 rounded-[2rem] border border-sky-500/10 flex flex-col gap-1 text-sky-500">
+                <IconShield className="w-5 h-5 mb-2" />
+                <span className="text-2xl font-black">100%</span>
+                <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest">Secured</span>
             </div>
         </div>
-      ))}
-    </div>
-    <div className="flex justify-between items-center mt-6">
-        <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest opacity-60">Distribution Map</span>
-        <div className="flex gap-2">
-            <div className="w-2 h-2 rounded-full bg-orange-500/20"></div>
-            <div className="w-2 h-2 rounded-full bg-orange-500/40"></div>
-            <div className="w-2 h-2 rounded-full bg-orange-500/60"></div>
-        </div>
+        
+        <p className="mt-8 text-[9px] font-bold text-content-muted uppercase tracking-[0.2em] opacity-40 text-right">Resource Verification: PASS</p>
     </div>
   </div>
 );

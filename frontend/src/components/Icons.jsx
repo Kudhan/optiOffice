@@ -350,3 +350,10 @@ export const IconAlertCircle = ({ className = "" }) => (
     <line x1="12" y1="16" x2="12.01" y2="16" />
   </svg>
 );
+
+export const IconTrendingUp = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+    <polyline points="17 6 23 6 23 12" />
+  </svg>
+);

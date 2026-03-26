@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Task = require('../models/Task');
 const { Leave } = require('../models/Leave');
 const Asset = require('../models/Asset');
+const Billing = require('../models/Billing');
 const { getScope, getTeamScope } = require('../middleware/getScope');
 
 /**
@@ -24,11 +25,21 @@ const getDashboardData = async (req, res) => {
       menu: []
     };
     
+    const billing = await Billing.findOne({ tenantId: req.user.tenantId });
+
     // Scoped Counts
     const totalEmployees = await User.countDocuments(userFilter);
     const activeTasks = await Task.countDocuments({ ...taskScope, status: { $nin: ['Done', 'Completed'] } });
     const completedTasks = await Task.countDocuments({ ...taskScope, status: { $in: ['Done', 'Completed'] } });
     const pendingLeaves = await Leave.countDocuments({ ...leaveScope, status: 'Pending' });
+    
+    // Asset Valuation & Billing Pulse (Admin/Manager Only)
+    let assetStats = { totalCount: 0, totalValue: 0 };
+    if (role === 'admin' || role === 'super-admin' || role === 'manager') {
+      const assets = await Asset.find({ tenantId: req.user.tenantId });
+      assetStats.totalCount = assets.length;
+      assetStats.totalValue = assets.reduce((sum, a) => sum + (a.value || 0), 0);
+    }
 
     // Scoped Department Stats
     const deptStats = await User.aggregate([
@@ -42,7 +53,11 @@ const getDashboardData = async (req, res) => {
         total_employees: totalEmployees,
         active_tasks: activeTasks,
         completed_tasks: completedTasks,
-        pending_leaves: pendingLeaves
+        pending_leaves: pendingLeaves,
+        asset_valuation: assetStats.totalValue,
+        asset_count: assetStats.totalCount,
+        plan_type: billing?.planType || 'Free',
+        next_due: billing?.nextPaymentDate
       };
       
       dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $nin: ['Done', 'Completed'] } })
