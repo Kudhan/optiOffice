@@ -19,15 +19,79 @@ import {
   ChevronRight,
   RefreshCw
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-hot-toast';
+
+// Strategic Print Guard: Ensuring High-Fidelity Ledger Exports
+const reportStyles = `
+@media print {
+    @page {
+        size: A4;
+        margin: 15mm;
+    }
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    aside, header, nav, .sticky, button, .flex-shrink-0 {
+        display: none !important;
+    }
+    .space-y-10 {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .rounded-[3.5rem], .rounded-[3rem], .rounded-[2.5rem], .rounded-[4rem] {
+        border-radius: 1rem !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .shadow-xl, .shadow-2xl, .shadow-sm {
+        shadow: none !important;
+        box-shadow: none !important;
+    }
+    .bg-slate-900, .bg-sky-500, .bg-slate-800 {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .grid {
+        display: block !important;
+    }
+    .grid > div {
+        page-break-inside: avoid !important;
+        margin-bottom: 2rem !important;
+        width: 100% !important;
+    }
+    .xl\\:col-span-8, .xl\\:col-span-12, .xl\\:col-span-4 {
+        width: 100% !important;
+    }
+    .screen-only {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+}
+.print-only {
+    display: none;
+}
+.screen-only {
+    display: block;
+}
+`;
 
 const Reports = () => {
     const { isAdmin, isManager } = useAuth();
     const { showNavbar } = useOutletContext();
     const [activeTab, setActiveTab] = useState('hr');
+    const [viewMode, setViewMode] = useState('bento'); // 'bento' or 'table'
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({ hr: null, inventory: null, org: null });
     const [lastUpdated, setLastUpdated] = useState(new Date());
+    const [isAtTop, setIsAtTop] = useState(true);
+
+    useEffect(() => {
+        const handleScroll = () => setIsAtTop(window.scrollY < 50);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const tabs = [
         { id: 'hr', label: 'HR Intelligence', icon: <Users size={18} /> },
@@ -62,10 +126,9 @@ const Reports = () => {
 
     const ProgressBar = ({ value, max, color = "bg-sky-500" }) => (
         <div className="w-full bg-slate-100 dark:bg-slate-700/50 h-2 rounded-full overflow-hidden">
-            <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${(value / max) * 100}%` }}
-                className={`h-full ${color} rounded-full`}
+            <div 
+                style={{ width: `${(value / max) * 100}%` }}
+                className={`h-full ${color} rounded-full transition-all duration-500`}
             />
         </div>
     );
@@ -83,9 +146,152 @@ const Reports = () => {
         </div>
     );
 
+    const DataTable = ({ headers, data, title, icon, color = "sky", compact = false, paginate = true }) => {
+        const [currentPage, setCurrentPage] = useState(1);
+        const rowsPerPage = compact ? 5 : 10;
+        
+        // Pagination Logic (Screen-only)
+        const totalPages = Math.ceil((data?.length || 0) / rowsPerPage);
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const displayedData = paginate ? data?.slice(startIndex, endIndex) : data;
+
+        return (
+            <div className={`bg-white dark:bg-slate-800 rounded-[3rem] border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm ${compact ? 'scale-95 origin-top' : ''}`}>
+                <div className={`px-10 py-8 border-b border-slate-50 dark:border-slate-700/50 flex items-center justify-between bg-gradient-to-r from-${color}-500/5 to-transparent`}>
+                    <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-2xl bg-${color}-500/10 text-${color}-500`}>
+                            {icon}
+                        </div>
+                        <h5 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+                            {title}
+                        </h5>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-lg">
+                            {data?.length || 0} Total Nodes
+                        </span>
+                        {paginate && totalPages > 1 && (
+                            <span className="text-[10px] font-black text-sky-500 uppercase tracking-widest bg-sky-500/5 px-3 py-1.5 rounded-lg border border-sky-500/10">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50/50 dark:bg-slate-900/50">
+                                {headers.map((h, i) => (
+                                    <th key={i} className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                            {(displayedData || []).map((row, i) => (
+                                <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
+                                    {Object.values(row).map((val, j) => (
+                                        <td key={j} className="px-10 py-6 text-sm font-bold text-slate-700 dark:text-slate-200">
+                                            {val}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                            {(!data || data.length === 0) && (
+                                <tr>
+                                    <td colSpan={headers.length} className="px-10 py-12 text-center text-xs font-bold text-slate-400 uppercase tracking-widest italic opacity-50">
+                                        No tactical data points synchronized for this sector.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination Controls (Dashboard Only) */}
+                {paginate && totalPages > 1 && (
+                    <div className="px-10 py-6 bg-slate-50/30 dark:bg-slate-900/30 border-t border-slate-50 dark:border-slate-700/50 flex items-center justify-between">
+                        <button 
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
+                        >
+                            <ChevronRight className="rotate-180" size={14} />
+                            Previous
+                        </button>
+                        <div className="flex gap-2">
+                             {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => (
+                                 <button 
+                                    key={i}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className={`w-10 h-10 rounded-xl text-[10px] font-black transition-all ${currentPage === i + 1 ? 'bg-sky-500 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                 >
+                                    {i + 1}
+                                 </button>
+                             ))}
+                        </div>
+                        <button 
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20 disabled:cursor-not-allowed hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
+                        >
+                            Next
+                            <ChevronRight size={14} />
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const renderHR = () => {
         const hr = data.hr;
         if (!hr) return null;
+
+        if (viewMode === 'table') {
+            return (
+                <div className="space-y-8">
+                    <DataTable 
+                        title="Attendance Status Ledger"
+                        icon={<Users size={20} className="text-sky-500" />}
+                        headers={['Operational Status', 'Node Count', 'Average Workflow (Hrs)', 'Saturation (%)']}
+                        data={hr.attendance.map(a => ({
+                            status: a._id,
+                            nodes: a.count,
+                            hours: `${a.avgHours?.toFixed(1) || 0}h`,
+                            saturation: `${((a.count / hr.summary.totalAttendanceNodes) * 100).toFixed(1)}%`
+                        }))}
+                        color="sky"
+                    />
+                    <DataTable 
+                        title="Personnel Leave Distribution"
+                        icon={<Calendar size={20} className="text-rose-500" />}
+                        headers={['Request Status', 'Volume', 'Organizational Impact']}
+                        data={hr.leaves.map(l => ({
+                            status: l._id,
+                            count: l.count,
+                            impact: l._id === 'Approved' ? 'Moderate (Capacity Reduction)' : 'Minimal (Policy Review)'
+                        }))}
+                        color="rose"
+                    />
+                    <DataTable 
+                        title="Detailed Attendance Registry (Last 100 Nodes)"
+                        icon={<Activity size={20} className="text-sky-500" />}
+                        headers={['Personnel', 'Date', 'Clock In', 'Clock Out', 'Duration', 'Tactical Status']}
+                        data={hr.details.attendance.map(a => ({
+                            user: a.userName,
+                            date: new Date(a.date).toLocaleDateString(),
+                            in: a.checkIn ? new Date(a.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+                            out: a.checkOut ? new Date(a.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'ACTIVE',
+                            hours: `${a.workHours?.toFixed(2) || 0}h`,
+                            status: a.status
+                        }))}
+                        color="sky"
+                    />
+                </div>
+            );
+        }
+
         return (
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
                 {/* Attendance Summary */}
@@ -157,6 +363,50 @@ const Reports = () => {
     const renderInventory = () => {
         const inv = data.inventory;
         if (!inv) return null;
+
+        if (viewMode === 'table') {
+            return (
+                <div className="space-y-8">
+                    <DataTable 
+                        title="Asset Category Valuation"
+                        icon={<Package size={20} className="text-indigo-500" />}
+                        headers={['Deployment Category', 'Node Volume', 'Collective Valuation', 'Portfolio Share']}
+                        data={inv.categories.map(c => ({
+                            category: c._id,
+                            count: c.count,
+                            value: `₹${c.totalValue.toLocaleString()}`,
+                            share: `${((c.totalValue / inv.valuation) * 100).toFixed(1)}%`
+                        }))}
+                        color="indigo"
+                    />
+                    <DataTable 
+                        title="Operational Status Registry"
+                        icon={<TrendingUp size={20} className="text-emerald-500" />}
+                        headers={['Lifecycle Status', 'Node Count', 'Condition Criticality']}
+                        data={inv.status.map(s => ({
+                            status: s._id,
+                            count: s.count,
+                            criticality: s._id === 'Maintenance' ? 'HIGH (Action Required)' : 'OPTIMAL'
+                        }))}
+                        color="emerald"
+                    />
+                    <DataTable 
+                        title="Master Asset Registry (Detailed)"
+                        icon={<Box size={20} className="text-indigo-500" />}
+                        headers={['Asset Name', 'Category', 'Assigned To', 'Value (₹)', 'Operational Status']}
+                        data={inv.details.assets.map(a => ({
+                            name: a.name,
+                            category: a.category,
+                            user: a.assigned_to ? a.assigned_to.full_name : 'UNASSIGNED',
+                            val: `₹${a.value.toLocaleString()}`,
+                            status: a.status
+                        }))}
+                        color="indigo"
+                    />
+                </div>
+            );
+        }
+
         return (
             <div className="space-y-10">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -224,6 +474,49 @@ const Reports = () => {
     const renderOrg = () => {
         const org = data.org;
         if (!org) return null;
+
+        if (viewMode === 'table') {
+            return (
+                <div className="space-y-8">
+                    <DataTable 
+                        title="Departmental Density Matrix"
+                        icon={<Users size={20} className="text-sky-500" />}
+                        headers={['Organizational Unit', 'Personnel Nodes', 'Inter-departmental Share']}
+                        data={org.departments.map(d => ({
+                            unit: d._id,
+                            personnel: d.count,
+                            share: `${((d.count / org.activePersonnel) * 100).toFixed(1)}%`
+                        }))}
+                        color="sky"
+                    />
+                    <DataTable 
+                        title="Hierarchical Tier Distribution"
+                        icon={<Shield size={20} className="text-indigo-500" />}
+                        headers={['Tier Layer', 'Personnel Nodes', 'Access Escalation']}
+                        data={org.roles.map(r => ({
+                            tier: r._id,
+                            count: r.count,
+                            escalation: r._id === 'Admin' ? 'Level 5 (Global)' : (r._id === 'Manager' ? 'Level 3 (Tactical)' : 'Level 1 (Basic)')
+                        }))}
+                        color="indigo"
+                    />
+                    <DataTable 
+                        title="Universal Personnel Directory"
+                        icon={<Users size={20} className="text-emerald-500" />}
+                        headers={['Full Name', 'Department', 'Role Tier', 'Contact Node', 'Auth Status']}
+                        data={org.details.personnel.map(p => ({
+                            name: p.full_name,
+                            dept: p.department,
+                            role: p.role,
+                            email: p.email,
+                            status: p.status
+                        }))}
+                        color="emerald"
+                    />
+                </div>
+            );
+        }
+
         return (
             <div className="space-y-10">
                 <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 bg-slate-900 p-12 rounded-[4rem] text-white relative overflow-hidden">
@@ -291,96 +584,206 @@ const Reports = () => {
     };
 
     return (
-        <div className="space-y-10 animate-fade-in max-w-[1600px] mx-auto pb-20">
-            {/* Header / Tab Navigation */}
-            <div className={`flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8 bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl p-8 rounded-[3.5rem] border border-slate-100 dark:border-slate-700 shadow-xl shadow-sky-500/5 sticky transition-all duration-500 ease-in-out z-20 ${
-                showNavbar ? 'top-24 opacity-100 translate-y-0' : '-top-20 opacity-0 -translate-y-10'
-            }`}>
-                <div className="space-y-1 ml-4 flex items-center gap-6">
-                    <div className="space-y-1">
-                        <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">Strategic <span className="text-sky-500 italic">Reports</span></h2>
-                        <div className="flex items-center gap-2">
-                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Real-time Sync: Active</p>
+        <div className="space-y-10 max-w-[1600px] mx-auto pb-20">
+            <style>{reportStyles}</style>
+            
+            {/* Tactical Print Header */}
+            <div className="print-only mb-10 border-b-2 border-slate-900 pb-12 uppercase">
+                <div className="flex justify-between items-end">
+                    <div>
+                        <h1 className="text-5xl font-black tracking-tighter italic">Consolidated Strategic Ledger</h1>
+                        <p className="text-sm font-bold text-slate-500 tracking-[0.3em] mt-2">OptiOffice Command Center // Universal Intelligence Audit</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs font-black">Generation Node: {new Date().toLocaleDateString()}</p>
+                        <p className="text-xs font-black">Clearance: {isAdmin ? 'Level 5 (Admin)' : 'Level 3 (Management)'}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Strategic Header / Command Bar */}
+            <div className="screen-only">
+                <div className={`flex flex-col lg:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/10 p-6 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 sticky transition-all duration-300 ease-in-out z-20 ${
+                    isAtTop ? 'top-24 opacity-100 translate-y-0 scale-100' : '-top-40 opacity-0 -translate-y-20 scale-95 pointer-events-none'
+                }`}>
+                    {/* Visual Identity */}
+                    <div className="flex items-center gap-6 px-4">
+                        <div className="relative">
+                            <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none flex items-center gap-2">
+                                Strategic <span className="text-sky-500 italic">Reports</span>
+                            </h2>
+                            <div className="absolute -bottom-3 left-0 flex items-center gap-2">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Live Intelligence Node</p>
+                            </div>
                         </div>
                     </div>
                     
-                    <div className="h-10 w-[1px] bg-slate-200 dark:bg-slate-700 hidden xl:block" />
+                    {/* Unified Command Hub */}
+                    <div className="flex flex-wrap lg:flex-nowrap items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-inner">
+                        {/* View Mode Segment */}
+                        <div className="flex p-1 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                            {[
+                                { id: 'bento', label: 'Bento', icon: <BarChart2 size={14} /> },
+                                { id: 'table', label: 'Table', icon: <Clock size={14} /> }
+                            ].map(mode => (
+                                <button 
+                                    key={mode.id}
+                                    onClick={() => setViewMode(mode.id)}
+                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === mode.id ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20 scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    {mode.icon}
+                                    <span className="hidden sm:inline">{mode.label}</span>
+                                </button>
+                            ))}
+                        </div>
 
-                    <div className="hidden xl:block">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-50">Last Intelligence Pulse</p>
-                        <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{lastUpdated.toLocaleTimeString()}</p>
-                    </div>
-                </div>
-                
-                <div className="flex gap-4 items-center w-full xl:w-auto">
-                    <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-2xl flex-1 xl:flex-none overflow-x-auto no-scrollbar">
-                        {tabs.map(tab => (
-                            (tab.adminOnly && !isAdmin) ? null : (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-3 px-6 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                                    activeTab === tab.id 
-                                    ? 'bg-white dark:bg-slate-800 text-sky-500 shadow-xl shadow-sky-500/10' 
-                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
-                                }`}
-                            >
-                                {tab.icon}
-                                <span className="">{tab.label}</span>
-                            </button>
-                            )
-                        ))}
-                    </div>
+                        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2 hidden lg:block" />
 
-                    <div className="flex-shrink-0">
+                        {/* Category Segment */}
+                        <div className="flex gap-1">
+                            {tabs.map(tab => (
+                                (tab.adminOnly && !isAdmin) ? null : (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-3 px-5 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                                        activeTab === tab.id 
+                                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl' 
+                                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800'
+                                    }`}
+                                >
+                                    {tab.icon}
+                                    <span className="hidden xl:inline">{tab.label}</span>
+                                </button>
+                                )
+                            ))}
+                        </div>
+
+                        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2 hidden lg:block" />
+
+                        {/* Force Sync Pulse */}
                         <button 
-                            onClick={() => { fetchData(activeTab); setLastUpdated(new Date()); }}
-                            className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-sky-500 hover:text-white transition-all group shadow-sm flex items-center justify-center min-w-[48px] min-h-[48px]"
+                            onClick={() => { 
+                                fetchData(activeTab); 
+                                setLastUpdated(new Date()); 
+                                toast.success("Intelligence Pulse Received: Sector Synchronized", {
+                                    style: { background: '#0f172a', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }
+                                });
+                            }}
+                            className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 text-sky-500 hover:bg-sky-500 hover:text-white transition-all group border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-center flex-shrink-0"
                             title="Force Intelligence Pulse"
                         >
                             <RefreshCw size={18} className={`group-hover:rotate-180 transition-transform duration-700 ${loading ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
                 </div>
-            </div>
 
             {/* Dynamic Content */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    {loading ? (
-                        <div className="py-40 text-center flex flex-col items-center justify-center gap-6">
-                            <div className="w-16 h-16 border-4 border-slate-100 dark:border-slate-800 border-t-sky-500 rounded-full animate-spin" />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] animate-pulse">Synchronizing Intelligence Nodes...</p>
-                        </div>
-                    ) : (
-                        <>
-                            {activeTab === 'hr' && renderHR()}
-                            {activeTab === 'inventory' && renderInventory()}
-                            {activeTab === 'org' && renderOrg()}
-                        </>
-                    )}
-                </motion.div>
-            </AnimatePresence>
+            <div className="py-6">
+                {loading ? (
+                    <div className="py-40 text-center flex flex-col items-center justify-center gap-6">
+                        <div className="w-16 h-16 border-4 border-slate-100 dark:border-slate-800 border-t-sky-500 rounded-full animate-spin" />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] animate-pulse">Synchronizing Intelligence Nodes...</p>
+                    </div>
+                ) : (
+                    <div className="transition-all duration-200">
+                        {activeTab === 'hr' && renderHR()}
+                        {activeTab === 'inventory' && renderInventory()}
+                        {activeTab === 'org' && renderOrg()}
+                    </div>
+                )}
+            </div>
 
             {/* Global Export Footer */}
             {!loading && (
                 <div className="flex justify-center pt-10">
                     <button 
-                        onClick={() => window.print()}
-                        className="flex items-center gap-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-10 py-5 rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all shadow-sky-500/10"
+                        onClick={() => {
+                            toast.loading("Intelligence Engine: Compiling Master Ledger [Working on it...]", {
+                                duration: 3000,
+                                style: { background: '#0f172a', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }
+                            });
+                        }}
+                        className="flex items-center gap-4 bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 px-10 py-5 rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl transition-all cursor-not-allowed grayscale"
                     >
                         <Download size={18} />
-                        Export Intelligence Summary (PDF)
+                        Export Master Intelligence PDF (Beta)
                     </button>
                 </div>
             )}
+            </div>
+
+            {/* Consolidated Print Registry (Universal Table Ledger) */}
+            <div className="print-only space-y-20">
+                <section>
+                    <h2 className="text-3xl font-black uppercase tracking-tighter mb-8 border-l-8 border-sky-500 pl-6">I. Human Resources Intelligence</h2>
+                    <div className="space-y-12">
+                        <DataTable 
+                            title="Attendance Status Registry (Summary)"
+                            headers={['Operational Status', 'Node Count', 'Avg Workflow', 'Saturation (%)']}
+                            data={data.hr?.attendance.map(a => ({ status: a._id, nodes: a.count, hours: `${a.avgHours?.toFixed(1) || 0}h`, saturation: `${((a.count / data.hr.summary.totalAttendanceNodes) * 100).toFixed(1)}%` })) || []} 
+                            paginate={false}
+                        />
+                        <div className="page-break-before-always pt-10">
+                            <DataTable 
+                                title="Personnel Attendance Log (Detailed Audit)"
+                                headers={['Personnel', 'Date', 'Clock In', 'Clock Out', 'Duration', 'Status']}
+                                data={data.hr?.details.attendance.map(a => ({ user: a.userName, date: new Date(a.date).toLocaleDateString(), in: a.checkIn ? new Date(a.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-', out: a.checkOut ? new Date(a.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'ACTIVE', hours: `${a.workHours?.toFixed(2) || 0}h`, status: a.status })) || []}
+                                paginate={false}
+                            />
+                        </div>
+                        <DataTable 
+                            title="Leave Request Distribution"
+                            headers={['Status', 'Volume', 'Impact Index']}
+                            data={data.hr?.leaves.map(l => ({ status: l._id, count: l.count, impact: l._id === 'Approved' ? 'High' : 'Low' })) || []}
+                            paginate={false}
+                        />
+                    </div>
+                </section>
+                
+                <section className="page-break-before-always">
+                    <h2 className="text-3xl font-black uppercase tracking-tighter mb-8 border-l-8 border-emerald-500 pl-6">II. Asset Ledger & Valuation</h2>
+                    <div className="space-y-12">
+                        <DataTable 
+                            title="Asset Valuation Matrix (Summary)"
+                            headers={['Category', 'Volume', 'Total Valuation (₹)', 'Share (%)']}
+                            data={data.inventory?.categories.map(c => ({ category: c._id, count: c.count, value: c.totalValue.toLocaleString(), share: `${((c.totalValue / data.inventory.valuation) * 100).toFixed(1)}%` })) || []}
+                            paginate={false}
+                        />
+                        <div className="page-break-before-always pt-10">
+                            <DataTable 
+                                title="Comprehensive Asset Inventory (Detailed Audit)"
+                                headers={['Asset Name', 'Category', 'Assigned To', 'Value (₹)', 'Status']}
+                                data={data.inventory?.details.assets.map(a => ({ name: a.name, category: a.category, user: a.assigned_to ? a.assigned_to.full_name : 'UNASSIGNED', val: `₹${a.value.toLocaleString()}`, status: a.status })) || []}
+                                paginate={false}
+                            />
+                        </div>
+                    </div>
+                </section>
+
+                {isAdmin && (
+                    <section className="page-break-before-always">
+                        <h2 className="text-3xl font-black uppercase tracking-tighter mb-8 border-l-8 border-indigo-500 pl-6">III. Organizational Dynamics</h2>
+                        <div className="space-y-12">
+                            <DataTable 
+                                title="Departmental Density Matrix"
+                                headers={['Unit', 'Personnel Nodes', 'Global Share (%)']}
+                                data={data.org?.departments.map(d => ({ unit: d._id, personnel: d.count, share: `${((d.count / data.org.activePersonnel) * 100).toFixed(1)}%` })) || []}
+                                paginate={false}
+                            />
+                            <div className="page-break-before-always pt-10">
+                                <DataTable 
+                                    title="Universal Personnel Directory (Detailed Audit)"
+                                    headers={['Full Name', 'Department', 'Role Tier', 'Contact Node', 'Status']}
+                                    data={data.org?.details.personnel.map(p => ({ name: p.full_name, dept: p.department, role: p.role, email: p.email, status: p.status })) || []}
+                                    paginate={false}
+                                />
+                            </div>
+                        </div>
+                    </section>
+                )}
+            </div>
         </div>
     );
 };

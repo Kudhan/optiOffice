@@ -38,9 +38,23 @@ exports.getHRAnalytics = async (req, res) => {
             }}
         ]);
 
+        // 3. Detailed Records (for granular reporting)
+        const detailedAttendance = await Attendance.find(match)
+            .sort({ date: -1, checkIn: -1 })
+            .limit(100);
+
+        const detailedLeaves = await Leave.find(match)
+            .populate('user', 'full_name role department')
+            .sort({ createdAt: -1 })
+            .limit(100);
+
         res.json({
             attendance: attendanceStats,
             leaves: leaveStats,
+            details: {
+                attendance: detailedAttendance,
+                leaves: detailedLeaves
+            },
             summary: {
                 totalAttendanceNodes: attendanceStats.reduce((acc, curr) => acc + curr.count, 0),
                 totalLeaveRequests: leaveStats.reduce((acc, curr) => acc + curr.count, 0)
@@ -84,9 +98,17 @@ exports.getInventoryAnalytics = async (req, res) => {
             }}
         ]);
 
+        // 3. Detailed Asset Inventory
+        const detailedAssets = await Asset.find(match)
+            .populate('assigned_to', 'full_name role department')
+            .sort({ category: 1, name: 1 });
+
         res.json({
             categories: assetStats,
             status: statusStats,
+            details: {
+                assets: detailedAssets
+            },
             valuation: assetStats.reduce((acc, curr) => acc + curr.totalValue, 0)
         });
     } catch (error) {
@@ -125,10 +147,18 @@ exports.getOrganizationalAnalytics = async (req, res) => {
 
         const activeUsers = await User.countDocuments({ tenantId, status: 'active' });
 
+        // 3. Complete Personnel Registry
+        const detailedPersonnel = await User.find({ tenantId })
+            .sort({ department: 1, role: 1, full_name: 1 })
+            .select('full_name email role department status lastLogin');
+
         res.json({
             departments: deptStats,
             roles: roleStats,
-            activePersonnel: activeUsers
+            activePersonnel: activeUsers,
+            details: {
+                personnel: detailedPersonnel
+            }
         });
     } catch (error) {
         console.error("REPORT_ORG_ERROR:", error);
