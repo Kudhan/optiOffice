@@ -25,7 +25,8 @@ import {
   IconInfo,
   IconBookOpen,
   IconActivity,
-  IconZap
+  IconZap,
+  IconEdit
 } from './Icons';
 import { ShieldAlert, AlertTriangle } from 'lucide-react';
 
@@ -70,6 +71,7 @@ function Layout() {
 
     fetchData();
   }, []);
+
 
   const handleLogout = () => {
     logout();
@@ -227,82 +229,33 @@ function Layout() {
           </div>
 
           {/* Header Action Items */}
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center bg-sky-100/50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 px-4 py-2 rounded-full text-xs font-bold border border-sky-200/50 dark:border-sky-900/40">
-              <span className="w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
-              Tenant: <span className="uppercase ml-1">{user?.tenantId || 'OptiOffice Central'}</span>
-            </div>
+            <div className="flex items-center gap-6">
 
-             <div className="flex gap-4 text-content-muted">
+
+              <div className="hidden lg:flex items-center bg-sky-100/50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 px-4 py-2 rounded-full text-xs font-bold border border-sky-200/50 dark:border-sky-900/40">
+                <span className="w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
+                Tenant: <span className="uppercase ml-1">{user?.tenantId || 'OptiOffice Central'}</span>
+              </div>
+
+              <div className="flex items-center gap-4 text-content-muted">
+                {/* Attendance Quick Link */}
+                <button 
+                  onClick={() => navigate('/attendance')}
+                  className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all font-black text-[10px] uppercase tracking-widest ${
+                    user.status === 'Clocked In' || user.status === 'Active'
+                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500 hover:text-white'
+                      : 'bg-slate-500/10 text-slate-500 border-slate-500/20 hover:bg-slate-500 hover:text-white'
+                  }`}
+                >
+                  <IconClock className="w-4 h-4" />
+                  {user.status || 'Offline'}
+                </button>
+
                 <ThemeToggle />
 
-                {/* Notifications */}
+                {/* Identity Perspective Dropdown */}
                 <HeaderDropdown
-                  title="Secure Notifications"
-                  trigger={
-                    <button className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all relative group">
-                        <IconBell className="w-5 h-5 group-hover:text-sky-500 transition-colors" />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-primary-surface"></span>
-                    </button>
-                  }
-                  items={[
-                    {
-                        label: 'Neural Task Assignment',
-                        description: 'New objective: Refinement of Profile UI',
-                        icon: <IconZap size={16} />,
-                        colorClass: 'bg-amber-500/10 text-amber-500',
-                        badge: true
-                    },
-                    {
-                        label: 'Protocol: Leave Approved',
-                        description: 'Your leave node for March 24-25 is active.',
-                        icon: <IconCalendar size={16} />,
-                        colorClass: 'bg-emerald-500/10 text-emerald-500'
-                    },
-                    { type: 'divider' },
-                    {
-                        label: 'System Maintenance',
-                        description: 'Operational downtime scheduled for 0200h.',
-                        icon: <IconShield size={16} />,
-                        colorClass: 'bg-indigo-500/10 text-indigo-500'
-                    }
-                  ]}
-                />
-
-                {/* Help/Support */}
-                <HeaderDropdown
-                  title="Operations Support"
-                  trigger={
-                    <button className="p-2.5 rounded-xl border border-border hover:bg-primary-surface transition-all group">
-                        <IconHelp className="w-5 h-5 group-hover:text-sky-500 transition-colors" />
-                    </button>
-                  }
-                  items={[
-                    {
-                        label: 'Operational Guide',
-                        description: 'Search documentation core',
-                        icon: <IconBookOpen size={16} />,
-                        colorClass: 'bg-sky-500/10 text-sky-500'
-                    },
-                    {
-                        label: 'Command Support',
-                        description: 'Open a priority uplink',
-                        icon: <IconMail size={16} />,
-                        colorClass: 'bg-emerald-500/10 text-emerald-500'
-                    },
-                    { type: 'divider' },
-                    {
-                        label: 'Protocol Status',
-                        description: 'Global system availability',
-                        icon: <IconInfo size={16} />,
-                        colorClass: 'bg-amber-500/10 text-amber-500'
-                    }
-                  ]}
-                />
-
-                {/* Quick Profile/Users */}
-                <HeaderDropdown
-                  title="Identity Perspective"
+                  title="Operative Perspective"
                   trigger={
                     <div className="w-10 h-10 rounded-xl bg-primary-surface flex items-center justify-center border border-border overflow-hidden shadow-inner cursor-pointer hover:border-sky-500 transition-colors">
                         <IconUsers className="w-6 h-6 text-content-muted" />
@@ -310,23 +263,32 @@ function Layout() {
                   }
                   items={[
                     {
-                        label: 'Identity Dashboard',
-                        description: 'View overall performance',
+                        label: 'Personal Dossier',
+                        description: 'Operational identity profile',
                         icon: <IconActivity size={16} />,
                         colorClass: 'bg-sky-500/10 text-sky-500',
                         onClick: () => navigate(`/profile/${user.id || user._id}`)
                     },
                     {
-                        label: 'Security Core',
-                        description: 'Manage authentication nodes',
-                        icon: <IconShield size={16} />,
-                        colorClass: 'bg-emerald-500/10 text-emerald-500'
+                        label: 'Task Objectives',
+                        description: 'Current mission parameters',
+                        icon: <IconZap size={16} />,
+                        colorClass: 'bg-amber-500/10 text-amber-500',
+                        onClick: () => navigate('/tasks')
                     },
                     {
-                        label: 'System Settings',
-                        description: 'Configure interface preferences',
-                        icon: <IconSettings size={16} />,
-                        colorClass: 'bg-indigo-500/10 text-indigo-500'
+                        label: 'Asset Inventory',
+                        description: 'Personnel equipment log',
+                        icon: <IconPackage size={16} />,
+                        colorClass: 'bg-emerald-500/10 text-emerald-500',
+                        onClick: () => navigate('/assets')
+                    },
+                    {
+                        label: 'Reconfigure Identity',
+                        description: 'Update operative parameters',
+                        icon: <IconEdit size={16} />,
+                        colorClass: 'bg-indigo-500/10 text-indigo-500',
+                        onClick: () => navigate(`/profile/${user.id || user._id}?edit=true`)
                     },
                     { type: 'divider' },
                     {
@@ -334,12 +296,12 @@ function Layout() {
                         description: 'Immediate secure logout',
                         icon: <IconLogOut size={16} />,
                         colorClass: 'bg-rose-500/10 text-rose-500',
-                        onClick: logout
+                        onClick: handleLogout
                     }
                   ]}
                 />
-             </div>
-          </div>
+              </div>
+            </div>
         </header>
 
         {/* Dynamic Canvas */}

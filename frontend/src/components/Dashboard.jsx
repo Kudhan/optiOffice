@@ -61,7 +61,7 @@ const Countdown = ({ targetTime }) => {
             
             const diff = target - new Date();
             if (diff <= 0) {
-                setTimeLeft('Shift Started');
+                setTimeLeft('');
                 return;
             }
 
@@ -77,6 +77,7 @@ const Countdown = ({ targetTime }) => {
         return () => clearInterval(interval);
     }, [targetTime]);
 
+    if (!timeLeft) return null;
     return <span className="text-[9px] font-black bg-white/20 px-2 py-0.5 rounded ml-2 tracking-widest">{timeLeft}</span>;
 };
 

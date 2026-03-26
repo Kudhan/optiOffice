@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import apiClient from '../api/client';
 import toast from 'react-hot-toast';
 import useAuth from '../hooks/useAuth';
@@ -62,6 +62,15 @@ function Profile() {
         fetchProfileData();
     }
   }, [targetId]);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('edit') === 'true' && profileData) {
+        setIsModalOpen(true);
+    }
+  }, [location.search, profileData]);
 
   const fetchProfileData = async () => {
     if (!targetId || targetId === "undefined") return;
