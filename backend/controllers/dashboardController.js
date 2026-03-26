@@ -3,6 +3,7 @@ const Task = require('../models/Task');
 const { Leave } = require('../models/Leave');
 const Asset = require('../models/Asset');
 const Billing = require('../models/Billing');
+const Attendance = require('../models/Attendance');
 const { getScope, getTeamScope } = require('../middleware/getScope');
 
 /**
@@ -29,10 +30,24 @@ const getDashboardData = async (req, res) => {
 
     // Scoped Counts
     const totalEmployees = await User.countDocuments(userFilter);
-    const activeTasks = await Task.countDocuments({ ...taskScope, status: { $nin: ['Done', 'Completed'] } });
-    const completedTasks = await Task.countDocuments({ ...taskScope, status: { $in: ['Done', 'Completed'] } });
-    const pendingLeaves = await Leave.countDocuments({ ...leaveScope, status: 'Pending' });
+    const activeTasks = await Task.countDocuments({ ...taskScope, status: { $nin: [/done/i, /completed/i] } });
+    const completedTasks = await Task.countDocuments({ ...taskScope, status: { $in: [/done/i, /completed/i] } });
+    const pendingLeavesCount = await Leave.countDocuments({ ...leaveScope, status: 'Pending' });
     
+    // Attendance Rate (Today)
+    const today = new Date().toISOString().split('T')[0];
+    const todayAttendanceCount = await Attendance.countDocuments({ 
+      tenantId: req.user.tenantId, 
+      date: today 
+    });
+    const attendanceRate = totalEmployees > 0 ? Math.round((todayAttendanceCount / totalEmployees) * 100) : 0;
+
+    // Recent Pending Leaves (Details)
+    const pendingLeavesList = await Leave.find({ ...leaveScope, status: 'Pending' })
+      .populate('user', 'full_name')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
     // Asset Valuation & Billing Pulse (Admin/Manager Only)
     let assetStats = { totalCount: 0, totalValue: 0 };
     if (role === 'admin' || role === 'super-admin' || role === 'manager') {
@@ -53,14 +68,16 @@ const getDashboardData = async (req, res) => {
         total_employees: totalEmployees,
         active_tasks: activeTasks,
         completed_tasks: completedTasks,
-        pending_leaves: pendingLeaves,
+        pending_leaves: pendingLeavesCount,
+        pending_leaves_list: pendingLeavesList,
+        attendance_rate: attendanceRate,
         asset_valuation: assetStats.totalValue,
         asset_count: assetStats.totalCount,
         plan_type: billing?.planType || 'Free',
         next_due: billing?.nextPaymentDate
       };
       
-      dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $nin: ['Done', 'Completed'] } })
+      dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $nin: [/done/i, /completed/i] } })
         .populate('assigned_to', 'full_name profile_photo')
         .sort({ priority: 1 })
         .limit(10);
@@ -71,7 +88,9 @@ const getDashboardData = async (req, res) => {
       dashboardResponse.stats = {
         project_progress: "75%",
         active_sprints: 2,
-        pending_leaves: pendingLeaves,
+        pending_leaves: pendingLeavesCount,
+        pending_leaves_list: pendingLeavesList,
+        attendance_rate: attendanceRate,
         active_tasks: activeTasks,
         completed_tasks: completedTasks,
         team_count: totalEmployees
@@ -86,7 +105,7 @@ const getDashboardData = async (req, res) => {
       dashboardResponse.stats = {
         active_tasks: activeTasks,
         completed_tasks: completedTasks,
-        pending_leaves: pendingLeaves
+        pending_leaves: pendingLeavesCount
       };
       // Get user specific tasks
       dashboardResponse.tasks = await Task.find(taskScope)

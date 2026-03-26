@@ -236,74 +236,101 @@ export const QuickActionsRow = ({ onAction, isLoading }) => {
         </div>
     );
 };
-// --- HR Specialized Widgets ---
-export const HiringPipeline = ({ isLoading }) => (
-  <div className={`${tileClasses} bg-gradient-to-br from-primary-surface to-indigo-500/5 col-span-12 lg:col-span-4`}>
-    <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-500 mb-6 block">Hiring Pipeline</span>
-    <div className="space-y-6 flex-1 flex flex-col justify-center">
-      {[
-        { role: 'Senior Dev', status: 'Interviewing', progress: 75, color: 'bg-indigo-500' },
-        { role: 'Product Lead', status: 'Sourcing', progress: 30, color: 'bg-indigo-300' }
-      ].map((job, idx) => (
-        <div key={idx} className="space-y-2">
-          <div className="flex justify-between items-center text-xs font-bold">
-            <span className="text-content-main uppercase tracking-tighter">{job.role}</span>
-            <span className="text-content-muted lowercase opacity-60 font-medium">{job.status}</span>
-          </div>
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div className={`${job.color} h-full rounded-full`} style={{ width: `${job.progress}%` }}></div>
-          </div>
-        </div>
-      ))}
-    </div>
-    <button className="mt-8 text-[10px] font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-400 text-left transition-colors">Manage Requisitions 🛰️</button>
-  </div>
-);
+// --- HR & Management Pulse Widgets ---
+export const DepartmentBreakdown = ({ stats, isLoading }) => {
+  const depts = stats?.dept_distribution || [];
+  const total = stats?.total_employees || 1;
 
-export const PendingLeaveApprovals = ({ isLoading }) => (
-  <div className={`${tileClasses} col-span-12 lg:col-span-4`}>
-    <div className="flex justify-between items-center mb-8">
-        <h3 className="text-xl font-black text-content-main tracking-tighter uppercase">Leave Queue</h3>
-        <span className="bg-rose-500/10 text-rose-500 text-[10px] font-black px-2.5 py-1 rounded-lg border border-rose-500/20">4 PENDING</span>
-    </div>
-    <div className="space-y-4">
-      {[
-        { name: 'Alice Smith', type: 'Annual', duration: '3 Days', date: 'From Mar 20' },
-        { name: 'Bob Johnson', type: 'Sick', duration: '1 Day', date: 'From Mar 19' }
-      ].map((leave, idx) => (
-        <div key={idx} className="p-4 bg-primary-muted rounded-2xl border border-border flex items-center justify-between group hover:border-rose-500/30 transition-all cursor-pointer">
-          <div>
-            <p className="text-xs font-black text-content-main uppercase tracking-tighter">{leave.name}</p>
-            <p className="text-[9px] font-bold text-content-muted mt-0.5 opacity-60 uppercase">{leave.type} · {leave.duration}</p>
+  return (
+    <div className={`${tileClasses} bg-gradient-to-br from-primary-surface to-indigo-500/5 col-span-12 lg:col-span-4`}>
+      <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-500 mb-6 block font-black">Departmental Intelligence</span>
+      <div className="space-y-6 flex-1 flex flex-col justify-center">
+        {depts.length > 0 ? depts.map((dept, idx) => (
+          <div key={idx} className="space-y-2">
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-content-main uppercase tracking-tighter">{dept._id || 'Unassigned'}</span>
+              <span className="text-content-muted lowercase opacity-60 font-medium">{dept.count} Members</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-indigo-500 h-full rounded-full transition-all duration-1000" 
+                style={{ width: `${(dept.count / total) * 100}%` }}
+              ></div>
+            </div>
           </div>
-          <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">{leave.date}</p>
-        </div>
-      ))}
-    </div>
-    <button className="mt-6 w-full py-4 bg-primary-surface border border-border rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-500 hover:text-white transition-all">Open Registry</button>
-  </div>
-);
-
-export const DailyAttendancePercent = ({ isLoading }) => (
-  <div className={`${tileClasses} bg-gradient-to-br from-emerald-500/5 via-primary-surface to-transparent col-span-12 lg:col-span-4`}>
-    <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-500 mb-6 block">Force Presence</span>
-    <div className="flex flex-col items-center justify-center flex-1 py-4">
-      <div className="relative w-40 h-40 flex items-center justify-center">
-        <svg className="w-full h-full transform -rotate-90">
-          <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-100 dark:text-slate-800" />
-          <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray="440" strokeDashoffset="44" className="text-emerald-500" />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-4xl font-black text-content-main tracking-tighter">90%</span>
-          <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest -mt-1 opacity-60">Avg. Rate</span>
-        </div>
+        )) : (
+          <p className="text-[10px] text-content-muted uppercase font-bold text-center opacity-40">Initializing workforce map...</p>
+        )}
       </div>
-      <p className="mt-6 text-[10px] font-bold text-content-muted uppercase tracking-wider text-center max-w-[150px]">
-        Team attendance is <span className="text-emerald-500">+2%</span> compared to last week
-      </p>
+      <p className="mt-8 text-[9px] font-black uppercase tracking-widest text-indigo-500 opacity-60">Total Sector Capacity: {total}</p>
     </div>
-  </div>
-);
+  );
+};
+
+export const PendingLeaveApprovals = ({ stats, isLoading }) => {
+  const leaves = stats?.pending_leaves_list || [];
+
+  return (
+    <div className={`${tileClasses} col-span-12 lg:col-span-4`}>
+      <div className="flex justify-between items-center mb-8">
+          <h3 className="text-xl font-black text-content-main tracking-tighter uppercase">Leave Queue</h3>
+          <span className="bg-rose-500/10 text-rose-500 text-[10px] font-black px-2.5 py-1 rounded-lg border border-rose-500/20">
+            {stats?.pending_leaves || 0} PENDING
+          </span>
+      </div>
+      <div className="space-y-4 flex-1">
+        {leaves.length > 0 ? leaves.map((leave, idx) => (
+          <div key={leave.id || idx} className="p-4 bg-primary-muted rounded-2xl border border-border flex items-center justify-between group hover:border-rose-500/30 transition-all cursor-pointer">
+            <div>
+              <p className="text-xs font-black text-content-main uppercase tracking-tighter">{leave.user?.full_name || 'Incognito Node'}</p>
+              <p className="text-[9px] font-bold text-content-muted mt-0.5 opacity-60 uppercase">{leave.leaveType} · {leave.duration} Days</p>
+            </div>
+            <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest">
+              {new Date(leave.startDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+            </p>
+          </div>
+        )) : (
+          <div className="flex flex-col items-center justify-center h-full opacity-20 py-8">
+            <span className="text-4xl mb-2">✅</span>
+            <p className="text-[10px] font-black uppercase tracking-widest text-center">Protocol Clear: No Pending Requests</p>
+          </div>
+        )}
+      </div>
+      <button className="mt-6 w-full py-4 bg-primary-surface border border-border rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-500 hover:text-white transition-all">Open Command Registry</button>
+    </div>
+  );
+};
+
+export const DailyAttendancePercent = ({ stats, isLoading }) => {
+  const rate = stats?.attendance_rate || 0;
+  
+  return (
+    <div className={`${tileClasses} bg-gradient-to-br from-emerald-500/5 via-primary-surface to-transparent col-span-12 lg:col-span-4`}>
+      <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-500 mb-6 block font-black">Presence Optimization</span>
+      <div className="flex flex-col items-center justify-center flex-1 py-4">
+        <div className="relative w-40 h-40 flex items-center justify-center">
+          <svg className="w-full h-full transform -rotate-90">
+            <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-100 dark:text-slate-800" />
+            <circle 
+              cx="80" cy="80" r="70" 
+              stroke="currentColor" strokeWidth="12" fill="transparent" 
+              strokeDasharray="440" 
+              style={{ strokeDashoffset: 440 - (rate / 100) * 440, transition: 'stroke-dashoffset 1.5s ease-out' }} 
+              className="text-emerald-500" 
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <span className="text-4xl font-black text-content-main tracking-tighter">{rate}%</span>
+            <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest -mt-1 opacity-60">Success Rate</span>
+          </div>
+        </div>
+        <p className="mt-6 text-[10px] font-bold text-content-muted uppercase tracking-wider text-center max-w-[150px]">
+          Today's attendance is <span className={rate > 80 ? 'text-emerald-500' : 'text-rose-500'}>{rate}%</span> operative capacity.
+        </p>
+      </div>
+    </div>
+  );
+};
 
 // --- Specialized Admin/Manager Pulse Widgets ---
 export const StrategicBillingPulse = ({ stats, isLoading }) => (

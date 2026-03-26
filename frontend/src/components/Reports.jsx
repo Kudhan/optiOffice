@@ -598,8 +598,12 @@ const Reports = () => {
             </div>
 
             {/* Strategic Header / Command Bar */}
-            <div className="screen-only mb-10">
-                <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/10 p-8 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 transition-all duration-300 z-10">
+            <div className={`screen-only mb-10 sticky top-[5.5rem] z-20 transition-all duration-500 ease-in-out ${
+                showNavbar 
+                ? 'translate-y-0 opacity-100' 
+                : '-translate-y-24 opacity-0 pointer-events-none'
+            }`}>
+                <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/10 p-8 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 transition-all duration-300">
                     {/* Visual Identity */}
                     <div className="flex items-center gap-6 px-4">
                         <div className="relative">

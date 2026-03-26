@@ -9,7 +9,8 @@ function Attendance({ token }) {
   const [records, setRecords] = useState([]);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [currentRecordId, setCurrentRecordId] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [stats, setStats] = useState({ avgHours: '0.0', presence: 0, shift: null });
 
   useEffect(() => {
     fetchAttendance();
@@ -19,13 +20,16 @@ function Attendance({ token }) {
     setIsLoading(true);
     try {
       const response = await apiClient.get('/attendance/me');
-      setRecords(response.data);
+      const { records: fetchedRecords, stats: fetchedStats } = response.data;
+      
+      setRecords(fetchedRecords || []);
+      setStats(fetchedStats || { avgHours: '0.0', presence: 0, shift: null });
 
       const today = new Date().toISOString().split('T')[0];
-      const todayRecord = response.data.find(r => r.date === today && !r.checkOut);
+      const todayRecord = (fetchedRecords || []).find(r => r.date === today && !r.checkOut);
       if (todayRecord) {
         setIsCheckedIn(true);
-        setCurrentRecordId(todayRecord.id);
+        setCurrentRecordId(todayRecord.id || todayRecord._id);
       }
     } catch (err) {
       console.error("Failed to fetch attendance", err);
@@ -38,7 +42,7 @@ function Attendance({ token }) {
     try {
       const response = await apiClient.post('/attendance/check-in', {});
       setIsCheckedIn(true);
-      setCurrentRecordId(response.data.id);
+      setCurrentRecordId(response.data.id || response.data._id);
       fetchAttendance();
     } catch (err) {
       // Handled by client interceptor
@@ -61,6 +65,10 @@ function Attendance({ token }) {
     return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const isWeekoff = stats.shift?.workDays 
+    ? !stats.shift.workDays.includes(new Date().getDay()) 
+    : [0, 6].includes(new Date().getDay());
+
   return (
     <div className="p-10 max-w-[1400px] mx-auto min-h-[85vh] animate-fade-in space-y-12">
       
@@ -79,12 +87,12 @@ function Attendance({ token }) {
           <div className="hidden lg:flex items-center gap-6 px-8 py-4 bg-primary-muted rounded-2xl border border-border mr-4">
              <div className="text-center">
                 <p className="text-[9px] font-black text-content-muted uppercase">Avg Hours</p>
-                <p className="text-lg font-black text-content-main">8.4<span className="text-xs text-sky-500 ml-0.5">h</span></p>
+                <p className="text-lg font-black text-content-main">{stats.avgHours}<span className="text-xs text-sky-500 ml-0.5">h</span></p>
              </div>
              <div className="w-px h-8 bg-border"></div>
              <div className="text-center">
                 <p className="text-[9px] font-black text-content-muted uppercase">Monthly Presence</p>
-                <p className="text-lg font-black text-content-main">96<span className="text-xs text-sky-500 ml-0.5">%</span></p>
+                <p className="text-lg font-black text-content-main">{stats.presence}<span className="text-xs text-sky-500 ml-0.5">%</span></p>
              </div>
           </div>
           
@@ -95,7 +103,7 @@ function Attendance({ token }) {
             >
               STOP SESSION
             </button>
-          ) : (new Date().getDay() === 0 || new Date().getDay() === 6 || new Date().getDay() === 2) ? (
+          ) : isWeekoff ? (
             <button 
               className="bg-slate-200 text-slate-400 font-black py-4 px-10 rounded-2xl cursor-not-allowed border border-border" 
               disabled
@@ -136,7 +144,7 @@ function Attendance({ token }) {
                     <tr><td colSpan="5" className="p-20 text-center text-content-muted font-bold uppercase italic">No records found.</td></tr>
                   ) : (
                     records.map(record => (
-                      <tr key={record.id} className="hover:bg-primary-muted/20 transition-colors group">
+                      <tr key={record.id || record._id} className="hover:bg-primary-muted/20 transition-colors group">
                         <td className="px-10 py-8">
                            <div className="flex items-center gap-4">
                               <div className="w-12 h-12 bg-primary-muted rounded-2xl flex flex-col items-center justify-center border border-border group-hover:bg-sky-500 group-hover:text-white transition-all">

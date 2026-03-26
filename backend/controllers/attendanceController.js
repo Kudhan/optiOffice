@@ -25,15 +25,9 @@ const calculateWorkHours = (checkIn, checkOut) => {
  */
 const checkIn = asyncHandler(async (req, res) => {
   const now = new Date();
-  const dayOfWeek = now.getDay(); // 0 is Sunday, 6 is Saturday
-
-  // Block clock-in on weekends (Temporarily including Tuesday for verification)
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Today is a weekoff. Clock-in is not allowed during weekends.' 
-    });
-  }
+  const dayOfWeek = now.getDay(); 
+  // Shift-based validation will happen after fetching user shift.
+  // We remove the hardcoded weekend block here to let shift workDays decide.
 
   const today = now.toISOString().split('T')[0];
 
@@ -216,11 +210,30 @@ const getDailyStatus = asyncHandler(async (req, res) => {
  * @access  Private (Employee)
  */
 const getMyAttendance = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id).populate('shift_id');
   const attendance = await Attendance.find({ 
     user: req.user.id 
   }).sort({ date: -1 });
+
+  // Calculate Stats (Last 30 days or all records)
+  const totalHours = attendance.reduce((sum, r) => sum + (r.workHours || 0), 0);
+  const avgHours = attendance.length > 0 ? (totalHours / attendance.length).toFixed(1) : 0;
   
-  res.json(attendance);
+  // Simple Presence % (Days present vs days since first record or last 30 days)
+  // For simplicity, we compare records in last 30 days vs 22 working days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const recentRecords = attendance.filter(r => new Date(r.date) >= thirtyDaysAgo);
+  const presence = Math.min(100, Math.round((recentRecords.length / 22) * 100));
+
+  res.json({
+    records: attendance,
+    stats: {
+      avgHours,
+      presence,
+      shift: user?.shift_id || null
+    }
+  });
 });
 
 /**

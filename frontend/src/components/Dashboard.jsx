@@ -9,7 +9,7 @@ import {
   PriorityTasks,
   QuickActionsRow,
   FloorDynamics,
-  HiringPipeline,
+  DepartmentBreakdown,
   PendingLeaveApprovals,
   DailyAttendancePercent,
   StrategicBillingPulse,
@@ -82,8 +82,10 @@ const Countdown = ({ targetTime }) => {
 };
 
 function Dashboard() {
-  const { isAdmin, isManager, user } = useAuth();
-  const { data: layoutData } = useOutletContext();
+  const { user, data: layoutData, showNavbar } = useOutletContext();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const isManager = user?.role === 'manager';
+  
   const [data, setData] = useState(layoutData);
   const [isLoading, setIsLoading] = useState(!layoutData);
   const [isClocking, setIsClocking] = useState(false);
@@ -239,9 +241,9 @@ function Dashboard() {
 
   const HRView = (
     <div className="grid grid-cols-12 gap-10">
-        <HiringPipeline isLoading={isLoading} />
-        <PendingLeaveApprovals isLoading={isLoading} />
-        <DailyAttendancePercent isLoading={isLoading} />
+        <DepartmentBreakdown stats={data?.stats} isLoading={isLoading} />
+        <PendingLeaveApprovals stats={data?.stats} isLoading={isLoading} />
+        <DailyAttendancePercent stats={data?.stats} isLoading={isLoading} />
         <div className="col-span-12 lg:col-span-8">
             <StatsWidget stats={data?.stats} isLoading={isLoading} />
         </div>
