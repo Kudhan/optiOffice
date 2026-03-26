@@ -105,4 +105,13 @@ userSchema.set('toJSON', {
   }
 });
 
+userSchema.set('toObject', {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    ret.id = ret._id.toString();
+    delete ret._id;
+  }
+});
+
 module.exports = mongoose.model('User', userSchema);

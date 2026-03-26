@@ -178,14 +178,14 @@ const getUserDossier = async (req, res) => {
     // Aggregate stats from other collections 
     // Note: Task uses 'assigned_to' (username) and Attendance uses 'user' (ObjectId)
     const [totalTasks, completedTasks, lastAttendance, recentTasks, attendanceLogs] = await Promise.all([
-      Task.countDocuments({ assigned_to: user.username, tenantId: user.tenantId }),
+      Task.countDocuments({ assigned_to: user._id, tenantId: user.tenantId }),
       Task.countDocuments({ 
-        assigned_to: user.username, 
+        assigned_to: user._id, 
         tenantId: user.tenantId,
         status: { $regex: /^completed$/i } 
       }),
       Attendance.findOne({ user: targetId }).sort({ createdAt: -1 }),
-      Task.find({ assigned_to: user.username, tenantId: user.tenantId }).sort({ createdAt: -1 }).limit(20),
+      Task.find({ assigned_to: user._id, tenantId: user.tenantId }).sort({ createdAt: -1 }).limit(20),
       Attendance.find({ user: targetId }).sort({ date: -1 }).limit(20)
     ]);
 

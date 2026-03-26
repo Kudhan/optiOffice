@@ -19,6 +19,7 @@ import Departments from './components/Departments';
 import Policies from './components/Policies';
 import ActivityLogs from './components/ActivityLogs';
 import Reports from './components/Reports';
+import TeamHub from './components/TeamHub';
 import Placeholder from './components/Placeholder';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
@@ -57,6 +58,11 @@ function App() {
               } />
               
               <Route path="organization" element={<Hierarchy />} />
+              <Route path="team-hub" element={
+                <ProtectedRoute allowedRoles={['manager']}>
+                  <TeamHub />
+                </ProtectedRoute>
+              } />
               <Route path="shifts" element={<Shifts />} />
               
               <Route path="billing" element={
@@ -70,7 +76,7 @@ function App() {
               <Route path="attendance" element={<Attendance />} />
               <Route path="leaves" element={<Leaves />} />
               <Route path="tasks" element={<Tasks />} />
-              <Route path="profile" element={<Profile />} />
+              <Route path="profile/:id?" element={<Profile />} />
               
               {/* Specialized Guards */}
               <Route path="roles" element={

@@ -25,7 +25,7 @@ const getProfileData = async (req, res) => {
     }
 
     const targetUser = await User.findById(targetUserId)
-      .populate('department_id', 'department_name')
+      .populate('department_id', 'name')
       .populate('manager', 'full_name designation')
       .select('-hashed_password');
 
@@ -55,12 +55,12 @@ const getProfileData = async (req, res) => {
       .limit(5);
 
     // Recent Tasks (Last 5)
-    const recentTasks = await Task.find({ assigned_to: targetUser.username })
+    const recentTasks = await Task.find({ assigned_to: targetUserId })
       .sort({ updatedAt: -1 })
       .limit(5);
 
     // All-time Task Stats for Velocity
-    const allTasks = await Task.find({ assigned_to: targetUser.username });
+    const allTasks = await Task.find({ assigned_to: targetUserId });
     const pendingTasks = allTasks.filter(t => !['Completed', 'Done'].includes(t.status)).length;
     const completedTasks = allTasks.filter(t => ['Completed', 'Done'].includes(t.status)).length;
 
@@ -81,7 +81,7 @@ const getProfileData = async (req, res) => {
         full_name: targetUser.full_name,
         email: targetUser.email,
         designation: targetUser.designation,
-        department: targetUser.department_id ? targetUser.department_id.department_name : 'N/A',
+        department: targetUser.department_id ? targetUser.department_id.name : 'N/A',
         phone: targetUser.phone,
         bio: targetUser.bio,
         profile_photo: targetUser.profile_photo,

@@ -88,7 +88,8 @@ function Layout() {
 
   const navItems = [
     { label: 'Dashboard', path: '/', icon: <IconDashboard className="w-5 h-5" /> },
-    { label: 'Team Hub', path: '/users', icon: <IconUsers className="w-5 h-5" />, permission: 'can_manage_users' },
+    { label: 'Team Hub', path: '/team-hub', icon: <IconUsers className="w-5 h-5" />, allowedRoles: ['manager'] },
+    { label: 'Personnel Directory', path: '/users', icon: <IconUsers className="w-5 h-5" />, permission: 'can_manage_users' },
     { label: 'Shift Roster', path: '/shifts', icon: <IconClock className="w-5 h-5" />, permission: 'can_manage_users' },
     { label: 'Organization', path: '/organization', icon: <IconBriefcase className="w-5 h-5" /> },
     { label: 'Attendance', path: '/attendance', icon: <IconClock className="w-5 h-5" /> },
@@ -101,12 +102,14 @@ function Layout() {
     { label: 'Roles', path: '/roles', icon: <IconShield className="w-5 h-5" />, permission: 'can_manage_users' }, // Using same permission for now
     { label: 'Policies', path: '/policies', icon: <IconShield className="w-5 h-5" /> },
     { label: 'Activity Logs', path: '/activity-logs', icon: <IconActivity className="w-5 h-5" />, permission: 'can_manage_users' },
-    { label: 'Reports', path: '/reports', icon: <IconBarChart className="w-5 h-5" /> },
+    { label: 'Reports', path: '/reports', icon: <IconBarChart className="w-5 h-5" />, allowedRoles: ['admin', 'manager'] },
   ];
 
-  const filteredNavItems = navItems.filter(item => 
-    !item.permission || hasPermission(item.permission)
-  );
+  const filteredNavItems = navItems.filter(item => {
+    const hasPerm = !item.permission || hasPermission(item.permission);
+    const hasRole = !item.allowedRoles || item.allowedRoles.includes(user?.role);
+    return hasPerm && hasRole;
+  });
 
   return (
     <div className="flex h-screen bg-primary transition-colors duration-300 font-sans">
