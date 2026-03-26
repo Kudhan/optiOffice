@@ -361,7 +361,7 @@ function Layout() {
                </div>
              </div>
            )}
-           <Outlet context={{ user, data }} />
+           <Outlet context={{ user, data, showNavbar }} />
         </main>
       </div>
 

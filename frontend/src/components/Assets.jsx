@@ -450,7 +450,7 @@ const Assets = () => {
                         </select>
                       </div>
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Value ($)</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Value (₹)</label>
                         <input 
                           type="number"
                           className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl px-6 py-4 outline-none focus:border-sky-500 transition-all font-bold text-sm"

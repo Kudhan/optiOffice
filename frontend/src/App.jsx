@@ -18,6 +18,7 @@ import Roles from './components/Roles';
 import Departments from './components/Departments';
 import Policies from './components/Policies';
 import ActivityLogs from './components/ActivityLogs';
+import Reports from './components/Reports';
 import Placeholder from './components/Placeholder';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
@@ -93,7 +94,7 @@ function App() {
               <Route path="settings" element={<Placeholder title="Settings" />} />
               <Route path="reports" element={
                 <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                  <Placeholder title="Reports & Analytics" />
+                  <Reports />
                 </ProtectedRoute>
               } />
               <Route path="sprints" element={<Placeholder title="Sprint Management" />} />

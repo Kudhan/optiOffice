@@ -30,7 +30,7 @@ function Billing({ token }) {
         <div className="plan-card current">
           <h3>Current Plan</h3>
           <div className="plan-name">{billingInfo.plan}</div>
-          <div className="plan-price">${billingInfo.amount_due}/mo</div>
+          <div className="plan-price">₹{billingInfo.amount_due}/mo</div>
           <div className="next-billing">Next billing: {billingInfo.next_billing_date}</div>
         </div>
 
@@ -61,7 +61,7 @@ function Billing({ token }) {
               <tr key={inv.id}>
                 <td>{inv.id}</td>
                 <td>{inv.date}</td>
-                <td>${inv.amount.toFixed(2)}</td>
+                <td>₹{inv.amount.toFixed(2)}</td>
                 <td><span className="status-paid">{inv.status}</span></td>
                 <td><button className="download-btn">PDF</button></td>
               </tr>

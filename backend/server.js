@@ -45,6 +45,7 @@ const assetRoutes = require('./routes/assetRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const shiftRoutes = require('./routes/shiftRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 const migrateRoutes = require('./routes/migrate');
 
 app.use('/api/v1/dashboard', dashboardRoutes);
@@ -61,6 +62,7 @@ app.use('/api/v1/assets', assetRoutes);
 app.use('/api/v1/tasks', taskRoutes);
 app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/shifts', shiftRoutes);
+app.use('/api/v1/reports', reportRoutes);
 
 
 // Legacy/Alternative Mounts (Ensuring standard bento boxes work)
