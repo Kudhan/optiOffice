@@ -82,11 +82,7 @@ function App() {
                   <Departments />
                 </ProtectedRoute>
               } />
-              <Route path="policies" element={
-                <ProtectedRoute requiredPermission="can_manage_users">
-                  <Policies />
-                </ProtectedRoute>
-              } />
+              <Route path="policies" element={<Policies />} />
               
               <Route path="activity-logs" element={
                 <ProtectedRoute requiredPermission="can_manage_users">

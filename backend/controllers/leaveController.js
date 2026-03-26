@@ -34,29 +34,47 @@ const calculateDuration = async (startDate, endDate, tenantId) => {
     return count;
 };
 
-// @desc    Get leaves mapping by tenantId
+// @desc    Get leaves mapping by tenantId with pagination
 // @route   GET /leaves
 const getLeaves = async (req, res) => {
   try {
     const role = req.user.role;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+    
     let filter = { tenantId: req.user.tenantId };
+    let total = 0;
+    let leaves = [];
 
     if (role === 'admin' || role === 'super-admin') {
       // Admin View: See everything in the tenant
-      const leaves = await Leave.find(filter).populate('user', 'full_name role').sort({ createdAt: -1 });
-      return res.json(leaves);
+      total = await Leave.countDocuments(filter);
+      leaves = await Leave.find(filter)
+        .populate('user', 'full_name role')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+      
+      return res.json({
+        data: leaves,
+        pagination: { total, pages: Math.ceil(total / limit), currentPage: page, limit }
+      });
     } 
     
     if (role === 'manager') {
       // Manager View: See their own leaves + direct reports who are NOT managers
-      // Using aggregation to filter by populated user role
-      const leaves = await Leave.aggregate([
-        { 
-          $match: { 
-            tenantId: req.user.tenantId, 
-            $or: [{ appliedTo: new mongoose.Types.ObjectId(req.user.id) }, { user: new mongoose.Types.ObjectId(req.user.id) }] 
-          } 
-        },
+      const aggregationMatch = { 
+        tenantId: req.user.tenantId, 
+        $or: [{ appliedTo: new mongoose.Types.ObjectId(req.user.id) }, { user: new mongoose.Types.ObjectId(req.user.id) }] 
+      };
+
+      // Count total for pagination (approximate or use separate aggregation)
+      // For managers, we'll fetch all and then slice to handle the complex role-based filtering logic if needed,
+      // but let's try to do it all in aggregation for performance.
+      
+      const pipeline = [
+        { $match: aggregationMatch },
         {
           $lookup: {
             from: 'users_collection',
@@ -73,29 +91,61 @@ const getLeaves = async (req, res) => {
               { "userDoc.role": { $ne: 'manager' } } // Reports who are not managers
             ]
           }
-        },
-        { $sort: { createdAt: -1 } },
+        }
+      ];
+
+      // Get multi-result: count and data
+      const results = await Leave.aggregate([
+        ...pipeline,
         {
-          $project: {
-            user: { _id: '$userDoc._id', id: '$userDoc._id', full_name: '$userDoc.full_name', role: '$userDoc.role' },
-            type: 1, startDate: 1, endDate: 1, status: 1, reason: 1, rejection_reason: 1, appliedTo: 1, createdAt: 1
+          $facet: {
+            data: [
+              { $sort: { createdAt: -1 } },
+              { $skip: skip },
+              { $limit: limit },
+              {
+                $project: {
+                  user: { _id: '$userDoc._id', id: '$userDoc._id', full_name: '$userDoc.full_name', role: '$userDoc.role' },
+                  type: 1, startDate: 1, endDate: 1, status: 1, reason: 1, rejection_reason: 1, appliedTo: 1, createdAt: 1
+                }
+              }
+            ],
+            totalCount: [
+              { $count: 'count' }
+            ]
           }
         }
       ]);
 
-      // Map _id and nested user.id to strings for compatibility
-      const formattedLeaves = leaves.map(l => ({ 
+      const formattedLeaves = results[0].data.map(l => ({ 
         ...l, 
         id: l._id.toString(),
         user: { ...l.user, id: l.user.id.toString(), _id: l.user._id.toString() }
       }));
-      return res.json(formattedLeaves);
+      
+      const count = results[0].totalCount[0]?.count || 0;
+
+      return res.json({
+        data: formattedLeaves,
+        pagination: { total: count, pages: Math.ceil(count / limit), currentPage: page, limit }
+      });
     }
 
     // Default: Employee View (Self only)
-    const leaves = await Leave.find({ tenantId: req.user.tenantId, user: req.user.id }).populate('user', 'full_name').sort({ createdAt: -1 });
-    res.json(leaves);
+    const employeeFilter = { tenantId: req.user.tenantId, user: req.user.id };
+    total = await Leave.countDocuments(employeeFilter);
+    leaves = await Leave.find(employeeFilter)
+      .populate('user', 'full_name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      data: leaves,
+      pagination: { total, pages: Math.ceil(total / limit), currentPage: page, limit }
+    });
   } catch (error) {
+    console.error("GET_LEAVES_PROTOCOL_FAIL:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };

@@ -1,29 +1,44 @@
 const mongoose = require('mongoose');
 
-// Because policies are huge nested objects in the Python backend, we can store it flexibly
 const policySchema = mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, 'Policy title is required'],
+    trim: true
+  },
+  content: {
+    type: String,
+    required: [true, 'Policy content is required']
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  icon: {
+    type: String,
+    default: 'FileText'
+  },
+  category: {
+    type: String,
+    enum: ['General', 'HR', 'IT', 'Attendance'],
+    default: 'General'
+  },
+  isSystemGenerated: {
+    type: Boolean,
+    default: false
+  },
   tenantId: {
     type: String,
     required: true,
-    unique: true, 
-    default: 'default_tenant'
-  },
-  password_policy: { type: Object, default: {} },
-  login_policy: { type: Object, default: {} },
-  user_policy: { type: Object, default: {} },
-  attendance_policy: { type: Object, default: {} },
-  leave_policy: { type: Object, default: {} },
-  task_policy: { type: Object, default: {} },
-  document_policy: { type: Object, default: {} },
-  notification_policy: { type: Object, default: {} },
-  security_policy: { type: Object, default: {} },
-  billing_policy: { type: Object, default: {} },
-  automation_policy: { type: Object, default: {} },
-  customization_policy: { type: Object, default: {} }
+    index: true
+  }
 }, {
   collection: 'policies_collection',
   timestamps: true
 });
+
+// Text index for searchability
+policySchema.index({ title: 'text', content: 'text' });
 
 policySchema.set('toJSON', {
   virtuals: true,

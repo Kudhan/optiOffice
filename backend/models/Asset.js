@@ -8,23 +8,59 @@ const assetSchema = mongoose.Schema({
   },
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ['Electronics', 'Furniture', 'Infrastructure', 'Software', 'Vehicles', 'Other'],
+    default: 'Electronics'
   },
   type: {
     type: String,
-    required: true
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    default: ''
   },
   serial_number: {
     type: String,
-    default: null
+    unique: true,
+    sparse: true
   },
   assigned_to: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     default: null
   },
   status: {
     type: String,
+    enum: ['Available', 'Assigned', 'Maintenance', 'Retired', 'Lost'],
     default: "Available"
+  },
+  condition: {
+    type: String,
+    enum: ['New', 'Excellent', 'Good', 'Fair', 'Poor', 'Damaged'],
+    default: 'New'
+  },
+  purchaseDate: {
+    type: Date,
+    default: null
+  },
+  warrantyExpiry: {
+    type: Date,
+    default: null
+  },
+  value: {
+    type: Number,
+    default: 0
+  },
+  notes: {
+    type: String,
+    default: ''
   }
 }, {
   collection: 'assets_collection',

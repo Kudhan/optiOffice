@@ -17,9 +17,37 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LeaveRequestModal from './LeaveRequestModal';
 import TeamCalendar from './TeamCalendar';
 
+const Pagination = ({ meta, onPageChange }) => {
+    if (!meta || meta.pages <= 1) return null;
+    return (
+        <div className="flex justify-between items-center px-8 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Showing <span className="text-sky-500">{Math.min(meta.total, (meta.currentPage - 1) * meta.limit + 1)}-{Math.min(meta.total, meta.currentPage * meta.limit)}</span> of {meta.total} records
+            </p>
+            <div className="flex gap-2">
+                <button 
+                    disabled={meta.currentPage === 1}
+                    onClick={() => onPageChange(meta.currentPage - 1)}
+                    className="px-6 py-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[10px] font-black uppercase tracking-widest disabled:opacity-30 hover:text-sky-500 transition-all shadow-sm"
+                >
+                    Prev
+                </button>
+                <button 
+                    disabled={meta.currentPage >= meta.pages}
+                    onClick={() => onPageChange(meta.currentPage + 1)}
+                    className="px-6 py-2 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[10px] font-black uppercase tracking-widest disabled:opacity-30 hover:text-sky-500 transition-all shadow-sm"
+                >
+                    Next
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const Leaves = () => {
     const { user, isManager, isAdmin } = useAuth();
     const [leaves, setLeaves] = useState([]);
+    const [pagination, setPagination] = useState({ total: 0, pages: 1, currentPage: 1, limit: 10 });
     const [balance, setBalance] = useState({ annual_total: 30, used: 0, remaining: 30 });
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -27,15 +55,16 @@ const Leaves = () => {
 
     const [rejectionReason, setRejectionReason] = useState({});
 
-    const fetchData = async () => {
+    const fetchData = async (page = 1) => {
         try {
             setLoading(true);
             const [leavesRes, balanceRes] = await Promise.all([
-                apiClient.get('/leaves'),
+                apiClient.get(`/leaves?page=${page}&limit=10`),
                 apiClient.get('/leaves/balance')
             ]);
-            setLeaves(leavesRes.data);
-            setBalance(balanceRes.data);
+            setLeaves(leavesRes.data?.data || []);
+            setPagination(leavesRes.data?.pagination || { total: 0, pages: 1, currentPage: 1, limit: 10 });
+            setBalance(balanceRes.data || { annual_total: 30, used: 0, remaining: 30 });
         } catch (err) {
             console.error("Signal fragmentation in tactical data link");
         } finally {
@@ -81,16 +110,17 @@ const Leaves = () => {
     };
 
     const pendingApprovals = useMemo(() => {
-        return leaves.filter(l => {
-            if (l.status !== 'Pending') return false;
+        return (leaves || []).filter(l => {
+            if (!l || l.status !== 'Pending') return false;
             if (isAdmin) return true; // Admins see everything pending
-            return l.appliedTo === user?.id || (typeof l.appliedTo === 'object' && l.appliedTo?._id === user?.id);
+            return l.appliedTo === user?.id || (typeof l.appliedTo === 'object' && (l.appliedTo?._id === user?.id || l.appliedTo?.id === user?.id));
         });
     }, [leaves, user, isAdmin]);
 
     const myRequests = useMemo(() => {
         const currentUserId = user?.id || user?._id;
-        return leaves.filter(l => {
+        return (leaves || []).filter(l => {
+            if (!l) return false;
             const leaveUserId = (typeof l.user === 'object') ? (l.user?.id || l.user?._id) : l.user;
             return leaveUserId?.toString() === currentUserId?.toString();
         });
@@ -147,10 +177,10 @@ const Leaves = () => {
 
     const AdminOversight = () => {
         const stats = useMemo(() => ({
-            pending: leaves.filter(l => l.status === 'Pending').length,
-            approved: leaves.filter(l => l.status === 'Approved').length,
-            rejected: leaves.filter(l => l.status === 'Rejected').length,
-            total: leaves.length
+            pending: (leaves || []).filter(l => l?.status === 'Pending').length,
+            approved: (leaves || []).filter(l => l?.status === 'Approved').length,
+            rejected: (leaves || []).filter(l => l?.status === 'Rejected').length,
+            total: (leaves || []).length
         }), [leaves]);
 
         return (
@@ -276,7 +306,7 @@ const Leaves = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
-                                {leaves.map(request => (
+                                { (leaves || []).map(request => (
                                     <tr key={request.id} className="group hover:bg-sky-500/5 transition-all">
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-3">
@@ -318,6 +348,7 @@ const Leaves = () => {
                             </tbody>
                         </table>
                     </div>
+                    <Pagination meta={pagination} onPageChange={fetchData} />
                 </div>
             </div>
         );
@@ -504,7 +535,7 @@ const Leaves = () => {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
-                                                {myRequests.map(request => (
+                                                { (myRequests || []).map(request => (
                                                     <tr key={request.id} className="group hover:bg-sky-500/5 transition-all">
                                                         <td className="px-8 py-6">
                                                             <div className="flex items-center gap-3">
@@ -534,7 +565,7 @@ const Leaves = () => {
                                                                 {request.status}
                                                             </div>
                                                         </td>
-                                                        <td className="px-8 py-6 max-w-xs transition-all">
+                                                         <td className="px-8 py-6 max-w-xs transition-all">
                                                             <p className="text-[10px] font-bold text-slate-400 truncate group-hover:text-slate-600 transition-colors uppercase tracking-tight">
                                                                 {request.reason || 'Strategic extraction protocol - No context provided.'}
                                                             </p>
@@ -549,6 +580,7 @@ const Leaves = () => {
                                             </tbody>
                                         </table>
                                     </div>
+                                    <Pagination meta={pagination} onPageChange={fetchData} />
                                 </div>
                             </div>
                         </motion.div>

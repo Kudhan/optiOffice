@@ -20,7 +20,7 @@ const TeamCalendar = () => {
         try {
             setLoading(true);
             const res = await apiClient.get('/leaves/team-calendar');
-            setTeamLeaves(res.data);
+            setTeamLeaves(res.data || []);
         } catch (err) {
             console.error("Calendar data link severed");
         } finally {
@@ -59,7 +59,8 @@ const TeamCalendar = () => {
         const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
         date.setHours(0, 0, 0, 0);
 
-        return filteredLeaves.filter(l => {
+        return (filteredLeaves || []).filter(l => {
+            if (!l) return false;
             // Normalize start/end dates to local midnight for comparison
             const start = new Date(l.startDate);
             start.setHours(0, 0, 0, 0);
@@ -75,10 +76,10 @@ const TeamCalendar = () => {
     };
 
     const filteredLeaves = useMemo(() => {
-        if (!filter) return teamLeaves;
-        return teamLeaves.filter(l => 
-            l.user?.full_name?.toLowerCase().includes(filter.toLowerCase()) ||
-            l.user?.department?.toLowerCase().includes(filter.toLowerCase())
+        if (!filter) return teamLeaves || [];
+        return (teamLeaves || []).filter(l => 
+            l?.user?.full_name?.toLowerCase().includes(filter.toLowerCase()) ||
+            l?.user?.department?.toLowerCase().includes(filter.toLowerCase())
         );
     }, [teamLeaves, filter]);
 
