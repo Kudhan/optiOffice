@@ -84,14 +84,10 @@ const Reports = () => {
     const [viewMode, setViewMode] = useState('bento'); // 'bento' or 'table'
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({ hr: null, inventory: null, org: null });
-    const [lastUpdated, setLastUpdated] = useState(new Date());
-    const [isAtTop, setIsAtTop] = useState(true);
 
-    useEffect(() => {
-        const handleScroll = () => setIsAtTop(window.scrollY < 50);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    const [lastUpdated, setLastUpdated] = useState(new Date());
+
+
 
     const tabs = [
         { id: 'hr', label: 'HR Intelligence', icon: <Users size={18} /> },
@@ -602,10 +598,8 @@ const Reports = () => {
             </div>
 
             {/* Strategic Header / Command Bar */}
-            <div className="screen-only">
-                <div className={`flex flex-col lg:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/10 p-6 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 sticky transition-all duration-300 ease-in-out z-20 ${
-                    isAtTop ? 'top-24 opacity-100 translate-y-0 scale-100' : '-top-40 opacity-0 -translate-y-20 scale-95 pointer-events-none'
-                }`}>
+            <div className="screen-only mb-10">
+                <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/10 p-8 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 transition-all duration-300 z-10">
                     {/* Visual Identity */}
                     <div className="flex items-center gap-6 px-4">
                         <div className="relative">
@@ -659,23 +653,6 @@ const Reports = () => {
                                 )
                             ))}
                         </div>
-
-                        <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2 hidden lg:block" />
-
-                        {/* Force Sync Pulse */}
-                        <button 
-                            onClick={() => { 
-                                fetchData(activeTab); 
-                                setLastUpdated(new Date()); 
-                                toast.success("Intelligence Pulse Received: Sector Synchronized", {
-                                    style: { background: '#0f172a', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }
-                                });
-                            }}
-                            className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 text-sky-500 hover:bg-sky-500 hover:text-white transition-all group border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-center flex-shrink-0"
-                            title="Force Intelligence Pulse"
-                        >
-                            <RefreshCw size={18} className={`group-hover:rotate-180 transition-transform duration-700 ${loading ? 'animate-spin' : ''}`} />
-                        </button>
                     </div>
                 </div>
 
