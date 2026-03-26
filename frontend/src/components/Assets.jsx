@@ -193,7 +193,7 @@ const Assets = () => {
             </div>
         </div>
 
-        {(isAdmin || isManager) && (
+        {isAdmin && (
           <button 
             onClick={() => { resetForm(); setShowForm(true); }}
             className="w-full xl:w-auto bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-black py-4 px-8 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase tracking-[0.2em] text-[10px]"
@@ -284,7 +284,9 @@ const Assets = () => {
                 </tr>
               ) : assets.length === 0 ? (
                 <tr>
-                   <td colSpan="6" className="py-20 text-center uppercase tracking-[0.4em] text-[10px] font-black text-slate-300">No Asset Nodes Found in current sector</td>
+                   <td colSpan="6" className="py-20 text-center uppercase tracking-[0.4em] text-[10px] font-black text-slate-300">
+                     {isAdmin ? "No Asset Nodes Found in current sector" : "No Assets Allocated to your Strategic Node"}
+                   </td>
                 </tr>
               ) : assets.map(asset => (
                 <tr key={asset.id} className="group hover:bg-sky-500/5 transition-all">
@@ -333,16 +335,14 @@ const Assets = () => {
                     )}
                   </td>
                   <td className="px-8 py-7 text-right">
-                    {(isAdmin || isManager) && (
+                    {isAdmin && (
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                         <button onClick={() => openEdit(asset)} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
                           <Edit className="w-4 h-4" />
                         </button>
-                        {isAdmin && (
-                          <button onClick={() => handleDelete(asset.id)} className="p-3 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
-                            <Trash className="w-4 h-4" />
-                          </button>
-                        )}
+                        <button onClick={() => handleDelete(asset.id)} className="p-3 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
+                          <Trash className="w-4 h-4" />
+                        </button>
                       </div>
                     )}
                   </td>

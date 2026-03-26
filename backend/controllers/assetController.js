@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Asset = require('../models/Asset');
 
 // @desc    Get assets mapping by tenantId with advanced filtering
@@ -8,6 +9,11 @@ const getAssets = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     let query = { tenantId: req.user.tenantId };
+    
+    // Strict Isolation: Non-admins only see what they are allocated with
+    if (req.user.role !== 'admin') {
+      query.assigned_to = req.user.id;
+    }
     
     if (search) {
       query.$or = [
@@ -45,8 +51,14 @@ const getAssets = async (req, res) => {
 // @route   GET /assets/stats
 const getAssetStats = async (req, res) => {
   try {
+    // Strict isolation for stats
+    const matchQuery = { tenantId: req.user.tenantId };
+    if (req.user.role !== 'admin') {
+      matchQuery.assigned_to = new mongoose.Types.ObjectId(req.user.id);
+    }
+
     const stats = await Asset.aggregate([
-      { $match: { tenantId: req.user.tenantId } },
+      { $match: matchQuery },
       {
         $group: {
           _id: null,
@@ -59,8 +71,14 @@ const getAssetStats = async (req, res) => {
       }
     ]);
 
+    // Strict isolation for category breakdown
+    const catMatchQuery = { tenantId: req.user.tenantId };
+    if (req.user.role !== 'admin') {
+      catMatchQuery.assigned_to = new mongoose.Types.ObjectId(req.user.id);
+    }
+
     const categories = await Asset.aggregate([
-      { $match: { tenantId: req.user.tenantId } },
+      { $match: catMatchQuery },
       { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
 
@@ -77,8 +95,8 @@ const getAssetStats = async (req, res) => {
 // @route   POST /assets
 const createAsset = async (req, res) => {
   try {
-    if (!['admin', 'manager'].includes(req.user.role)) {
-      return res.status(403).json({ detail: "Security Restriction: Asset provisioning requires elevated clearance." });
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ detail: "Security Restriction: Asset provisioning requires absolute administrative clearance." });
     }
     
     const assetData = { ...req.body };
@@ -109,8 +127,8 @@ const createAsset = async (req, res) => {
 // @route   PUT /assets/:id
 const updateAsset = async (req, res) => {
   try {
-    if (!['admin', 'manager'].includes(req.user.role)) {
-      return res.status(403).json({ detail: "Security Restriction: Asset modification requires elevated clearance." });
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ detail: "Security Restriction: Asset modification requires absolute administrative clearance." });
     }
     
     const updateData = { ...req.body };
