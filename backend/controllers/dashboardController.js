@@ -26,7 +26,8 @@ const getDashboardData = async (req, res) => {
     
     // Scoped Counts
     const totalEmployees = await User.countDocuments(userFilter);
-    const activeTasks = await Task.countDocuments({ ...taskScope, status: { $ne: 'Done' } });
+    const activeTasks = await Task.countDocuments({ ...taskScope, status: { $nin: ['Done', 'Completed'] } });
+    const completedTasks = await Task.countDocuments({ ...taskScope, status: { $in: ['Done', 'Completed'] } });
     const pendingLeaves = await Leave.countDocuments({ ...leaveScope, status: 'Pending' });
 
     // Scoped Department Stats
@@ -40,10 +41,11 @@ const getDashboardData = async (req, res) => {
       dashboardResponse.stats = {
         total_employees: totalEmployees,
         active_tasks: activeTasks,
+        completed_tasks: completedTasks,
         pending_leaves: pendingLeaves
       };
       
-      dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $ne: 'Done' } })
+      dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $nin: ['Done', 'Completed'] } })
         .populate('assigned_to', 'full_name profile_photo')
         .sort({ priority: 1 })
         .limit(10);
@@ -56,6 +58,7 @@ const getDashboardData = async (req, res) => {
         active_sprints: 2,
         pending_leaves: pendingLeaves,
         active_tasks: activeTasks,
+        completed_tasks: completedTasks,
         team_count: totalEmployees
       };
       // Tasks assigned to their team
@@ -67,6 +70,7 @@ const getDashboardData = async (req, res) => {
       dashboardResponse.menu = ["My Tasks", "Attendance", "Leaves", "Profile", "Organization Tree", "Holidays"];
       dashboardResponse.stats = {
         active_tasks: activeTasks,
+        completed_tasks: completedTasks,
         pending_leaves: pendingLeaves
       };
       // Get user specific tasks

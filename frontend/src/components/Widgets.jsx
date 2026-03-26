@@ -18,14 +18,15 @@ const tileClasses = "bg-primary-surface backdrop-blur-md border border-border ro
 // StatsWidget remained same...
 export const StatsWidget = ({ stats, isLoading }) => {
   const items = [
-    { label: 'Total Employees', value: stats?.total_employees || '0', trend: '+4%', trendColor: 'text-emerald-500' },
+    { label: 'Total Employees', value: stats?.total_employees || stats?.team_count || '0', trend: '+4%', trendColor: 'text-emerald-500' },
     { label: 'Active Tasks', value: stats?.active_tasks || '0', trend: 'Live', trendColor: 'text-sky-500' },
+    { label: 'Tasks Done', value: stats?.completed_tasks || '0', trend: 'Velocity', trendColor: 'text-emerald-500' },
     { label: 'Pending Leaves', value: stats?.pending_leaves || '0', trend: 'Action Required', trendColor: 'text-rose-500' },
   ];
   
   return (
     <div className={`col-span-12 lg:col-span-8 ${tileClasses}`}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {items.map((item, idx) => (
           <div key={idx} className="flex flex-col border-r border-border last:border-0 pr-4">
             <span className="text-[10px] uppercase font-bold tracking-widest text-content-muted mb-2">{item.label}</span>

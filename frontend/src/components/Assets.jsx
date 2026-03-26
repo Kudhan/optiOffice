@@ -224,7 +224,7 @@ const Assets = () => {
           <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group text-white">
               <p className="text-[10px] font-black opacity-50 uppercase tracking-widest mb-1 relative z-10">Valuation Ledger (Total)</p>
               <h4 className="text-4xl font-black uppercase tracking-tighter relative z-10">
-                ${(stats?.overview?.totalValue || 0).toLocaleString()}
+                ₹{(stats?.overview?.totalValue || 0).toLocaleString()}
               </h4>
               <Shield className="absolute top-6 right-6 w-12 h-12 text-white/5" />
               <div className="absolute bottom-0 right-0 w-32 h-32 bg-sky-500/20 rounded-full blur-[60px] -mr-16 -mb-16" />

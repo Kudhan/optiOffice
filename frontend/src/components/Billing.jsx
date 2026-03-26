@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
 import { 
-  CreditCard, 
-  Shield, 
-  Zap, 
-  Globe, 
-  Download, 
-  History, 
-  TrendingUp, 
-  Users, 
-  Calendar,
-  CheckCircle2,
-  Lock,
-  ArrowRight,
-  ChevronRight,
-  Package
+    CreditCard, 
+    Shield, 
+    Zap, 
+    Globe, 
+    Download, 
+    History, 
+    TrendingUp, 
+    Users, 
+    Calendar,
+    CheckCircle2,
+    Lock,
+    ArrowRight,
+    ChevronRight,
+    Package,
+    RefreshCw
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 
 const Billing = () => {
@@ -25,14 +25,22 @@ const Billing = () => {
     const [billingCycle, setBillingCycle] = useState('Monthly');
     const [tab, setTab] = useState('overview');
 
+    const [allInvoices, setAllInvoices] = useState([]);
+
     const fetchData = async () => {
         try {
             setLoading(true);
             const response = await apiClient.get('billing');
             setBillingData(response.data);
+            
+            // Also fetch all historical records if on invoices tab
+            if (tab === 'invoices') {
+                const invRes = await apiClient.get('billing/invoices');
+                setAllInvoices(invRes.data);
+            }
         } catch (error) {
-            console.error("Billing Intelligence Sync Error:", error);
-            toast.error("Failed to fetch billing intelligence");
+            console.error("Financial Sync Error:", error);
+            toast.error("Failed to synchronize financial nodes");
         } finally {
             setLoading(false);
         }
@@ -40,7 +48,7 @@ const Billing = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [tab]);
 
     const handleUpgrade = async (planType) => {
         try {
@@ -150,19 +158,16 @@ const Billing = () => {
                 </div>
             </div>
 
-            <AnimatePresence mode="wait">
+            <div className="pt-10">
                 {tab === 'overview' && (
-                    <motion.div 
-                        key="overview"
-                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                        className="space-y-12"
-                    >
+                    <div className="space-y-12">
                         {/* Bento Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            <StatCard title="Active Sub" value={billingData?.planType} icon={<Shield size={22} />} color="sky" />
-                            <StatCard title="Seat Saturation" value={`${billingData?.currentUserCount} / ${billingData?.userLimit}`} icon={<Users size={22} />} color="emerald" />
-                            <StatCard title="Next Ledger" value={billingData?.nextPaymentDate ? new Date(billingData.nextPaymentDate).toLocaleDateString() : 'N/A'} icon={<Calendar size={22} />} color="amber" />
-                            <StatCard title="Financial Status" value={billingData?.status} icon={<TrendingUp size={22} />} color={billingData?.status === 'Active' ? 'emerald' : 'rose'} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                            <StatCard title="Active Sub" value={billingData?.planType} icon={<Shield size={20} />} color="sky" />
+                            <StatCard title="Total Capacity" value={billingData?.userLimit} icon={<Users size={20} />} color="indigo" />
+                            <StatCard title="Seat Headroom" value={billingData?.usageRemaining} icon={<ArrowRight size={20} />} color="emerald" />
+                            <StatCard title="Next Ledger" value={billingData?.nextPaymentDate ? new Date(billingData.nextPaymentDate).toLocaleDateString() : 'N/A'} icon={<Calendar size={20} />} color="amber" />
+                            <StatCard title="Financial Status" value={billingData?.status} icon={<TrendingUp size={20} />} color={billingData?.status === 'Active' ? 'emerald' : 'rose'} />
                         </div>
 
                         {/* Recent History */}
@@ -200,15 +205,11 @@ const Billing = () => {
                                 </table>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
 
                 {tab === 'plans' && (
-                    <motion.div 
-                        key="plans"
-                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                        className="space-y-12"
-                    >
+                    <div className="space-y-12">
                         {/* Cycle Toggle */}
                         <div className="flex justify-center">
                             <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-3xl flex gap-1 border border-slate-200/50 dark:border-slate-700/50">
@@ -246,14 +247,11 @@ const Billing = () => {
                                 current={billingData?.planType === 'Enterprise'}
                             />
                         </div>
-                    </motion.div>
+                    </div>
                 )}
 
                 {tab === 'invoices' && (
-                    <motion.div 
-                        key="invoices"
-                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                        className="bg-white dark:bg-slate-900 rounded-[4rem] border border-slate-100 dark:border-slate-800 shadow-sm p-12 overflow-hidden"
+                    <div className="bg-white dark:bg-slate-900 rounded-[4rem] border border-slate-100 dark:border-slate-800 shadow-sm p-12 overflow-hidden"
                     >
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-10">Historical Intelligence Records</h3>
                         <div className="overflow-x-auto">
@@ -268,7 +266,7 @@ const Billing = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                                    {(billingData?.invoices || []).map(inv => (
+                                    {(allInvoices || []).map(inv => (
                                         <tr key={inv.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td className="py-8 px-4">
                                                 <div className="flex items-center gap-3">
@@ -295,9 +293,9 @@ const Billing = () => {
                                 </tbody>
                             </table>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
-            </AnimatePresence>
+            </div>
         </div>
     );
 };

@@ -203,7 +203,7 @@ function Dashboard() {
     return 'Good Evening';
   };
 
-  const firstName = user?.sub?.split(' ')[0] || 'User';
+  const firstName = user?.full_name?.split(' ')[0] || user?.username || user?.sub?.split(' ')[0] || 'User';
 
   if (isLoading) {
     return (
@@ -282,7 +282,7 @@ function Dashboard() {
                     </div>
                     <div className="p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10">
                         <p className="text-xs font-bold text-emerald-500 mb-1">Tasks Done</p>
-                        <p className="text-3xl font-black text-content-main">{data?.tasks?.filter(t => t.status === 'Completed').length || 0}</p>
+                        <p className="text-3xl font-black text-content-main">{data?.stats?.completed_tasks || 0}</p>
                     </div>
                 </div>
              </div>
