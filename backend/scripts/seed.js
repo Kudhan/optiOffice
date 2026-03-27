@@ -175,7 +175,7 @@ const seedDB = async () => {
             username: 'superadmin',
             email: 'super@optioffice.com',
             full_name: 'The Overlord',
-            hashed_password: 'password123',
+            hashed_password: hashedPassword, // Use the same 'password123' hash defined above
             role: 'super-admin',
             tenantId: 'global',
             department_id: null,

@@ -61,7 +61,12 @@ const getUsers = async (req, res) => {
 // @access  Private
 const createUser = async (req, res) => {
   try {
-    const { username, password, email, full_name, role, manager, department } = req.body;
+    let { username, password, email, full_name, role, manager, department } = req.body;
+    
+    // Trim and Cleanse Inputs
+    username = username?.trim();
+    email = email?.trim()?.toLowerCase();
+    full_name = full_name?.trim();
     
     // Task 3: Hierarchy Protection
     if (manager) {
@@ -76,9 +81,16 @@ const createUser = async (req, res) => {
       }
     }
 
-    const userExists = await User.findOne({ username });
+    const userExists = await User.findOne({ 
+      $or: [
+        { username: { $regex: new RegExp(`^${username}$`, 'i') } },
+        { email: email }
+      ]
+    });
+
     if (userExists) {
-      return res.status(400).json({ detail: "Username already exists" });
+      const conflictField = userExists.username.toLowerCase() === username.toLowerCase() ? "Username" : "Email";
+      return res.status(400).json({ detail: `${conflictField} already exists in the system.` });
     }
 
     // Salt and hash the password (mirroring bcrypt flow from Python passlib)

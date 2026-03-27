@@ -1,0 +1,13 @@
+﻿Connected to MongoDB
+Found 11 users:
+- Username: "admin", Email: "admin@company.com", Tenant: "one", HasPassword: true
+- Username: "asmith", Email: "asmith@company.com", Tenant: "one", HasPassword: true
+- Username: "jdoe", Email: "jdoe@company.com", Tenant: "one", HasPassword: true
+- Username: "bblack", Email: "bblack@company.com", Tenant: "one", HasPassword: true
+- Username: "rgreen", Email: "rgreen@company.com", Tenant: "one", HasPassword: true
+- Username: "wwhite", Email: "wwhite@company.com", Tenant: "one", HasPassword: true
+- Username: "mwhite", Email: "mwhite@company.com", Tenant: "one", HasPassword: true
+- Username: "pblue", Email: "pblue@company.com", Tenant: "one", HasPassword: true
+- Username: "tblack", Email: "tblack@company.com", Tenant: "one", HasPassword: true
+- Username: "cgrey", Email: "cgrey@company.com", Tenant: "one", HasPassword: true
+- Username: "kbrown", Email: "kbrown@company.com", Tenant: "one", HasPassword: true
