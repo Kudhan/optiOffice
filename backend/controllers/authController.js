@@ -25,11 +25,12 @@ const loginUser = asyncHandler(async (req, res) => {
     return res.status(401).json({ success: false, message: 'Invalid username or password' });
   }
 
-  // Verify password matching old bcrypt python hash
+  // Verify password matching
   const isMatch = await bcrypt.compare(password, user.hashed_password);
 
   if (!isMatch) {
-    console.log('Password mismatch for user:', username);
+    console.log(`[AUTH DEBUG] Password mismatch for: ${username}`);
+    console.log(`[AUTH DEBUG] Provided password: [${password}]`);
     return res.status(401).json({ success: false, message: 'Invalid username or password' });
   }
 

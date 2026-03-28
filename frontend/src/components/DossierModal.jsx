@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Activity, ClipboardList, Clock, Shield, 
   Lock, LogOut, CheckCircle2, AlertCircle, TrendingUp,
-  ChevronRight, Calendar, User as UserIcon
+  ChevronRight, Calendar, User as UserIcon, Edit
 } from 'lucide-react';
 import apiClient from '../api/client';
 import toast from 'react-hot-toast';
+import EditProfileModal from './EditProfileModal';
 
-const DossierModal = ({ isOpen, onClose, user, onRefresh }) => {
+const DossierModal = ({ isOpen, onClose, user, onRefresh, departments = [] }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [fullUser, setFullUser] = useState(null);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -23,6 +26,7 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh }) => {
       setLoading(true);
       const res = await apiClient.get(`/users/${user.id || user._id}/dossier`);
       setStats(res.data.stats);
+      setFullUser(res.data.user);
     } catch (err) {
       toast.error("Failed to load dossier data.");
     } finally {
@@ -39,6 +43,17 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh }) => {
       if (action === 'freeze' || action === 'unfreeze') fetchDossier();
     } catch (err) {
       toast.error("Security protocol execution failed.");
+    }
+  };
+
+  const handleAdminSave = async (updatedData) => {
+    try {
+      await apiClient.patch(`/users/${user.id || user._id}`, updatedData);
+      toast.success("Identity Override Successful");
+      fetchDossier();
+      onRefresh();
+    } catch (err) {
+      toast.error("Override Protocol Failed");
     }
   };
 
@@ -67,9 +82,18 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh }) => {
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-content-muted">Identity Node: {user.username} | {user.email}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-3 rounded-2xl hover:bg-rose-500/10 hover:text-rose-500 transition-all">
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsEditOpen(true)}
+              className="group flex items-center gap-3 px-6 py-3 rounded-2xl bg-sky-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20 active:scale-95"
+            >
+              <Edit className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              Edit Dossier
+            </button>
+            <button onClick={onClose} className="p-3 rounded-2xl hover:bg-rose-500/10 hover:text-rose-500 transition-all">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
@@ -122,6 +146,32 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh }) => {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Identity Dossier */}
+                      <div className="bg-navy-50 dark:bg-navy-900/50 p-8 rounded-[2.5rem] border border-border h-full">
+                         <h3 className="text-xl font-black text-content-main mb-6 flex items-center gap-3">
+                           <Shield className="w-5 h-5 text-sky-500" /> Identity Dossier
+                         </h3>
+                         <div className="grid grid-cols-1 gap-6 text-[11px] font-bold">
+                            <div className="flex justify-between items-center border-b border-border/50 pb-3">
+                              <span className="text-content-muted uppercase tracking-widest text-[9px]">Legal Entity</span>
+                              <p className="text-content-main font-black underline decoration-sky-500/30 underline-offset-4">{user.privateIdentity?.legalName || user.full_name}</p>
+                            </div>
+                            <div className="flex justify-between items-center border-b border-border/50 pb-3">
+                              <span className="text-content-muted uppercase tracking-widest text-[9px]">Tax Node (TID)</span>
+                              <p className="text-sky-500 font-black uppercase tracking-tighter">{user.privateIdentity?.taxId || 'UNREGISTERED'}</p>
+                            </div>
+                            <div className="flex justify-between items-center border-b border-border/50 pb-3">
+                              <span className="text-content-muted uppercase tracking-widest text-[9px]">Passport Serial</span>
+                              <p className="text-content-main font-black tracking-widest">{user.privateIdentity?.passportNumber || 'N/A'}</p>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-content-muted uppercase tracking-widest text-[9px]">Financial Node</span>
+                              <p className="text-emerald-500 font-black italic">{user.secureVault?.bankDetails?.bankName ? 'VAULT ACTIVE' : 'NO VAULT DATA'}</p>
+                            </div>
+                         </div>
+                      </div>
+
+                      {/* Administrative Context */}
                       <div className="bg-navy-50 dark:bg-navy-900/50 p-8 rounded-[2.5rem] border border-border h-full">
                          <h3 className="text-xl font-black text-content-main mb-6 flex items-center gap-3">
                            <UserIcon className="w-5 h-5 text-sky-500" /> Administrative Context
@@ -145,27 +195,27 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh }) => {
                             </div>
                          </div>
                       </div>
+                    </div>
 
-                      <div className="bg-sky-500/5 p-8 rounded-[2.5rem] border border-sky-500/10 h-full">
-                         <h3 className="text-xl font-black text-content-main mb-6 flex items-center gap-3">
-                           <Activity className="w-5 h-5 text-sky-500" /> Recent Pulse Log
-                         </h3>
-                         <div className="space-y-3">
-                            {(stats?.attendanceLogs?.slice(0, 3).length || 0) === 0 ? (
-                              <p className="text-[10px] font-black text-content-muted uppercase tracking-widest text-center py-10 opacity-40">No Recent Cycles</p>
-                            ) : (
-                              stats.attendanceLogs.slice(0, 3).map(log => (
-                                <div key={log.id || log._id} className="flex items-center justify-between p-3.5 bg-white dark:bg-navy-950/50 rounded-2xl border border-border/50 group hover:border-sky-500/30 transition-all">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                    <span className="text-[11px] font-black text-content-main">{log.date}</span>
-                                  </div>
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-sky-500 opacity-80">{log.status}</span>
+                    <div className="bg-sky-500/5 p-8 rounded-[2.5rem] border border-sky-500/10">
+                       <h3 className="text-xl font-black text-content-main mb-6 flex items-center gap-3">
+                         <Activity className="w-5 h-5 text-sky-500" /> Recent Pulse Log
+                       </h3>
+                       <div className="space-y-3">
+                          {!stats?.attendanceLogs?.slice(0, 3).length ? (
+                            <p className="text-[10px] font-black text-content-muted uppercase tracking-widest text-center py-10 opacity-40">No Recent Cycles</p>
+                          ) : (
+                            stats.attendanceLogs.slice(0, 3).map((log) => (
+                              <div key={log.id || log._id} className="flex items-center justify-between p-3.5 bg-white dark:bg-navy-950/50 rounded-2xl border border-border/50 group hover:border-sky-500/30 transition-all">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                  <span className="text-[11px] font-black text-content-main">{log.date}</span>
                                 </div>
-                              ))
-                            )}
-                         </div>
-                      </div>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-sky-500 opacity-80">{log.status}</span>
+                              </div>
+                            ))
+                          )}
+                       </div>
                     </div>
                   </div>
                 )}
@@ -322,6 +372,15 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh }) => {
           </div>
         </div>
       </div>
+
+      <EditProfileModal 
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        user={fullUser || user}
+        onSave={handleAdminSave}
+        isAdminView={true}
+        departments={departments}
+      />
     </div>
   );
 };

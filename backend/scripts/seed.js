@@ -44,13 +44,13 @@ const seedDB = async () => {
                 tenantId: null, // Global Role
                 name: 'super-admin',
                 description: 'Global System Overlord',
-                permissions: ['*']
+                permissions: ['*', 'can_view_sensitive_data']
             },
             {
                 tenantId: tenantId,
                 name: 'admin',
                 description: 'Full system access',
-                permissions: ['can_manage_users', 'can_manage_tasks', 'can_manage_holidays', 'can_view_all_attendance', 'can_approve_leaves']
+                permissions: ['can_manage_users', 'can_manage_tasks', 'can_manage_holidays', 'can_view_all_attendance', 'can_approve_leaves', 'can_view_sensitive_data']
             },
             {
                 tenantId: tenantId,
@@ -125,7 +125,29 @@ const seedDB = async () => {
             department_id: deptMap['Engineering'],
             department: 'Engineering',
             manager: null,
-            shift_id: shiftIds[0] // General Shift
+            shift_id: shiftIds[0],
+            publicProfile: {
+                preferredName: 'The CEO',
+                bio: 'Strategic commander of OptiOffice operations.',
+                skills: ['Leadership', 'Strategy', 'Innovation'],
+                workEmail: 'ceo@optioffice.com'
+            },
+            privateIdentity: {
+                legalName: 'Optimus Prime CEO',
+                dob: '1980-01-01',
+                gender: 'Male',
+                nationality: 'Cybertronian',
+                taxId: 'CEO-777-WIN',
+                passportNumber: 'PASS-CEO-1'
+            },
+            secureVault: {
+                bankDetails: {
+                    accountNumber: '1234567890',
+                    ifscCode: 'BANK001',
+                    bankName: 'Global Reserve',
+                    accountHolder: 'Optimus Prime'
+                }
+            }
         });
 
         // Managers
@@ -142,7 +164,16 @@ const seedDB = async () => {
                 department_id: dept._id,
                 department: dept.name,
                 manager: adminDoc._id,
-                shift_id: shiftIds[idx % shiftIds.length]
+                shift_id: shiftIds[idx % shiftIds.length],
+                publicProfile: {
+                    preferredName: uname,
+                    bio: `Departmental lead for ${dept.name}.`,
+                    skills: ['Management', 'Coordination']
+                },
+                privateIdentity: {
+                    legalName: `${uname.toUpperCase()} LEGAL NAME`,
+                    taxId: `TAX-${idx}-MGR`
+                }
             };
         }));
 
@@ -164,7 +195,15 @@ const seedDB = async () => {
                 department_id: dept._id,
                 department: dept.name,
                 manager: managers[idx % managers.length]._id,
-                shift_id: shiftIds[Math.floor(Math.random() * shiftIds.length)]
+                shift_id: shiftIds[Math.floor(Math.random() * shiftIds.length)],
+                publicProfile: {
+                    preferredName: uname,
+                    skills: ['Operational Support']
+                },
+                privateIdentity: {
+                    legalName: `${uname.toUpperCase()} WORKER NAME`,
+                    taxId: `TAX-${idx}-EMP`
+                }
             };
         }));
 

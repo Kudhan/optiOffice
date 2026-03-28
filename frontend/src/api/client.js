@@ -40,7 +40,8 @@ apiClient.interceptors.response.use(
       // Authentication Errors
       if (status === 401) {
         localStorage.removeItem('token');
-        toast.error('Session expired. Please login again.');
+        const isLoginPage = window.location.pathname === '/login' || window.location.pathname.endsWith('/login');
+        toast.error(isLoginPage ? message : 'Session expired. Please login again.');
         setTimeout(() => {
           if (window.location.pathname !== '/login') {
             window.location.href = '/login';

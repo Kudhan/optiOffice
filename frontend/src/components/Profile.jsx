@@ -72,6 +72,9 @@ function Profile() {
     }
   }, [location.search, profileData]);
 
+  const [activeTab, setActiveTab] = useState('public'); // public, personal, vault
+  const [vaultUnlocked, setVaultUnlocked] = useState(false);
+
   const fetchProfileData = async () => {
     if (!targetId || targetId === "undefined") return;
     setIsLoading(true);
@@ -99,6 +102,9 @@ function Profile() {
   if (!profileData) return <div className="p-10 text-center py-32 font-bold text-rose-500 uppercase tracking-widest">Identity record not found.</div>;
 
   const { user, hierarchy, stats, task_overview, recent_activity } = profileData;
+  const publicProfile = user.publicProfile || {};
+  const privateIdentity = user.privateIdentity || {};
+  const secureVault = user.secureVault || {};
 
   return (
     <>
@@ -110,8 +116,8 @@ function Profile() {
             <div className="p-8 lg:p-20 flex flex-col lg:flex-row items-center gap-16 relative">
               <div className="relative shrink-0">
                 <div className="w-48 h-48 lg:w-72 lg:h-72 bg-primary-surface rounded-[5rem] border-[8px] border-slate-100 dark:border-slate-800 flex items-center justify-center text-9xl font-black text-sky-500 relative z-10 overflow-hidden shadow-lg">
-                  {user.profile_photo ? (
-                    <img src={user.profile_photo} alt="" className="w-full h-full object-cover" />
+                  {publicProfile.avatarUrl ? (
+                    <img src={publicProfile.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (user.full_name?.charAt(0) || 'U')}
                 </div>
                 <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-emerald-500 rounded-3xl border-4 border-primary-surface z-20 flex items-center justify-center shadow-lg">
@@ -121,7 +127,7 @@ function Profile() {
 
               <div className="flex-1 text-center lg:text-left space-y-8">
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6">
-                  <h1 className="text-5xl lg:text-8xl font-black text-content-main tracking-tighter leading-none">{user.full_name}</h1>
+                  <h1 className="text-5xl lg:text-8xl font-black text-content-main tracking-tighter leading-none">{publicProfile.preferredName || user.full_name}</h1>
                   <span className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] border shadow-sm ${
                     user.role === 'admin' ? 'bg-indigo-500 text-white border-indigo-600' : 'bg-sky-500 text-white border-sky-600'
                   }`}>
@@ -129,12 +135,12 @@ function Profile() {
                   </span>
                 </div>
                 <p className="max-w-4xl text-content-muted font-bold text-xl leading-relaxed italic opacity-80">
-                  {user.bio || "Secure identity profile active. This operative is awaiting secondary briefing documentation."}
+                  {publicProfile.bio || user.bio || "Secure identity profile active. This operative is awaiting secondary briefing documentation."}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-wrap items-center justify-center lg:justify-start gap-x-12 gap-y-6 pt-8 border-t border-border">
                   <div className="flex items-center gap-4 text-content-muted font-black text-xs uppercase tracking-[0.2em]">
                     <IconMail className="w-4 h-4 text-sky-500" />
-                    {user.email}
+                    {publicProfile.workEmail || user.email}
                   </div>
                   <div className="flex items-center gap-4 text-content-muted font-black text-xs uppercase tracking-[0.2em]">
                     <IconBriefcase className="w-4 h-4 text-sky-500" />
@@ -156,6 +162,32 @@ function Profile() {
               )}
             </div>
           </BentoCard>
+
+          {/* TAB NAVIGATION */}
+          <div className="flex flex-wrap gap-4 p-2 bg-primary-surface border border-border rounded-[3rem] w-fit mx-auto lg:mx-0 shadow-sm">
+            <button 
+              onClick={() => setActiveTab('public')}
+              className={`px-10 py-4 rounded-[2.5rem] text-[11px] font-black uppercase tracking-[0.3em] transition-all ${activeTab === 'public' ? 'bg-sky-500 text-white shadow-lg' : 'text-content-muted hover:bg-primary-muted'}`}
+            >
+              Public Dossier
+            </button>
+            {(isOwnProfile || isAdmin || user.privateIdentity) && (
+              <button 
+                onClick={() => setActiveTab('personal')}
+                className={`px-10 py-4 rounded-[2.5rem] text-[11px] font-black uppercase tracking-[0.3em] transition-all ${activeTab === 'personal' ? 'bg-indigo-500 text-white shadow-lg' : 'text-content-muted hover:bg-primary-muted'}`}
+              >
+                Private Identity
+              </button>
+            )}
+            {(isOwnProfile || isAdmin || user.secureVault) && (
+              <button 
+                onClick={() => setActiveTab('vault')}
+                className={`px-10 py-4 rounded-[2.5rem] text-[11px] font-black uppercase tracking-[0.3em] transition-all ${activeTab === 'vault' ? 'bg-rose-500 text-white shadow-lg' : 'text-content-muted hover:bg-primary-muted'}`}
+              >
+                Secure Vault
+              </button>
+            )}
+          </div>
 
           <div className="grid grid-cols-12 gap-10 lg:gap-16">
             <div className="col-span-12 lg:col-span-4 space-y-12">
@@ -224,48 +256,207 @@ function Profile() {
             </div>
 
             <div className="col-span-12 lg:col-span-8 space-y-12">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                <StatWidget icon={IconZap} label="Work Velocity" value={`${stats.task_velocity}%`} subValue="LIFETIME" colorClass="bg-amber-500/10 text-amber-500" />
-                <StatWidget icon={IconActivity} label="Punctuality" value={`${stats.punctuality_score}%`} subValue="CONSISTENCY" colorClass="bg-emerald-500/10 text-emerald-500" />
-                <StatWidget icon={IconCalendar} label="Leave Nodes" value={user.leave_balance} subValue="UNLOCKED" colorClass="bg-rose-500/10 text-rose-500" />
-              </div>
-
-              <BentoCard className="bg-primary-surface flex flex-col md:flex-row items-center justify-between p-10 lg:p-16 border-border shadow-md">
-                <div className="space-y-6 text-center md:text-left">
-                  <div className="p-4 bg-sky-500 rounded-[1.5rem] w-fit mx-auto md:mx-0 shadow-lg text-white">
-                    <IconBriefcase className="w-8 h-8" />
+              {activeTab === 'public' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <StatWidget icon={IconZap} label="Work Velocity" value={`${stats.task_velocity}%`} subValue="LIFETIME" colorClass="bg-amber-500/10 text-amber-500" />
+                    <StatWidget icon={IconActivity} label="Punctuality" value={`${stats.punctuality_score}%`} subValue="CONSISTENCY" colorClass="bg-emerald-500/10 text-emerald-500" />
+                    <StatWidget icon={IconCalendar} label="Leave Nodes" value={user.leave_balance} subValue="UNLOCKED" colorClass="bg-rose-500/10 text-rose-500" />
                   </div>
-                  <div>
-                    <h3 className="text-4xl lg:text-5xl font-black text-content-main tracking-tighter uppercase leading-none">Strategic Objectives</h3>
-                    <p className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] mt-3 italic opacity-60">Real-time Tactical Pulse</p>
+
+                  <BentoCard className="bg-primary-surface flex flex-col md:flex-row items-center justify-between p-10 lg:p-16 border-border shadow-md">
+                    <div className="space-y-6 text-center md:text-left">
+                      <div className="p-4 bg-sky-500 rounded-[1.5rem] w-fit mx-auto md:mx-0 shadow-lg text-white">
+                        <IconBriefcase className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-4xl lg:text-5xl font-black text-content-main tracking-tighter uppercase leading-none">Strategic Objectives</h3>
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] mt-3 italic opacity-60">Real-time Tactical Pulse</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-16 lg:gap-28">
+                      <div className="text-center relative">
+                        <p className="text-6xl lg:text-9xl font-black text-sky-500 tracking-tighter leading-none">{task_overview.pending}</p>
+                        <p className="text-[11px] font-black text-content-muted uppercase tracking-[0.25em] mt-4 opacity-60">Target Active</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-6xl lg:text-9xl font-black text-emerald-500 tracking-tighter leading-none">{task_overview.completed}</p>
+                        <p className="text-[11px] font-black text-content-muted uppercase tracking-[0.25em] mt-4 opacity-60">Success Ops</p>
+                      </div>
+                    </div>
+                  </BentoCard>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <BentoCard className="bg-primary-muted/20 border-dashed border-2 p-8 border-border relative overflow-hidden h-full">
+                      <h4 className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] mb-8 opacity-60">Specialized Skills</h4>
+                      <div className="flex flex-wrap gap-4">
+                        {(publicProfile.skills?.length > 0 ? publicProfile.skills : ['Strategic Thinking', 'Operational Excellence', 'Data Analytics']).map(skill => (
+                          <span key={skill} className="px-6 py-3 bg-primary-surface border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-content-main shadow-sm">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </BentoCard>
+                    <BentoCard className="bg-primary-muted/20 border-dashed border-2 p-8 border-border relative overflow-hidden h-full">
+                      <h4 className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] mb-4 opacity-60">Security Protocol</h4>
+                      <p className="text-content-muted font-bold text-sm leading-relaxed italic relative z-10">
+                        Access identity verified. Clearance: {user.role === 'admin' ? 'ALPHA-ONE EXECUTIVE' : 'GAMMA-NINER OPERATIVE'}. All interactions logged within the corporate ledger.
+                      </p>
+                    </BentoCard>
+                  </div>
+                </>
+              )}
+
+              {activeTab === 'personal' && (
+                <div className="grid md:grid-cols-2 gap-10">
+                  <BentoCard className="md:col-span-2">
+                    <h3 className="text-3xl font-black text-content-main tracking-tighter uppercase mb-10">Identity Verification Dossier</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Legal Name</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.legalName || 'PENDING VERIFICATION'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Date of Birth</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.dob || '01-JAN-1990'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Nationality</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.nationality || 'OPERATIONAL'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Gender</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.gender || 'SPECIFIED'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Personal Mobile</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.personalContact?.mobile || user.phone || 'SECURE'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Personal Email</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.personalContact?.email || 'ENCRYPTED'}</p>
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Permanent Address</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.address || 'CORPORATE HOUSING'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Tax Identity (TID)</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.taxId || 'REDACTED'}</p>
+                      </div>
+                    </div>
+                  </BentoCard>
+
+                  <BentoCard>
+                    <h3 className="text-xl font-black text-content-main tracking-tighter uppercase mb-8">Emergency Contact</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-[9px] font-black text-content-muted uppercase tracking-widest">Primary Kin</p>
+                        <p className="text-base font-bold text-content-main">{privateIdentity.emergencyContact?.name || 'CENTRAL COMMAND'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-content-muted uppercase tracking-widest">Relationship</p>
+                        <p className="text-base font-bold text-content-main">{privateIdentity.emergencyContact?.relationship || 'GOVERNMENT'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-content-muted uppercase tracking-widest">Tactical Comms</p>
+                        <p className="text-base font-bold text-content-main">{privateIdentity.emergencyContact?.phone || 'STANDBY'}</p>
+                      </div>
+                    </div>
+                  </BentoCard>
+
+                  <BentoCard>
+                    <h3 className="text-xl font-black text-content-main tracking-tighter uppercase mb-8">Passport & Visa</h3>
+                    <div className="space-y-6 text-center py-4">
+                      <div className="p-6 bg-primary-muted/10 rounded-3xl border border-dashed border-border mb-4">
+                        <p className="text-3xl font-black text-content-main tracking-widest">{privateIdentity.passportNumber || '********'}</p>
+                        <p className="text-[9px] font-black text-content-muted uppercase tracking-[0.3em] mt-3">Passport Serial Node</p>
+                      </div>
+                      <a href={privateIdentity.resumeUrl} className="inline-block px-8 py-3 bg-sky-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">Download Full Dossier (PDF)</a>
+                    </div>
+                  </BentoCard>
+                </div>
+              )}
+
+              {activeTab === 'vault' && (
+                <div className="space-y-12 animate-fade-in">
+                  <BentoCard className={`relative transition-all duration-700 ${!vaultUnlocked ? 'blur-md grayscale' : ''}`}>
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-16 gap-8">
+                      <div>
+                        <h3 className="text-4xl lg:text-6xl font-black text-content-main tracking-tighter uppercase">Financial Vault</h3>
+                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em] mt-4">Restricted Access: Financial Division Only</p>
+                      </div>
+                      <div className="p-6 bg-rose-500 text-white rounded-3xl shadow-2xl shadow-rose-500/20">
+                        <IconShield className="w-10 h-10" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                      <div className="space-y-8">
+                        <div className="p-10 bg-primary-muted/20 rounded-[2.5rem] border-border border">
+                          <p className="text-[10px] font-black text-content-muted uppercase tracking-widest mb-4">Account Holder</p>
+                          <p className="text-2xl font-black text-content-main tracking-tight uppercase">
+                            {vaultUnlocked ? secureVault.bankDetails?.accountHolder || user.full_name : '•••••••• ••••••'}
+                          </p>
+                        </div>
+                        <div className="p-10 bg-primary-muted/20 rounded-[2.5rem] border-border border">
+                          <p className="text-[10px] font-black text-content-muted uppercase tracking-widest mb-4">Bank Institution</p>
+                          <p className="text-2xl font-black text-content-main tracking-tight uppercase">
+                            {vaultUnlocked ? secureVault.bankDetails?.bankName || 'CORPORATE BANK' : '•••••••• ••••••'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-8">
+                        <div className="p-10 bg-primary-muted/20 rounded-[2.5rem] border-border border">
+                          <p className="text-[10px] font-black text-content-muted uppercase tracking-widest mb-4">Account Serial (ACN)</p>
+                          <p className="text-3xl font-black text-sky-500 tracking-[0.2em]">
+                            {vaultUnlocked ? secureVault.bankDetails?.accountNumber || '0000 0000 0000' : '•••• •••• ••••'}
+                          </p>
+                        </div>
+                        <div className="p-10 bg-primary-muted/20 rounded-[2.5rem] border-border border">
+                          <p className="text-[10px] font-black text-content-muted uppercase tracking-widest mb-4">Routing / IFSC Code</p>
+                          <p className="text-3xl font-black text-emerald-500 tracking-[0.2em]">
+                            {vaultUnlocked ? secureVault.bankDetails?.ifscCode || 'CORP000001' : '••••••••••'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {!vaultUnlocked && (
+                      <div className="absolute inset-0 z-50 flex items-center justify-center p-10 text-center">
+                        <div className="max-w-md space-y-8">
+                          <div className="w-24 h-24 bg-rose-500 rounded-[2rem] mx-auto flex items-center justify-center shadow-2xl shadow-rose-500/40">
+                            <IconShield className="w-12 h-12 text-white" />
+                          </div>
+                          <h4 className="text-3xl font-black text-content-main tracking-tighter uppercase">Biometric Verification Required</h4>
+                          <p className="text-sm font-bold text-content-muted leading-relaxed italic">The following data nodes are encrypted in the corporate ledger. Please initialize manual reveal protocol.</p>
+                          <button 
+                            onClick={() => setVaultUnlocked(true)}
+                            className="w-full py-5 bg-rose-500 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl shadow-rose-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                          >
+                            Release Security Locks
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </BentoCard>
+
+                  <div className="grid md:grid-cols-3 gap-10">
+                    <div className="p-8 border-2 border-dashed border-border rounded-[2rem] flex flex-col items-center justify-center text-center space-y-4 opacity-50">
+                        <IconActivity className="w-10 h-10 text-rose-500" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">Audit Trail Active</p>
+                    </div>
+                    <div className="p-8 border-2 border-dashed border-border rounded-[2rem] flex flex-col items-center justify-center text-center space-y-4 opacity-50">
+                        <IconShield className="w-10 h-10 text-sky-500" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">End-to-End Encryption</p>
+                    </div>
+                    <div className="p-8 border-2 border-dashed border-border rounded-[2rem] flex flex-col items-center justify-center text-center space-y-4 opacity-50">
+                        <IconZap className="w-10 h-10 text-emerald-500" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">SSL Secure Link</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-16 lg:gap-28">
-                  <div className="text-center relative">
-                    <p className="text-6xl lg:text-9xl font-black text-sky-500 tracking-tighter leading-none">{task_overview.pending}</p>
-                    <p className="text-[11px] font-black text-content-muted uppercase tracking-[0.25em] mt-4 opacity-60">Target Active</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-6xl lg:text-9xl font-black text-emerald-500 tracking-tighter leading-none">{task_overview.completed}</p>
-                    <p className="text-[11px] font-black text-content-muted uppercase tracking-[0.25em] mt-4 opacity-60">Success Ops</p>
-                  </div>
-                </div>
-              </BentoCard>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <BentoCard className="bg-primary-muted/20 border-dashed border-2 p-8 border-border relative overflow-hidden">
-                  <h4 className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] mb-4 opacity-60">Efficiency Core</h4>
-                  <p className="text-content-muted font-bold text-sm leading-relaxed italic relative z-10">
-                    "Precision is the foundation of structural integrity. Every objective achieved strengthens the organization's mission profile."
-                  </p>
-                </BentoCard>
-                <BentoCard className="bg-primary-muted/20 border-dashed border-2 p-8 border-border relative overflow-hidden">
-                  <h4 className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] mb-4 opacity-60">Security Protocol</h4>
-                  <p className="text-content-muted font-bold text-sm leading-relaxed italic relative z-10">
-                    Access identity verified. Clearance: {user.role === 'admin' ? 'ALPHA-ONE EXECUTIVE' : 'GAMMA-NINER OPERATIVE'}. All interactions logged.
-                  </p>
-                </BentoCard>
-              </div>
+              )}
             </div>
           </div>
         </div>

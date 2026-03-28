@@ -443,6 +443,7 @@ function UserList() {
             onClose={() => setIsDossierOpen(false)}
             user={selectedUser}
             onRefresh={fetchUsers}
+            departments={availableDepartments}
         />
 
         <ManagerTransferModal 

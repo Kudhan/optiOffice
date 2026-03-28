@@ -4,6 +4,26 @@ const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const { getScope } = require('../middleware/getScope');
 
+const stripSensitiveData = (user, viewer) => {
+  const isSelf = String(user._id) === String(viewer.id || viewer._id);
+  const isAdmin = viewer.role === 'admin';
+  const isHR = viewer.role === 'hr' || viewer.department === 'HR';
+  const hasPermission = viewer.permissions?.includes('can_view_sensitive_data');
+
+  const userObj = user.toObject ? user.toObject() : user;
+
+  if (isSelf || isAdmin || isHR || hasPermission) {
+    if (user.decryptVault) user.decryptVault();
+    // Re-get object after decryption if it was a mongoose document
+    const fullObj = user.toObject ? user.toObject() : user;
+    return fullObj;
+  }
+
+  // Colleague View: Strip privateIdentity and secureVault
+  const { privateIdentity, secureVault, hashed_password, sessionVersion, ...publicData } = userObj;
+  return publicData;
+};
+
 // @desc    Get current user profile and permissions
 // @route   GET /users/me
 // @access  Private
@@ -50,7 +70,8 @@ const getUsers = async (req, res) => {
     }
 
     const users = await User.find(filter).select('-hashed_password');
-    res.json(users);
+    const strippedUsers = users.map(u => stripSensitiveData(u, req.user));
+    res.json(strippedUsers);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
@@ -105,13 +126,16 @@ const createUser = async (req, res) => {
       full_name,
       role: role || 'employee',
       manager: manager || null,
-      department: department || 'General'
+      department: department || 'General',
+      publicProfile: req.body.publicProfile || { preferredName: full_name, workEmail: email },
+      privateIdentity: req.body.privateIdentity || { legalName: full_name },
+      secureVault: req.body.secureVault || {}
     });
     
-    const userResponse = user.toObject();
-    delete userResponse.hashed_password;
+    const userResponse = stripSensitiveData(user, req.user);
     res.json(userResponse);
   } catch (error) {
+    console.error('createUser error:', error);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -121,7 +145,7 @@ const createUser = async (req, res) => {
 // @access  Private/Admin
 const updateUser = async (req, res) => {
   try {
-    const { role, status, department, full_name, manager } = req.body;
+    const { role, status, department, full_name, manager, publicProfile, privateIdentity, secureVault } = req.body;
     const targetUserId = req.params.id;
     const user = await User.findOne({ _id: targetUserId, tenantId: req.user.tenantId });
 
@@ -129,7 +153,10 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ detail: "User not found" });
     }
 
-    // Task 3: Hierarchy Protection
+    // Role check for sensitivity
+    const isAdmin = req.user.role === 'admin';
+    const isSelf = String(req.user.id || req.user._id) === String(targetUserId);
+
     if (manager) {
       if (manager === targetUserId) {
         return res.status(400).json({ detail: "Circular Reference: A user cannot be their own manager" });
@@ -140,14 +167,22 @@ const updateUser = async (req, res) => {
       }
     }
 
-    if (role) user.role = role;
-    if (status) user.status = status;
-    if (department) user.department = department;
+    if (role && isAdmin) user.role = role;
+    if (status && isAdmin) user.status = status;
+    if (department && isAdmin) user.department = department;
     if (full_name) user.full_name = full_name;
-    if (manager !== undefined) user.manager = manager;
+    if (manager !== undefined && isAdmin) user.manager = manager;
+
+    // Deep merge for buckets
+    if (publicProfile) user.publicProfile = { ...user.publicProfile, ...publicProfile };
+    
+    if (isAdmin || isSelf) {
+      if (privateIdentity) user.privateIdentity = { ...user.privateIdentity, ...privateIdentity };
+      if (secureVault) user.secureVault = { ...user.secureVault, ...secureVault };
+    }
 
     await user.save();
-    res.json(user);
+    res.json(stripSensitiveData(user, req.user));
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
@@ -188,7 +223,6 @@ const getUserDossier = async (req, res) => {
     if (!user) return res.status(404).json({ detail: "User not found" });
 
     // Aggregate stats from other collections 
-    // Note: Task uses 'assigned_to' (username) and Attendance uses 'user' (ObjectId)
     const [totalTasks, completedTasks, lastAttendance, recentTasks, attendanceLogs] = await Promise.all([
       Task.countDocuments({ assigned_to: user._id, tenantId: user.tenantId }),
       Task.countDocuments({ 
@@ -201,16 +235,9 @@ const getUserDossier = async (req, res) => {
       Attendance.find({ user: targetId }).sort({ date: -1 }).limit(20)
     ]);
 
-    console.log('[DEBUG] DB Results:', { 
-      username: user.username,
-      totalTasks, 
-      completedTasks, 
-      tasksCount: recentTasks.length,
-      logsCount: attendanceLogs.length 
-    });
-
+    const userResponse = stripSensitiveData(user, req.user);
     res.json({
-      user,
+      user: userResponse,
       stats: {
         totalTasks,
         completedTasks,
