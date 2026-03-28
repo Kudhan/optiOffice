@@ -1,3 +1,8 @@
+const mongoose = require('mongoose');
+const User = require('../models/User');
+const Attendance = require('../models/Attendance');
+const Task = require('../models/Task');
+
 const stripSensitiveData = (user, viewer) => {
   const isSelf = String(user._id) === String(viewer.id || viewer._id);
   const isAdmin = viewer.role === 'admin';

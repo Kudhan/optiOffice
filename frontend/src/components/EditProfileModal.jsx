@@ -8,6 +8,7 @@ const EditProfileModal = ({
     user, 
     onSave, 
     isAdminView = false,
+    isViewerAdmin = false,
     departments = [],
     roles = ['admin', 'manager', 'employee']
 }) => {
@@ -61,35 +62,60 @@ const EditProfileModal = ({
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Comprehensive Validation
-        const missing = [];
-        if (!formData.publicProfile.preferredName) missing.push("PREFERRED NAME");
-        if (!formData.publicProfile.workEmail) missing.push("WORK EMAIL");
-        if (!formData.privateIdentity.legalName) missing.push("LEGAL NAME");
-        if (!formData.privateIdentity.dob) missing.push("DATE OF BIRTH");
-        if (!formData.privateIdentity.nationality) missing.push("NATIONALITY");
-        if (!formData.privateIdentity.taxId) missing.push("TAX ID");
-        
-        // Vault validation only if any vault field is partially filled
-        const vd = formData.secureVault.bankDetails;
-        if (vd.accountNumber || vd.ifscCode || vd.bankName || vd.accountHolder) {
-            if (!vd.accountNumber) missing.push("BANK ACCOUNT NUMBER");
-            if (!vd.ifscCode) missing.push("IFSC CODE");
-            if (!vd.bankName) missing.push("BANK NAME");
-            if (!vd.accountHolder) missing.push("ACCOUNT HOLDER");
+        const errors = {
+            public: [],
+            identity: [],
+            vault: []
+        };
+
+        // Section: Public
+        if (!formData.publicProfile.preferredName) errors.public.push("Preferred Name");
+        if (!formData.publicProfile.workEmail) errors.public.push("Professional Email");
+
+        // Section: Identity
+        if (!formData.privateIdentity.legalName) errors.identity.push("Legal Full Name");
+        if (!formData.privateIdentity.dob) errors.identity.push("Date of Birth");
+        if (!formData.privateIdentity.nationality) errors.identity.push("Nationality");
+        if (!formData.privateIdentity.taxId) errors.identity.push("Tax ID");
+
+        // Section: Vault (Only validate if Admin and ANY field is touched)
+        if (isViewerAdmin) {
+            const vd = formData.secureVault.bankDetails;
+            const isVaultTouched = !!(vd.accountNumber || vd.ifscCode || vd.bankName || vd.accountHolder);
+            if (isVaultTouched) {
+                if (!vd.accountNumber) errors.vault.push("Account Number");
+                if (!vd.ifscCode) errors.vault.push("IFSC Code");
+                if (!vd.bankName) errors.vault.push("Bank Name");
+                if (!vd.accountHolder) errors.vault.push("Account Holder");
+            }
         }
 
-        if (missing.length > 0) {
-            toast.error(`Mandatory fields missing: ${missing.join(', ')}`, {
-                style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
+        // Error Handling & Tab Switching
+        if (errors.public.length > 0 || errors.identity.length > 0 || errors.vault.length > 0) {
+            let firstErrorSection = 'public';
+            if (errors.public.length > 0) firstErrorSection = 'public';
+            else if (errors.identity.length > 0) firstErrorSection = 'identity';
+            else if (errors.vault.length > 0) firstErrorSection = 'vault';
+
+            setActiveSection(firstErrorSection);
+            
+            const allErrors = [...errors.public, ...errors.identity, ...errors.vault];
+            toast.error(`Incomplete Nodes in ${firstErrorSection.toUpperCase()}: ${allErrors.slice(0, 3).join(', ')}${allErrors.length > 3 ? '...' : ''}`, {
+                style: { borderRadius: '15px', background: '#0B1120', color: '#fff', border: '1px solid rgba(244, 63, 94, 0.3)' }
             });
             return;
         }
 
         setIsSaving(true);
-        await onSave(formData);
-        setIsSaving(false);
-        onClose();
+        try {
+            await onSave(formData);
+            toast.success("Identity record synchronized successfully");
+            onClose();
+        } catch (err) {
+            toast.error("Structural sync failed: " + (err.response?.data?.detail || "Network disruption"));
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const addSkill = () => {
@@ -165,8 +191,9 @@ const EditProfileModal = ({
                                     <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] ml-1 group-focus-within:text-sky-500 transition-colors opacity-60">Professional Alias (Email) <span className="text-rose-500">*</span></label>
                                     <input 
                                         value={formData.publicProfile.workEmail}
+                                        disabled={!isViewerAdmin}
                                         onChange={(e) => setFormData({...formData, publicProfile: {...formData.publicProfile, workEmail: e.target.value}})}
-                                        className="w-full bg-primary-surface/50 border-2 border-border/40 hover:border-sky-500/30 focus:border-sky-500 rounded-3xl py-4 px-8 font-black text-content-main outline-none transition-all shadow-sm"
+                                        className={`w-full bg-primary-surface/50 border-2 border-border/40 hover:border-sky-500/30 focus:border-sky-500 rounded-3xl py-4 px-8 font-black text-content-main outline-none transition-all shadow-sm ${!isViewerAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div className="col-span-2 space-y-4 group">
@@ -267,6 +294,15 @@ const EditProfileModal = ({
                                     </div>
                                 </div>
                                 <div className="space-y-4 group">
+                                    <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Personal Contact Email</label>
+                                    <input 
+                                        value={formData.privateIdentity.personalContact.email}
+                                        disabled={!isViewerAdmin}
+                                        onChange={(e) => setFormData({...formData, privateIdentity: {...formData.privateIdentity, personalContact: {...formData.privateIdentity.personalContact, email: e.target.value}}})}
+                                        className={`w-full bg-primary-surface/50 border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none ${!isViewerAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    />
+                                </div>
+                                <div className="space-y-4 group">
                                     <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Tax ID (TID) <span className="text-rose-500">*</span></label>
                                     <input 
                                         value={formData.privateIdentity.taxId}
@@ -293,44 +329,59 @@ const EditProfileModal = ({
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-black text-content-main tracking-tighter uppercase">Secure Financial Node</h3>
-                                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mt-1">Data encrypted at rest. Double-check before sync.</p>
+                                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mt-1">
+                                            {isViewerAdmin ? 'Data encrypted at rest. Double-check before sync.' : 'Restricted Identity Node'}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="grid md:grid-cols-2 gap-10">
-                                    <div className="space-y-4 group">
-                                        <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Legal Account Holder <span className="text-rose-500">*</span></label>
-                                        <input 
-                                            value={formData.secureVault.bankDetails.accountHolder}
-                                            onChange={(e) => setFormData({...formData, secureVault: {...formData.secureVault, bankDetails: {...formData.secureVault.bankDetails, accountHolder: e.target.value}}})}
-                                            className="w-full bg-primary-surface border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
-                                        />
+
+                                {!isViewerAdmin ? (
+                                    <div className="p-10 border-2 border-dashed border-rose-500/30 rounded-[2rem] bg-rose-500/5 text-center space-y-6">
+                                        <div className="w-16 h-16 bg-rose-500/20 rounded-2xl mx-auto flex items-center justify-center text-rose-500">
+                                            <IconShield className="w-8 h-8" />
+                                        </div>
+                                        <h4 className="text-xl font-black text-content-main uppercase tracking-tighter">Vault Access Restricted</h4>
+                                        <p className="text-sm font-bold text-content-muted leading-relaxed max-w-md mx-auto italic">
+                                            Financial Vault protocols are locked for non-administrative entities. To update your bank details, please <span className="text-rose-500">raise a structural ticket</span> with the Finance or HR department.
+                                        </p>
                                     </div>
-                                    <div className="space-y-4 group">
-                                        <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Bank Institution Name <span className="text-rose-500">*</span></label>
-                                        <input 
-                                            value={formData.secureVault.bankDetails.bankName}
-                                            onChange={(e) => setFormData({...formData, secureVault: {...formData.secureVault, bankDetails: {...formData.secureVault.bankDetails, bankName: e.target.value}}})}
-                                            className="w-full bg-primary-surface border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
-                                        />
+                                ) : (
+                                    <div className="grid md:grid-cols-2 gap-10">
+                                        <div className="space-y-4 group">
+                                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Legal Account Holder <span className="text-rose-500">*</span></label>
+                                            <input 
+                                                value={formData.secureVault.bankDetails.accountHolder}
+                                                onChange={(e) => setFormData({...formData, secureVault: {...formData.secureVault, bankDetails: {...formData.secureVault.bankDetails, accountHolder: e.target.value}}})}
+                                                className="w-full bg-primary-surface border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-4 group">
+                                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Bank Institution Name <span className="text-rose-500">*</span></label>
+                                            <input 
+                                                value={formData.secureVault.bankDetails.bankName}
+                                                onChange={(e) => setFormData({...formData, secureVault: {...formData.secureVault, bankDetails: {...formData.secureVault.bankDetails, bankName: e.target.value}}})}
+                                                className="w-full bg-primary-surface border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-4 group">
+                                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Account Number (Sensitive) <span className="text-rose-500">*</span></label>
+                                            <input 
+                                                type="password"
+                                                value={formData.secureVault.bankDetails.accountNumber}
+                                                onChange={(e) => setFormData({...formData, secureVault: {...formData.secureVault, bankDetails: {...formData.secureVault.bankDetails, accountNumber: e.target.value}}})}
+                                                className="w-full bg-primary-surface border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-4 group">
+                                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">IFSC / Routing Code <span className="text-rose-500">*</span></label>
+                                            <input 
+                                                value={formData.secureVault.bankDetails.ifscCode}
+                                                onChange={(e) => setFormData({...formData, secureVault: {...formData.secureVault, bankDetails: {...formData.secureVault.bankDetails, ifscCode: e.target.value}}})}
+                                                className="w-full bg-primary-surface border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-4 group">
-                                        <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Account Number (Sensitive) <span className="text-rose-500">*</span></label>
-                                        <input 
-                                            type="password"
-                                            value={formData.secureVault.bankDetails.accountNumber}
-                                            onChange={(e) => setFormData({...formData, secureVault: {...formData.secureVault, bankDetails: {...formData.secureVault.bankDetails, accountNumber: e.target.value}}})}
-                                            className="w-full bg-primary-surface border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
-                                        />
-                                    </div>
-                                    <div className="space-y-4 group">
-                                        <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">IFSC / Routing Code <span className="text-rose-500">*</span></label>
-                                        <input 
-                                            value={formData.secureVault.bankDetails.ifscCode}
-                                            onChange={(e) => setFormData({...formData, secureVault: {...formData.secureVault, bankDetails: {...formData.secureVault.bankDetails, ifscCode: e.target.value}}})}
-                                            className="w-full bg-primary-surface border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
-                                        />
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         )}
 

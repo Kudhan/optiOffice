@@ -47,7 +47,7 @@ const StatWidget = ({ icon: Icon, label, value, subValue, colorClass }) => (
 
 function Profile() {
   const { id } = useParams();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,7 +94,11 @@ function Profile() {
         await apiClient.put('users/profile', { ...formData, userId: targetId });
         toast.success("Identity Re-synchronized");
         fetchProfileData();
+        if (isOwnProfile) {
+            refreshUser();
+        }
     } catch (err) {
+        toast.error("Structural sync failed");
     }
   };
 
@@ -467,6 +471,7 @@ function Profile() {
         user={user}
         onSave={handleUpdate}
         isAdminView={isAdmin && !isOwnProfile}
+        isViewerAdmin={isAdmin}
       />
     </>
   );

@@ -379,6 +379,7 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh, departments = [] }) =>
         user={fullUser || user}
         onSave={handleAdminSave}
         isAdminView={true}
+        isViewerAdmin={true}
         departments={departments}
       />
     </div>

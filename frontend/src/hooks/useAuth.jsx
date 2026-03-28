@@ -84,7 +84,7 @@ export const useAuth = () => {
     hasRole,
     login,
     logout,
-    refreshPermissions: fetchUserProfile,
+    refreshUser: fetchUserProfile,
     isAuthenticated: !!token && !!user,
     loading
   };
