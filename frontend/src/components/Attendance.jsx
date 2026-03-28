@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  */
 function Attendance({ token }) {
   const [records, setRecords] = useState([]);
+  const [leaves, setLeaves] = useState([]);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [currentRecordId, setCurrentRecordId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,9 +24,11 @@ function Attendance({ token }) {
     setIsLoading(true);
     try {
       const response = await apiClient.get('/attendance/me');
-      const { records: fetchedRecords, stats: fetchedStats } = response.data;
+      const { records: fetchedRecords, leaves: fetchedLeaves, stats: fetchedStats } = response.data;
+      console.log("[Attendance] Loaded Leaves:", fetchedLeaves);
       
       setRecords(fetchedRecords || []);
+      setLeaves(fetchedLeaves || []);
       setStats(fetchedStats || { avgHours: '0.0', presence: 0, shift: null });
 
       const today = new Date().toISOString().split('T')[0];
@@ -155,7 +158,7 @@ function Attendance({ token }) {
             exit={{ opacity: 0, y: -10 }}
             className="col-span-12"
           >
-            <AttendanceCalendar records={records} />
+            <AttendanceCalendar records={records} leaves={leaves} shift={stats.shift} />
           </motion.div>
         ) : (
           <motion.div 

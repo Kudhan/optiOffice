@@ -158,12 +158,16 @@ function Holidays() {
     try {
       setLoading(true);
       const res = await apiClient.get('/holidays');
-      // Filter for 2026 AS PER METADATA sourcing
-      const currentYear = 2026; 
-      const data = res.data.data;
+      console.log("[Holidays] Raw API Response:", res.data);
+      
+      const currentYear = new Date().getFullYear(); 
+      const data = res.data.data || [];
       const filtered = data.filter(h => new Date(h.date).getFullYear() === currentYear);
+      
+      console.log(`[Holidays] Filtered for ${currentYear}:`, filtered);
       setHolidays(filtered);
     } catch (err) {
+      console.error("[Holidays] Fetch Error:", err);
       toast.error("Failed to load holiday grid.");
     } finally {
       setLoading(false);
@@ -315,8 +319,10 @@ function Holidays() {
         <div className="flex flex-col items-center justify-center py-40 bg-primary-muted rounded-[4rem] border-4 border-dashed border-border">
           <IconCalendar className="w-20 h-20 text-content-muted opacity-20 mb-8" />
           <h3 className="text-3xl font-black text-content-main tracking-tighter mb-4">No Holidays Loaded.</h3>
-          {isAdmin && (
-             <button onClick={handleSync} className="text-sky-500 font-bold hover:underline underline-offset-4">Click here to seed India standard holidays.</button>
+          {isAdmin ? (
+             <button onClick={handleSync} className="text-sky-500 font-bold hover:underline underline-offset-4 tracking-[0.05em] uppercase text-[10px]">Click here to bootstrap India standard holidays.</button>
+          ) : (
+             <p className="text-[10px] font-black uppercase tracking-widest text-content-muted/40 max-w-xs text-center">Organizational Roster Empty. Please contact your Departmental Administrator to synchronize the strategic calendar.</p>
           )}
         </div>
       ) : (

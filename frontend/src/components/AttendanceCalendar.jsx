@@ -9,7 +9,7 @@ import {
     IconLogOut
 } from './Icons';
 
-const AttendanceCalendar = ({ records = [] }) => {
+const AttendanceCalendar = ({ records = [], leaves = [], shift = null }) => {
     const [viewDate, setViewDate] = useState(new Date());
 
     const daysInMonth = useMemo(() => {
@@ -35,6 +35,29 @@ const AttendanceCalendar = ({ records = [] }) => {
         if (!day) return null;
         const dateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         return records.find(r => r.date === dateStr);
+    };
+
+    const getLeaveOnDay = (day) => {
+        if (!day) return null;
+        // Construct local date string YYYY-MM-DD
+        const dateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        return leaves.find(l => {
+            // Normalize potential Date objects or ISO strings to YYYY-MM-DD
+            const startStr = (typeof l.startDate === 'string' ? l.startDate : new Date(l.startDate).toISOString()).split('T')[0];
+            const endStr = (typeof l.endDate === 'string' ? l.endDate : new Date(l.endDate).toISOString()).split('T')[0];
+            return dateStr >= startStr && dateStr <= endStr;
+        });
+    };
+
+    const isWeekoff = (day) => {
+        if (!day) return false;
+        const current = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+        const dayOfWeek = current.getDay();
+        if (shift && shift.workDays) {
+            return !shift.workDays.includes(dayOfWeek);
+        }
+        return [0, 6].includes(dayOfWeek);
     };
 
     const changeMonth = (offset) => {
@@ -90,20 +113,22 @@ const AttendanceCalendar = ({ records = [] }) => {
                 <div className="grid grid-cols-7">
                     {calendarGrid.map((day, idx) => {
                         const record = getRecordForDay(day);
+                        const leave = getLeaveOnDay(day);
+                        const dayOff = isWeekoff(day);
                         const isToday = day && 
                                         new Date().getDate() === day && 
                                         new Date().getMonth() === viewDate.getMonth() && 
                                         new Date().getFullYear() === viewDate.getFullYear();
 
                         return (
-                            <div key={idx} className={`min-h-[120px] p-3 border-r border-b border-border/30 flex flex-col gap-2 relative group transition-all hover:bg-primary-muted/10 ${!day ? 'bg-primary-muted/5' : ''}`}>
+                            <div key={idx} className={`min-h-[120px] p-3 border-r border-b border-border/30 flex flex-col gap-2 relative group transition-all hover:bg-primary-muted/10 ${!day ? 'bg-primary-muted/5' : ''} ${dayOff && !record ? 'bg-primary-muted/5' : ''}`}>
                                 {day && (
                                     <span className={`text-[11px] font-black ${isToday ? 'text-sky-500' : 'text-content-muted/60 group-hover:text-content-main transition-colors'}`}>
                                         {day.toString().padStart(2, '0')}
                                     </span>
                                 )}
                                 
-                                {record && (
+                                {record ? (
                                     <div className="flex flex-col gap-1.5 mt-1">
                                         <div className="flex items-center gap-1.5 bg-emerald-500/5 border border-emerald-500/20 rounded-lg px-2 py-1">
                                             <IconClock className="w-2.5 h-2.5 text-emerald-500" />
@@ -128,7 +153,16 @@ const AttendanceCalendar = ({ records = [] }) => {
                                             {record.status}
                                         </div>
                                     </div>
-                                )}
+                                ) : leave ? (
+                                    <div className="mt-2 text-center bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">
+                                        <p className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter">{leave.type} LEAVE</p>
+                                        <p className="text-[7px] font-bold text-indigo-400 uppercase mt-0.5">{leave.status}</p>
+                                    </div>
+                                ) : dayOff ? (
+                                    <div className="flex-1 flex items-center justify-center opacity-40">
+                                        <span className="text-[8px] font-black text-content-muted uppercase tracking-[0.2em] rotate-[-15deg]">Weekoff</span>
+                                    </div>
+                                ) : null}
 
                                 {isToday && <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-sky-500 rounded-full shadow-lg shadow-sky-500/50 animate-pulse" />}
                             </div>
@@ -138,22 +172,30 @@ const AttendanceCalendar = ({ records = [] }) => {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-6 px-6 py-4 bg-primary-muted/10 rounded-2xl border border-border/50 text-[9px] font-black text-content-muted uppercase tracking-widest">
-                <div className="flex items-center gap-2">
+            <div className="flex items-center gap-6 px-6 py-4 bg-primary-muted/10 rounded-2xl border border-border/50 text-[9px] font-black text-content-muted uppercase tracking-widest overflow-x-auto">
+                <div className="flex items-center gap-2 whitespace-nowrap">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span>On Time</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 whitespace-nowrap">
                     <div className="w-2 h-2 rounded-full bg-amber-500" />
                     <span>Late Entry</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 whitespace-nowrap">
                     <div className="w-2 h-2 rounded-full bg-rose-500" />
                     <span>Short Attendance</span>
                 </div>
-                <div className="ml-auto opacity-50 flex items-center gap-2">
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                    <div className="w-2 h-2 rounded-md bg-indigo-500/20 border border-indigo-500/40" />
+                    <span>Planned Leave</span>
+                </div>
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                    <span className="italic opacity-60">Weekoff</span>
+                    <span>No Shift</span>
+                </div>
+                <div className="ml-auto opacity-50 flex items-center gap-2 whitespace-nowrap">
                     <IconInfo className="w-3 h-3" />
-                    <span>Click to view detailed session log</span>
+                    <span>Integrated Perspective Sync Active</span>
                 </div>
             </div>
         </div>

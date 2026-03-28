@@ -1,5 +1,6 @@
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
+const { Leave } = require('../models/Leave');
 const asyncHandler = require('../utils/asyncHandler');
 const { getTeamScope } = require('../middleware/getScope');
 const { recordActivity } = require('../utils/activityLogger');
@@ -214,6 +215,11 @@ const getMyAttendance = asyncHandler(async (req, res) => {
   const attendance = await Attendance.find({ 
     user: req.user.id 
   }).sort({ date: -1 });
+  
+  const leaves = await Leave.find({
+    user: req.user.id,
+    status: { $in: ['Approved', 'Pending'] }
+  });
 
   // Calculate Stats (Last 30 days or all records)
   const totalHours = attendance.reduce((sum, r) => sum + (r.workHours || 0), 0);
@@ -228,6 +234,7 @@ const getMyAttendance = asyncHandler(async (req, res) => {
 
   res.json({
     records: attendance,
+    leaves,
     stats: {
       avgHours,
       presence,

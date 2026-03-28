@@ -1,5 +1,8 @@
 const User = require('../models/User');
 const Role = require('../models/Role');
+const { Leave } = require('../models/Leave');
+const Attendance = require('../models/Attendance');
+const Task = require('../models/Task');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const { getScope } = require('../middleware/getScope');
@@ -205,9 +208,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const Task = require('../models/Task');
-const Attendance = require('../models/Attendance');
-
 // @desc    Get 360 Dossier for a user
 // @route   GET /users/:id/dossier
 // @access  Private/Admin/Manager
@@ -218,7 +218,8 @@ const getUserDossier = async (req, res) => {
     
     const user = await User.findById(targetId)
       .select('-hashed_password')
-      .populate('manager', 'full_name');
+      .populate('manager', 'full_name')
+      .populate('shift_id');
     
     if (!user) return res.status(404).json({ detail: "User not found" });
 
@@ -232,7 +233,8 @@ const getUserDossier = async (req, res) => {
       }),
       Attendance.findOne({ user: targetId }).sort({ createdAt: -1 }),
       Task.find({ assigned_to: user._id, tenantId: user.tenantId }).sort({ createdAt: -1 }).limit(20),
-      Attendance.find({ user: targetId }).sort({ date: -1 }).limit(20)
+      Attendance.find({ user: targetId }).sort({ date: -1 }).limit(20),
+      Leave.find({ user: targetId, status: { $in: ['Approved', 'Pending'] } })
     ]);
 
     const userResponse = stripSensitiveData(user, req.user);
@@ -244,7 +246,8 @@ const getUserDossier = async (req, res) => {
         performance: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0,
         lastPulse: lastAttendance ? lastAttendance.status : 'N/A',
         recentTasks, // Full task objects
-        attendanceLogs // Full attendance objects
+        attendanceLogs, // Full attendance objects
+        leaves // Full leave objects
       }
     });
   } catch (error) {

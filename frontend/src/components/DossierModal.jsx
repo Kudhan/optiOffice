@@ -300,7 +300,11 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh, departments = [] }) =>
                           animate={{ opacity: 1, y: 0 }} 
                           exit={{ opacity: 0, y: -10 }}
                         >
-                          <AttendanceCalendar records={stats?.attendanceLogs || []} />
+                          <AttendanceCalendar 
+                            records={stats?.attendanceLogs || []} 
+                            leaves={stats?.leaves || []}
+                            shift={fullUser?.shift_id} 
+                          />
                         </motion.div>
                       ) : (
                         <motion.div 
