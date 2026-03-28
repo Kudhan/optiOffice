@@ -1,4 +1,4 @@
-﻿Connected to MongoDB
+Connected to MongoDB
 Collections:
 - tasks_collection
 - roles_collection
@@ -6,7 +6,6 @@ Collections:
 - attendances_collection
 - holidays
 - assets_collection
-- billing_collection
 - leaves_collection
 - users_collection
 - departments_collection

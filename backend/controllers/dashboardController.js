@@ -2,7 +2,6 @@ const User = require('../models/User');
 const Task = require('../models/Task');
 const { Leave } = require('../models/Leave');
 const Asset = require('../models/Asset');
-const Billing = require('../models/Billing');
 const Attendance = require('../models/Attendance');
 const { getScope, getTeamScope } = require('../middleware/getScope');
 
@@ -25,8 +24,6 @@ const getDashboardData = async (req, res) => {
       message: `Welcome ${role.charAt(0).toUpperCase() + role.slice(1)} ${req.user.sub}`,
       menu: []
     };
-    
-    const billing = await Billing.findOne({ tenantId: req.user.tenantId });
 
     // Scoped Counts
     const totalEmployees = await User.countDocuments(userFilter);
@@ -63,7 +60,7 @@ const getDashboardData = async (req, res) => {
     ]);
     
     if (role === 'admin' || role === 'super-admin') {
-      dashboardResponse.menu = ["Users", "Roles", "Policies", "Assets", "Attendance", "Leaves", "Tasks", "Settings", "Reports", "Billing", "Organization Tree", "Holidays"];
+      dashboardResponse.menu = ["Users", "Roles", "Policies", "Assets", "Attendance", "Leaves", "Tasks", "Settings", "Reports", "Organization Tree", "Holidays"];
       dashboardResponse.stats = {
         total_employees: totalEmployees,
         active_tasks: activeTasks,
@@ -72,9 +69,7 @@ const getDashboardData = async (req, res) => {
         pending_leaves_list: pendingLeavesList,
         attendance_rate: attendanceRate,
         asset_valuation: assetStats.totalValue,
-        asset_count: assetStats.totalCount,
-        plan_type: billing?.planType || 'Free',
-        next_due: billing?.nextPaymentDate
+        asset_count: assetStats.totalCount
       };
       
       dashboardResponse.tasks = await Task.find({ ...taskScope, status: { $nin: [/done/i, /completed/i] } })

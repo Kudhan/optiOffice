@@ -11,8 +11,7 @@ const Role = require('../models/Role');
 const Department = require('../models/Department');
 const Attendance = require('../models/Attendance');
 const Task = require('../models/Task');
-const Leave = require('../models/Leave');
-const Billing = require('../models/Billing');
+const { Leave } = require('../models/Leave');
 const Asset = require('../models/Asset');
 const Holiday = require('../models/Holiday');
 const Shift = require('../models/Shift');
@@ -43,7 +42,6 @@ router.post('/', async (req, res) => {
         const AttendanceModel = conn.model('Attendance', Attendance.schema);
         const TaskModel = conn.model('Task', Task.schema);
         const LeaveModel = conn.model('Leave', Leave.schema);
-        const BillingModel = conn.model('Billing', Billing.schema);
         const AssetModel = conn.model('Asset', Asset.schema);
         const HolidayModel = conn.model('Holiday', Holiday.schema);
         const ShiftModel = conn.model('Shift', Shift.schema);
@@ -55,7 +53,6 @@ router.post('/', async (req, res) => {
             AttendanceModel.deleteMany({}),
             TaskModel.deleteMany({}),
             LeaveModel.deleteMany({}),
-            BillingModel.deleteMany({}),
             AssetModel.deleteMany({}),
             HolidayModel.deleteMany({}),
             ShiftModel.deleteMany({}),
@@ -66,7 +63,7 @@ router.post('/', async (req, res) => {
 
         const roles = await RoleModel.create([
             { tenantId: null, name: 'super-admin', description: 'Global System Overlord', permissions: ['*'] },
-            { tenantId, name: 'admin', description: 'Full system access', permissions: ['can_manage_users', 'can_manage_tasks', 'can_manage_holidays', 'can_manage_billing', 'can_view_all_attendance', 'can_approve_leaves'] },
+            { tenantId, name: 'admin', description: 'Full system access', permissions: ['can_manage_users', 'can_manage_tasks', 'can_manage_holidays', 'can_view_all_attendance', 'can_approve_leaves'] },
             { tenantId, name: 'manager', description: 'Team management access', permissions: ['can_manage_tasks', 'can_view_all_attendance', 'can_approve_leaves'] },
             { tenantId, name: 'employee', description: 'Standard employee access', permissions: ['can_manage_tasks'] },
         ]);
@@ -131,7 +128,6 @@ router.post('/', async (req, res) => {
             };
         }));
 
-        await BillingModel.create({ tenantId, planType: 'Pro', status: 'Active', billingCycle: 'Monthly', nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
 
         // Seed National Holidays for the new tenant
         const seedIndiaHolidays = require('../utils/seedIndiaHolidays');

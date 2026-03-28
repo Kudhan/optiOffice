@@ -3,7 +3,6 @@ const Shift = require('../models/Shift');
 const Holiday = require('../models/Holiday');
 const Attendance = require('../models/Attendance');
 const { LeaveBalance } = require('../models/Leave');
-const Billing = require('../models/Billing');
 const Role = require('../models/Role');
 
 // @desc    Get system-derived policies based on other modules
@@ -103,19 +102,6 @@ const getSystemPolicies = async (tenantId) => {
     });
   }
 
-  // 4. Study Billing Module
-  const billingInfo = await Billing.findOne({ tenantId });
-  if (billingInfo) {
-    systemPoints.push({
-      title: 'Organizational Resource Tier',
-      description: 'Subscription protocol and personnel capacity limits.',
-      content: `Current operations are synchronized with the **${billingInfo.planType}** tier, supporting a maximum deployment of **${billingInfo.userLimit}** active personnel.`,
-      icon: 'Zap',
-      category: 'General',
-      isSystemGenerated: true,
-      tenantId
-    });
-  }
 
   // 5. Study Role/Access Module
   const primaryRole = await Role.findOne({ tenantId, name: 'Admin' });

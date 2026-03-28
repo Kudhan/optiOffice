@@ -7,8 +7,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const Task = require('../models/Task');
-const Leave = require('../models/Leave');
-const Billing = require('../models/Billing');
+const { Leave } = require('../models/Leave');
 const Asset = require('../models/Asset');
 const Department = require('../models/Department');
 const Role = require('../models/Role');
@@ -29,7 +28,6 @@ const seedDB = async () => {
         await Attendance.deleteMany({});
         await Task.deleteMany({});
         await Leave.deleteMany({});
-        await Billing.deleteMany({});
         await Asset.deleteMany({});
         await Holiday.deleteMany({});
         await Shift.deleteMany({});
@@ -52,7 +50,7 @@ const seedDB = async () => {
                 tenantId: tenantId,
                 name: 'admin',
                 description: 'Full system access',
-                permissions: ['can_manage_users', 'can_manage_tasks', 'can_manage_holidays', 'can_manage_billing', 'can_view_all_attendance', 'can_approve_leaves']
+                permissions: ['can_manage_users', 'can_manage_tasks', 'can_manage_holidays', 'can_view_all_attendance', 'can_approve_leaves']
             },
             {
                 tenantId: tenantId,
@@ -185,15 +183,6 @@ const seedDB = async () => {
         const users = [adminDoc, ...managers, ...employees];
         const allUsernames = ['admin', ...managerUsernames, ...employeeUsernames];
 
-        // 3. Create Billing
-        console.log('Creating billing record...');
-        await Billing.create({
-            tenantId: tenantId,
-            planType: 'Pro',
-            status: 'Active',
-            billingCycle: 'Monthly',
-            nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        });
 
         // 4. Create Tasks (20+)
         console.log('Creating 20+ distributed tasks...');
@@ -213,7 +202,7 @@ const seedDB = async () => {
             description: `Automated task description for ${title}`,
             status: idx % 3 === 0 ? 'To Do' : (idx % 3 === 1 ? 'In Progress' : 'Done'),
             priority: idx % 4 === 0 ? 'High' : (idx % 4 === 1 ? 'Medium' : 'Low'),
-            assigned_to: allUsernames[idx % allUsernames.length],
+            assigned_to: [users[idx % users.length]._id],
             due_date: new Date(Date.now() + (idx - 5) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         }));
         await Task.create(taskDocs);
@@ -270,16 +259,16 @@ const seedDB = async () => {
         // 6. Create Leaves
         console.log('Creating pending leaves...');
         await Leave.create([
-            { tenantId, username: 'asmith', type: 'Annual', start_date: '2024-03-25', end_date: '2024-03-28', status: 'Pending' },
-            { tenantId, username: 'jdoe', type: 'Sick', start_date: '2024-03-18', end_date: '2024-03-19', status: 'Approved' },
-            { tenantId, username: 'rgreen', type: 'Casual', start_date: '2024-03-20', end_date: '2024-03-21', status: 'Pending' }
+            { tenantId, username: 'asmith', type: 'EL', startDate: '2024-03-25', endDate: '2024-03-28', status: 'Pending', user: managers[1]._id },
+            { tenantId, username: 'jdoe', type: 'SL', startDate: '2024-03-18', endDate: '2024-03-19', status: 'Approved', user: managers[0]._id },
+            { tenantId, username: 'rgreen', type: 'CL', startDate: '2024-03-20', endDate: '2024-03-21', status: 'Pending', user: managers[2]._id }
         ]);
 
         // 7. Create Assets
         console.log('Creating assets...');
         await Asset.create([
-            { tenantId, name: 'MacBook Pro M3', type: 'Laptop', assigned_to: 'jdoe', status: 'Assigned' },
-            { tenantId, name: 'Dell UltraSharp', type: 'Monitor', assigned_to: 'asmith', status: 'Assigned' }
+            { tenantId, name: 'MacBook Pro M3', type: 'Laptop', assigned_to: managers[0]._id, status: 'Assigned', category: 'Electronics' },
+            { tenantId, name: 'Dell UltraSharp', type: 'Monitor', assigned_to: managers[1]._id, status: 'Assigned', category: 'Electronics' }
         ]);
 
         // 8. Create Holidays
@@ -303,7 +292,8 @@ const seedDB = async () => {
         console.log('----------------------------------------------------');
         process.exit();
     } catch (err) {
-        console.error('Error seeding data:', err);
+        const errorLog = `Error seeding data: ${err.stack || err}\n${err.errors ? JSON.stringify(err.errors, null, 2) : ''}`;
+        require('fs').writeFileSync('seed_debug.log', errorLog);
         process.exit(1);
     }
 };

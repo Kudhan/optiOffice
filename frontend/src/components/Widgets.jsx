@@ -11,9 +11,7 @@ import {
   IconBarChart,
   IconPlus,
   IconDashboard,
-  IconCreditCard,
   IconPackage,
-  IconTrendingUp,
   IconShield
 } from './Icons';
 
@@ -332,37 +330,6 @@ export const DailyAttendancePercent = ({ stats, isLoading }) => {
   );
 };
 
-// --- Specialized Admin/Manager Pulse Widgets ---
-export const StrategicBillingPulse = ({ stats, isLoading }) => (
-  <div className={`${tileClasses} bg-gradient-to-br from-primary-surface to-sky-500/5 col-span-12 lg:col-span-4`}>
-    <span className="text-[10px] uppercase font-bold tracking-widest text-sky-500 mb-6 block">Strategic Billing Hub</span>
-    <div className="flex flex-col justify-between flex-1">
-        <div className="flex items-end gap-3 mb-6">
-            <h2 className="text-5xl font-black text-content-main tracking-tighter leading-none">{stats?.plan_type || 'FREE'}</h2>
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 shadow-sm px-2 py-0.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">Active Node</span>
-        </div>
-        
-        <div className="space-y-4">
-            <div className="flex justify-between items-center p-4 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-border/50">
-                <div className="flex items-center gap-3">
-                    <IconCreditCard className="w-4 h-4 text-sky-500" />
-                    <span className="text-[10px] font-bold text-content-muted uppercase">Next Ledger Date</span>
-                </div>
-                <span className="text-xs font-black text-content-main">{stats?.next_due ? new Date(stats.next_due).toLocaleDateString() : 'N/A: LIFETIME'}</span>
-            </div>
-            <div className="flex justify-between items-center p-4 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-border/50">
-                <div className="flex items-center gap-3">
-                    <IconTrendingUp className="w-4 h-4 text-emerald-500" />
-                    <span className="text-[10px] font-bold text-content-muted uppercase">Operational Health</span>
-                </div>
-                <span className="text-xs font-black text-emerald-500">99.9% Uptime</span>
-            </div>
-        </div>
-        
-        <p className="mt-8 text-[9px] font-bold text-content-muted uppercase tracking-[0.2em] opacity-60">Financial Gateway Synchronized</p>
-    </div>
-  </div>
-);
 
 export const AssetValuationPulse = ({ stats, isLoading }) => (
   <div className={`${tileClasses} bg-gradient-to-br from-primary-surface to-indigo-500/5 col-span-12 lg:col-span-4`}>

@@ -15,7 +15,6 @@ const Roles = () => {
         'can_manage_users',
         'can_manage_tasks',
         'can_manage_holidays',
-        'can_manage_billing',
         'can_view_all_attendance',
         'can_approve_leaves'
     ];
