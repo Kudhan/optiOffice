@@ -7,6 +7,8 @@ import {
 import apiClient from '../api/client';
 import toast from 'react-hot-toast';
 import EditProfileModal from './EditProfileModal';
+import AttendanceCalendar from './AttendanceCalendar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const DossierModal = ({ isOpen, onClose, user, onRefresh, departments = [] }) => {
   const [activeTab, setActiveTab] = useState('Overview');
@@ -14,6 +16,7 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh, departments = [] }) =>
   const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [fullUser, setFullUser] = useState(null);
+  const [attendanceViewMode, setAttendanceViewMode] = useState('list'); // 'list' | 'calendar'
 
   useEffect(() => {
     if (isOpen && user) {
@@ -268,51 +271,86 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh, departments = [] }) =>
                   <div className="space-y-6">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-2xl font-black text-content-main tracking-tight">Transmission Pulse Frequency</h3>
-                      <button className="bg-sky-500 text-white font-black px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-sky-500/20 hover:scale-105 active:scale-95 transition-all">
-                        Admin Audit Log
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <div className="flex p-1 bg-primary-muted rounded-xl border border-border shadow-inner">
+                          <button 
+                            onClick={() => setAttendanceViewMode('list')}
+                            className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${attendanceViewMode === 'list' ? 'bg-white shadow-sm text-sky-500' : 'text-content-muted hover:text-content-main'}`}
+                          >
+                            Logs
+                          </button>
+                          <button 
+                            onClick={() => setAttendanceViewMode('calendar')}
+                            className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${attendanceViewMode === 'calendar' ? 'bg-white shadow-sm text-sky-500' : 'text-content-muted hover:text-content-main'}`}
+                          >
+                            Map
+                          </button>
+                        </div>
+                        <button className="bg-sky-500 text-white font-black px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-sky-500/20 hover:scale-105 active:scale-95 transition-all">
+                          Admin Audit
+                        </button>
+                      </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 gap-3">
-                      {(stats?.attendanceLogs?.length || 0) === 0 ? (
-                        <div className="bg-primary-muted/20 rounded-[2rem] border border-border p-4 flex flex-col items-center justify-center py-20">
-                          <Clock className="w-12 h-12 text-content-muted opacity-20 mb-4" />
-                          <p className="text-content-muted font-bold uppercase text-[10px] tracking-widest text-center">No Transmission Cycles Registered</p>
-                        </div>
+                    <AnimatePresence mode="wait">
+                      {attendanceViewMode === 'calendar' ? (
+                        <motion.div 
+                          key="calendar" 
+                          initial={{ opacity: 0, y: 10 }} 
+                          animate={{ opacity: 1, y: 0 }} 
+                          exit={{ opacity: 0, y: -10 }}
+                        >
+                          <AttendanceCalendar records={stats?.attendanceLogs || []} />
+                        </motion.div>
                       ) : (
-                        stats.attendanceLogs.map(log => (
-                          <div key={log.id || log._id} className="bg-primary-muted/5 p-6 rounded-[2rem] border border-border/50 hover:bg-primary-muted/10 transition-all flex items-center justify-between group">
-                            <div className="flex items-center gap-6">
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                                log.status === 'Present' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
-                              }`}>
-                                <Calendar className="w-6 h-6" />
-                              </div>
-                              <div>
-                                <p className="text-content-main font-black text-base tracking-tight mb-1">{log.date}</p>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-content-muted">
-                                  Status: <span className={log.status === 'Present' ? 'text-emerald-500' : 'text-amber-500 font-black'}>{log.status}</span>
-                                </p>
-                              </div>
+                        <motion.div 
+                          key="list" 
+                          initial={{ opacity: 0, y: 10 }} 
+                          animate={{ opacity: 1, y: 0 }} 
+                          exit={{ opacity: 0, y: -10 }}
+                          className="grid grid-cols-1 gap-3"
+                        >
+                          {(stats?.attendanceLogs?.length || 0) === 0 ? (
+                            <div className="bg-primary-muted/20 rounded-[2rem] border border-border p-4 flex flex-col items-center justify-center py-20">
+                              <Clock className="w-12 h-12 text-content-muted opacity-20 mb-4" />
+                              <p className="text-content-muted font-bold uppercase text-[10px] tracking-widest text-center">No Transmission Cycles Registered</p>
                             </div>
-                            <div className="flex items-center gap-8 text-right">
-                              <div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-content-muted mb-1 opacity-60">Sync In</p>
-                                <p className="text-[11px] font-black text-content-main">{new Date(log.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          ) : (
+                            stats.attendanceLogs.map(log => (
+                              <div key={log.id || log._id} className="bg-primary-muted/5 p-6 rounded-[2rem] border border-border/50 hover:bg-primary-muted/10 transition-all flex items-center justify-between group">
+                                <div className="flex items-center gap-6">
+                                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                                    log.status === 'Present' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
+                                  }`}>
+                                    <Calendar className="w-6 h-6" />
+                                  </div>
+                                  <div>
+                                    <p className="text-content-main font-black text-base tracking-tight mb-1">{log.date}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-content-muted">
+                                      Status: <span className={log.status === 'Present' ? 'text-emerald-500' : 'text-amber-500 font-black'}>{log.status}</span>
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-8 text-right">
+                                  <div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-content-muted mb-1 opacity-60">Sync In</p>
+                                    <p className="text-[11px] font-black text-content-main">{new Date(log.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-content-muted mb-1 opacity-60">Sync Out</p>
+                                    <p className="text-[11px] font-black text-content-main">{log.checkOut ? new Date(log.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'}</p>
+                                  </div>
+                                  <div className="w-12 h-12 rounded-xl bg-primary-muted/30 flex flex-col items-center justify-center">
+                                    <p className="text-[8px] font-black text-content-muted leading-none mb-1">UNIT</p>
+                                    <p className="text-[10px] font-black text-sky-500 leading-none">{log.workHours?.toFixed(1) || '0.0'}</p>
+                                  </div>
+                                </div>
                               </div>
-                              <div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-content-muted mb-1 opacity-60">Sync Out</p>
-                                <p className="text-[11px] font-black text-content-main">{log.checkOut ? new Date(log.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'}</p>
-                              </div>
-                              <div className="w-12 h-12 rounded-xl bg-primary-muted/30 flex flex-col items-center justify-center">
-                                <p className="text-[8px] font-black text-content-muted leading-none mb-1">UNIT</p>
-                                <p className="text-[10px] font-black text-sky-500 leading-none">{log.workHours?.toFixed(1) || '0.0'}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))
+                            ))
+                          )}
+                        </motion.div>
                       )}
-                    </div>
+                    </AnimatePresence>
                   </div>
                 )}
 

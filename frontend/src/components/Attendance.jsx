@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
-import { IconClock, IconBarChart, IconUsers } from './Icons';
+import { IconClock, IconBarChart, IconUsers, IconCalendar, IconClipboardList } from './Icons';
+import AttendanceCalendar from './AttendanceCalendar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Attendance Component: Premium Detailed History Page
@@ -11,6 +13,7 @@ function Attendance({ token }) {
   const [currentRecordId, setCurrentRecordId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [stats, setStats] = useState({ avgHours: '0.0', presence: 0, shift: null });
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
 
   useEffect(() => {
     fetchAttendance();
@@ -118,6 +121,23 @@ function Attendance({ token }) {
               START SHIFT
             </button>
           )}
+
+          <div className="flex p-1 bg-primary-muted rounded-2xl border border-border ml-4 shadow-inner">
+             <button 
+                onClick={() => setViewMode('list')}
+                className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-sky-500' : 'text-content-muted hover:text-content-main'}`}
+                title="Log Archive"
+             >
+                <IconClipboardList className="w-5 h-5" />
+             </button>
+             <button 
+                onClick={() => setViewMode('calendar')}
+                className={`p-3 rounded-xl transition-all ${viewMode === 'calendar' ? 'bg-white shadow-sm text-sky-500' : 'text-content-muted hover:text-content-main'}`}
+                title="Deployment Map"
+             >
+                <IconCalendar className="w-5 h-5" />
+             </button>
+          </div>
         </div>
       </div>
 
@@ -125,59 +145,80 @@ function Attendance({ token }) {
       <div className="grid grid-cols-12 gap-10">
         
         {/* History Table/List */}
-        <div className="col-span-12">
-          <div className="bg-primary-surface border border-border rounded-[3rem] overflow-hidden shadow-sm">
-             <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-border bg-primary-muted/30">
-                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest">Date / Period</th>
-                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">In</th>
-                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">Out</th>
-                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">Hours</th>
-                    <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {isLoading ? (
-                    <tr><td colSpan="5" className="p-20 text-center animate-pulse text-content-muted font-bold italic">Syncing with server...</td></tr>
-                  ) : records.length === 0 ? (
-                    <tr><td colSpan="5" className="p-20 text-center text-content-muted font-bold uppercase italic">No records found.</td></tr>
-                  ) : (
-                    records.map(record => (
-                      <tr key={record.id || record._id} className="hover:bg-primary-muted/20 transition-colors group">
-                        <td className="px-10 py-8">
-                           <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-primary-muted rounded-2xl flex flex-col items-center justify-center border border-border group-hover:bg-sky-500 group-hover:text-white transition-all">
-                                 <span className="text-[8px] font-black leading-none">{new Date(record.date).toLocaleString('default', { month: 'short' })}</span>
-                                 <span className="text-lg font-black leading-none mt-0.5">{new Date(record.date).getDate()}</span>
-                              </div>
-                              <div>
-                                <p className="text-sm font-black text-content-main uppercase">{new Date(record.date).toLocaleDateString('default', { weekday: 'long' })}</p>
-                                <p className="text-[9px] font-bold text-content-muted uppercase tracking-tighter">Tenant Hub: {record.tenantId}</p>
-                              </div>
-                           </div>
-                        </td>
-                        <td className="px-10 py-8 text-center text-sm font-bold text-content-main">{formatTime(record.checkIn)}</td>
-                        <td className="px-10 py-8 text-center text-sm font-bold text-content-main">{formatTime(record.checkOut)}</td>
-                        <td className="px-10 py-8 text-center">
-                           <span className="text-lg font-black text-content-main italic">{record.workHours || '0.0'}<span className="text-[9px] ml-0.5 not-italic text-sky-500">HRS</span></span>
-                        </td>
-                        <td className="px-10 py-8 text-right">
-                           <span className={`inline-block px-4 py-1.5 text-[9px] font-black uppercase rounded-full border ${
-                             record.status === 'Present' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
-                             record.status === 'Late' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
-                             'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                           }`}>
-                             {record.status}
-                           </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-             </table>
-          </div>
-        </div>
+      {/* Deployment Map (Calendar) vs Log Archive (List) */}
+      <AnimatePresence mode="wait">
+        {viewMode === 'calendar' ? (
+          <motion.div 
+            key="calendar" 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -10 }}
+            className="col-span-12"
+          >
+            <AttendanceCalendar records={records} />
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="list" 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -10 }}
+            className="col-span-12"
+          >
+            <div className="bg-primary-surface border border-border rounded-[3rem] overflow-hidden shadow-sm">
+               <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-border bg-primary-muted/30">
+                      <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest">Date / Period</th>
+                      <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">In</th>
+                      <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">Out</th>
+                      <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-center">Hours</th>
+                      <th className="px-10 py-6 text-[10px] font-black text-content-muted uppercase tracking-widest text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {isLoading ? (
+                      <tr><td colSpan="5" className="p-20 text-center animate-pulse text-content-muted font-bold italic">Syncing with server...</td></tr>
+                    ) : records.length === 0 ? (
+                      <tr><td colSpan="5" className="p-20 text-center text-content-muted font-bold uppercase italic">No records found.</td></tr>
+                    ) : (
+                      records.map(record => (
+                        <tr key={record.id || record._id} className="hover:bg-primary-muted/20 transition-colors group">
+                          <td className="px-10 py-8">
+                             <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-primary-muted rounded-2xl flex flex-col items-center justify-center border border-border group-hover:bg-sky-500 group-hover:text-white transition-all">
+                                   <span className="text-[8px] font-black leading-none">{new Date(record.date).toLocaleString('default', { month: 'short' })}</span>
+                                   <span className="text-lg font-black leading-none mt-0.5">{new Date(record.date).getDate()}</span>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-black text-content-main uppercase">{new Date(record.date).toLocaleDateString('default', { weekday: 'long' })}</p>
+                                  <p className="text-[9px] font-bold text-content-muted uppercase tracking-tighter">Tenant Hub: {record.tenantId}</p>
+                                </div>
+                             </div>
+                          </td>
+                          <td className="px-10 py-8 text-center text-sm font-bold text-content-main">{formatTime(record.checkIn)}</td>
+                          <td className="px-10 py-8 text-center text-sm font-bold text-content-main">{formatTime(record.checkOut)}</td>
+                          <td className="px-10 py-8 text-center">
+                             <span className="text-lg font-black text-content-main italic">{record.workHours || '0.0'}<span className="text-[9px] ml-0.5 not-italic text-sky-500">HRS</span></span>
+                          </td>
+                          <td className="px-10 py-8 text-right">
+                             <span className={`inline-block px-4 py-1.5 text-[9px] font-black uppercase rounded-full border ${
+                               record.status === 'Present' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
+                               record.status === 'Late' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+                               'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                             }`}>
+                               {record.status}
+                             </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+               </table>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       </div>
     </div>
   );
