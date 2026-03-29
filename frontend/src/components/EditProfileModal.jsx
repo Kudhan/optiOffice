@@ -37,8 +37,8 @@ const EditProfileModal = ({
                 relationship: user?.privateIdentity?.emergencyContact?.relationship || '',
                 phone: user?.privateIdentity?.emergencyContact?.phone || ''
             },
-            taxId: user?.privateIdentity?.taxId || '',
-            passportNumber: user?.privateIdentity?.passportNumber || '',
+            panNumber: user?.privateIdentity?.panNumber || '',
+            aadharNumber: user?.privateIdentity?.aadharNumber || '',
             resumeUrl: user?.privateIdentity?.resumeUrl || ''
         },
         secureVault: {
@@ -76,7 +76,7 @@ const EditProfileModal = ({
         if (!formData.privateIdentity.legalName) errors.identity.push("Legal Full Name");
         if (!formData.privateIdentity.dob) errors.identity.push("Date of Birth");
         if (!formData.privateIdentity.nationality) errors.identity.push("Nationality");
-        if (!formData.privateIdentity.taxId) errors.identity.push("Tax ID");
+        if (!formData.privateIdentity.panNumber) errors.identity.push("PAN Card Number");
 
         // Section: Vault (Only validate if Admin and ANY field is touched)
         if (isViewerAdmin) {
@@ -303,19 +303,21 @@ const EditProfileModal = ({
                                     />
                                 </div>
                                 <div className="space-y-4 group">
-                                    <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Tax ID (TID) <span className="text-rose-500">*</span></label>
+                                    <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">PAN Card Number <span className="text-rose-500">*</span></label>
                                     <input 
-                                        value={formData.privateIdentity.taxId}
-                                        onChange={(e) => setFormData({...formData, privateIdentity: {...formData.privateIdentity, taxId: e.target.value}})}
+                                        value={formData.privateIdentity.panNumber}
+                                        onChange={(e) => setFormData({...formData, privateIdentity: {...formData.privateIdentity, panNumber: e.target.value}})}
                                         className="w-full bg-primary-surface/50 border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
+                                        placeholder="ABCDE1234F"
                                     />
                                 </div>
                                 <div className="space-y-4 group">
-                                    <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Passport Serial</label>
+                                    <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.3em] opacity-60">Aadhar Number</label>
                                     <input 
-                                        value={formData.privateIdentity.passportNumber}
-                                        onChange={(e) => setFormData({...formData, privateIdentity: {...formData.privateIdentity, passportNumber: e.target.value}})}
+                                        value={formData.privateIdentity.aadharNumber}
+                                        onChange={(e) => setFormData({...formData, privateIdentity: {...formData.privateIdentity, aadharNumber: e.target.value}})}
                                         className="w-full bg-primary-surface/50 border-2 border-border/40 rounded-3xl py-4 px-8 font-black text-content-main outline-none"
+                                        placeholder="1234 5678 9012"
                                     />
                                 </div>
                             </div>

@@ -160,12 +160,12 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh, departments = [] }) =>
                               <p className="text-content-main font-black underline decoration-sky-500/30 underline-offset-4">{user.privateIdentity?.legalName || user.full_name}</p>
                             </div>
                             <div className="flex justify-between items-center border-b border-border/50 pb-3">
-                              <span className="text-content-muted uppercase tracking-widest text-[9px]">Tax Node (TID)</span>
-                              <p className="text-sky-500 font-black uppercase tracking-tighter">{user.privateIdentity?.taxId || 'UNREGISTERED'}</p>
+                              <span className="text-content-muted uppercase tracking-widest text-[9px]">PAN Card Number</span>
+                              <p className="text-sky-500 font-black uppercase tracking-tighter">{user.privateIdentity?.panNumber || 'UNREGISTERED'}</p>
                             </div>
                             <div className="flex justify-between items-center border-b border-border/50 pb-3">
-                              <span className="text-content-muted uppercase tracking-widest text-[9px]">Passport Serial</span>
-                              <p className="text-content-main font-black tracking-widest">{user.privateIdentity?.passportNumber || 'N/A'}</p>
+                              <span className="text-content-muted uppercase tracking-widest text-[9px]">Aadhar Number</span>
+                              <p className="text-content-main font-black tracking-widest">{user.privateIdentity?.aadharNumber || 'N/A'}</p>
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="text-content-muted uppercase tracking-widest text-[9px]">Financial Node</span>

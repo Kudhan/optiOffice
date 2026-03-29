@@ -58,6 +58,52 @@ const loginUser = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Setup password via onboarding token
+// @route   POST /auth/setup-password
+// @access  Public
+const setupPassword = asyncHandler(async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return res.status(400).json({ success: false, message: 'Token and password are required' });
+  }
+
+  // Find user by token and check expiration
+  const user = await User.findOne({
+    onboardingToken: token,
+    onboardingTokenExpires: { $gt: Date.now() }
+  });
+
+  if (!user) {
+    return res.status(400).json({ success: false, message: 'Invalid or expired setup link' });
+  }
+
+  // Password Strength Validation (Server-side)
+  const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!complexityRegex.test(password)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Password does not meet complexity requirements: Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number and one special character.' 
+    });
+  }
+
+  // Hash new password
+  const salt = await bcrypt.genSalt(12);
+  user.hashed_password = await bcrypt.hash(password, salt);
+
+  // Clear onboarding token fields
+  user.onboardingToken = null;
+  user.onboardingTokenExpires = null;
+  
+  // Ensure status is active
+  if (user.status === 'frozen') user.status = 'active';
+
+  await user.save();
+
+  res.json({ success: true, message: 'Password established successfully. Deployment complete.' });
+});
+
 module.exports = {
-  loginUser
+  loginUser,
+  setupPassword
 };

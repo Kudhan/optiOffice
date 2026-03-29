@@ -93,8 +93,8 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
         department: 'General',
         privateIdentity: {
             legalName: '',
-            taxId: '',
-            passportNumber: ''
+            panNumber: '',
+            aadharNumber: ''
         },
         secureVault: {
             bankDetails: {
@@ -142,7 +142,7 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
         } else if (section === 'pro') {
             const proNodes = [
                 { path: 'privateIdentity.legalName', label: 'LEGAL NAME' },
-                { path: 'privateIdentity.taxId', label: 'TAX ID' },
+                { path: 'privateIdentity.panNumber', label: 'PAN CARD NUMBER' },
                 { path: 'secureVault.bankDetails.bankName', label: 'BANK NAME' },
                 { path: 'secureVault.bankDetails.ifscCode', label: 'IFSC CODE' },
                 { path: 'secureVault.bankDetails.accountNumber', label: 'ACCOUNT NUMBER' }
@@ -171,7 +171,6 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
                 email: formData.email,
                 role: formData.role,
                 department: formData.department,
-                password: 'TemporaryPassword123!',
                 publicProfile: {
                     preferredName: formData.full_name,
                     workEmail: formData.email
@@ -294,21 +293,21 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.2em] ml-1">TID / Tax ID <span className="text-rose-500">*</span></label>
+                                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.2em] ml-1">PAN Card Number <span className="text-rose-500">*</span></label>
                                             <input 
                                                 className="w-full bg-white/50 dark:bg-navy-900/50 border-2 border-border/40 focus:border-sky-500/50 rounded-2xl py-3 px-5 text-[11px] font-black uppercase tracking-widest text-content-main outline-none transition-all"
-                                                value={formData.privateIdentity.taxId}
-                                                onChange={e => setFormData({...formData, privateIdentity: {...formData.privateIdentity, taxId: e.target.value}})}
-                                                placeholder="TX-9921-A"
+                                                value={formData.privateIdentity.panNumber}
+                                                onChange={e => setFormData({...formData, privateIdentity: {...formData.privateIdentity, panNumber: e.target.value}})}
+                                                placeholder="ABCDE1234F"
                                             />
                                         </div>
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.2em] ml-1">Passport Node</label>
+                                            <label className="text-[10px] font-black text-content-muted uppercase tracking-[0.2em] ml-1">Aadhar Number</label>
                                             <input 
                                                 className="w-full bg-white/50 dark:bg-navy-900/50 border-2 border-border/40 focus:border-sky-500/50 rounded-2xl py-3 px-5 text-[11px] font-black uppercase tracking-widest text-content-main outline-none transition-all"
-                                                value={formData.privateIdentity.passportNumber}
-                                                onChange={e => setFormData({...formData, privateIdentity: {...formData.privateIdentity, passportNumber: e.target.value}})}
-                                                placeholder="P-882711"
+                                                value={formData.privateIdentity.aadharNumber}
+                                                onChange={e => setFormData({...formData, privateIdentity: {...formData.privateIdentity, aadharNumber: e.target.value}})}
+                                                placeholder="1234 5678 9012"
                                             />
                                         </div>
                                     </div>

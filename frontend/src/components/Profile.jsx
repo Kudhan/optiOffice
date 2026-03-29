@@ -345,8 +345,8 @@ function Profile() {
                         <p className="text-lg font-bold text-content-main">{privateIdentity.address || 'CORPORATE HOUSING'}</p>
                       </div>
                       <div className="space-y-2">
-                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">Tax Identity (TID)</p>
-                        <p className="text-lg font-bold text-content-main">{privateIdentity.taxId || 'REDACTED'}</p>
+                        <p className="text-[10px] font-black text-content-muted uppercase tracking-widest">PAN Card Number</p>
+                        <p className="text-lg font-bold text-content-main">{privateIdentity.panNumber || 'REDACTED'}</p>
                       </div>
                     </div>
                   </BentoCard>
@@ -370,11 +370,11 @@ function Profile() {
                   </BentoCard>
 
                   <BentoCard>
-                    <h3 className="text-xl font-black text-content-main tracking-tighter uppercase mb-8">Passport & Visa</h3>
+                    <h3 className="text-xl font-black text-content-main tracking-tighter uppercase mb-8">Aadhar Verification</h3>
                     <div className="space-y-6 text-center py-4">
                       <div className="p-6 bg-primary-muted/10 rounded-3xl border border-dashed border-border mb-4">
-                        <p className="text-3xl font-black text-content-main tracking-widest">{privateIdentity.passportNumber || '********'}</p>
-                        <p className="text-[9px] font-black text-content-muted uppercase tracking-[0.3em] mt-3">Passport Serial Node</p>
+                        <p className="text-3xl font-black text-content-main tracking-widest">{privateIdentity.aadharNumber || '•••• •••• ••••'}</p>
+                        <p className="text-[9px] font-black text-content-muted uppercase tracking-[0.3em] mt-3">Aadhar Serial Node</p>
                       </div>
                       <a href={privateIdentity.resumeUrl} className="inline-block px-8 py-3 bg-sky-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">Download Full Dossier (PDF)</a>
                     </div>

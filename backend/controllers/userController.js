@@ -5,6 +5,8 @@ const Attendance = require('../models/Attendance');
 const Task = require('../models/Task');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+const { sendOnboardingEmail } = require('../utils/emailService');
 const { getScope } = require('../middleware/getScope');
 
 const stripSensitiveData = (user, viewer) => {
@@ -117,9 +119,14 @@ const createUser = async (req, res) => {
       return res.status(400).json({ detail: `${conflictField} already exists in the system.` });
     }
 
-    // Salt and hash the password (mirroring bcrypt flow from Python passlib)
+    // Generate Onboarding Token
+    const onboardingToken = crypto.randomBytes(32).toString('hex');
+    const onboardingTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+    // Salt and hash a random placeholder password (mirroring bcrypt flow)
+    const randomPass = crypto.randomBytes(16).toString('hex');
     const salt = await bcrypt.genSalt(12);
-    const hashed_password = await bcrypt.hash(password, salt);
+    const hashed_password = await bcrypt.hash(randomPass, salt);
     
     const user = await User.create({
       tenantId: req.user.tenantId,
@@ -130,9 +137,16 @@ const createUser = async (req, res) => {
       role: role || 'employee',
       manager: manager || null,
       department: department || 'General',
+      onboardingToken,
+      onboardingTokenExpires,
       publicProfile: req.body.publicProfile || { preferredName: full_name, workEmail: email },
       privateIdentity: req.body.privateIdentity || { legalName: full_name },
       secureVault: req.body.secureVault || {}
+    });
+
+    // Send Onboarding Email (Async)
+    sendOnboardingEmail(user, onboardingToken).catch(err => {
+      console.error('[ONBOARDING] Failed to send email during creation:', err);
     });
     
     const userResponse = stripSensitiveData(user, req.user);

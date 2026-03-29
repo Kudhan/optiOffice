@@ -54,8 +54,9 @@ const userSchema = mongoose.Schema({
       relationship: { type: String, default: "" },
       phone: { type: String, default: "" }
     },
-    taxId: { type: String, default: "" },
-    passportNumber: { type: String, default: "" },
+    taxId: { type: String, default: "" }, // Deprecated - replaced by panNumber
+    panNumber: { type: String, default: "" },
+    aadharNumber: { type: String, default: "" },
     resumeUrl: { type: String, default: "" }
   },
   secureVault: {
@@ -122,6 +123,14 @@ const userSchema = mongoose.Schema({
   shift_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Shift',
+    default: null
+  },
+  onboardingToken: {
+    type: String,
+    default: null
+  },
+  onboardingTokenExpires: {
+    type: Date,
     default: null
   }
 

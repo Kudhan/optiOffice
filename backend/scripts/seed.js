@@ -137,8 +137,8 @@ const seedDB = async () => {
                 dob: '1980-01-01',
                 gender: 'Male',
                 nationality: 'Cybertronian',
-                taxId: 'CEO-777-WIN',
-                passportNumber: 'PASS-CEO-1'
+                panNumber: 'CEO-PAN-777',
+                aadharNumber: '1234 5678 9012'
             },
             secureVault: {
                 bankDetails: {
@@ -172,7 +172,7 @@ const seedDB = async () => {
                 },
                 privateIdentity: {
                     legalName: `${uname.toUpperCase()} LEGAL NAME`,
-                    taxId: `TAX-${idx}-MGR`
+                    panNumber: `PAN-${idx}-MGR`
                 }
             };
         }));
@@ -202,7 +202,7 @@ const seedDB = async () => {
                 },
                 privateIdentity: {
                     legalName: `${uname.toUpperCase()} WORKER NAME`,
-                    taxId: `TAX-${idx}-EMP`
+                    panNumber: `PAN-${idx}-EMP`
                 }
             };
         }));

@@ -21,6 +21,7 @@ import Reports from './components/Reports';
 import TeamHub from './components/TeamHub';
 import HelpDesk from './components/HelpDesk';
 import TicketDetails from './components/TicketDetails';
+import SetupPassword from './components/SetupPassword';
 import Placeholder from './components/Placeholder';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
@@ -39,6 +40,11 @@ function App() {
             <Route
               path="/login"
               element={!isAuthenticated ? <Login setToken={login} /> : <Navigate to="/" />}
+            />
+
+            <Route
+              path="/setup-password/:token"
+              element={<SetupPassword />}
             />
 
             {/* Protected Routes wrapped in Layout */}
