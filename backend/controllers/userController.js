@@ -144,6 +144,29 @@ const createUser = async (req, res) => {
       secureVault: req.body.secureVault || {}
     });
 
+    // --- Validation Protocol (Indian Standards) ---
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    const aadharRegex = /^[2-9]{1}[0-9]{11}$/;
+    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+
+    if (user.privateIdentity?.panNumber && !panRegex.test(user.privateIdentity.panNumber)) {
+      await User.findByIdAndDelete(user._id);
+      return res.status(400).json({ detail: "Invalid PAN Card Format: Must be AAAAA1234A" });
+    }
+    if (user.privateIdentity?.aadharNumber) {
+      const cleanAadhar = user.privateIdentity.aadharNumber.replace(/\s/g, '');
+      if (!aadharRegex.test(cleanAadhar)) {
+        await User.findByIdAndDelete(user._id);
+        return res.status(400).json({ detail: "Invalid Aadhar Number: Must be 12 digits" });
+      }
+      user.privateIdentity.aadharNumber = cleanAadhar; // Store without spaces
+    }
+    if (user.secureVault?.bankDetails?.ifscCode && !ifscRegex.test(user.secureVault.bankDetails.ifscCode)) {
+      await User.findByIdAndDelete(user._id);
+      return res.status(400).json({ detail: "Invalid IFSC Code: Must be AAAA0123456" });
+    }
+    await user.save();
+
     // Send Onboarding Email (Async)
     sendOnboardingEmail(user, onboardingToken).catch(err => {
       console.error('[ONBOARDING] Failed to send email during creation:', err);
@@ -194,8 +217,31 @@ const updateUser = async (req, res) => {
     if (publicProfile) user.publicProfile = { ...user.publicProfile, ...publicProfile };
     
     if (isAdmin || isSelf) {
-      if (privateIdentity) user.privateIdentity = { ...user.privateIdentity, ...privateIdentity };
-      if (secureVault) user.secureVault = { ...user.secureVault, ...secureVault };
+      if (privateIdentity) {
+        // Validation for Updates
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        const aadharRegex = /^[2-9]{1}[0-9]{11}$/;
+
+        if (privateIdentity.panNumber && !panRegex.test(privateIdentity.panNumber)) {
+          return res.status(400).json({ detail: "Invalid PAN Card Format: Must be AAAAA1234A" });
+        }
+        if (privateIdentity.aadharNumber) {
+          const cleanAadhar = privateIdentity.aadharNumber.replace(/\s/g, '');
+          if (!aadharRegex.test(cleanAadhar)) {
+            return res.status(400).json({ detail: "Invalid Aadhar Number: Must be 12 digits" });
+          }
+          privateIdentity.aadharNumber = cleanAadhar;
+        }
+        user.privateIdentity = { ...user.privateIdentity, ...privateIdentity };
+      }
+
+      if (secureVault) {
+        const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+        if (secureVault.bankDetails?.ifscCode && !ifscRegex.test(secureVault.bankDetails.ifscCode)) {
+          return res.status(400).json({ detail: "Invalid IFSC Code: Must be AAAA0123456" });
+        }
+        user.secureVault = { ...user.secureVault, ...secureVault };
+      }
     }
 
     await user.save();

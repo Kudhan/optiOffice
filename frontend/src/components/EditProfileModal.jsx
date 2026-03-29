@@ -106,6 +106,32 @@ const EditProfileModal = ({
             return;
         }
 
+        // --- Operational Logic: Indian Standard Validation ---
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+        const aadharRegex = /^[2-9]{1}[0-9]{11}$/;
+        const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+
+        if (formData.privateIdentity.panNumber && !panRegex.test(formData.privateIdentity.panNumber)) {
+            setActiveSection('identity');
+            toast.error("Invalid PAN Card Format (AAAAA1234A)");
+            return;
+        }
+
+        const cleanAadhar = formData.privateIdentity.aadharNumber.replace(/\s/g, '');
+        if (cleanAadhar && !aadharRegex.test(cleanAadhar)) {
+            setActiveSection('identity');
+            toast.error("Invalid Aadhar Format (Must be 12 digits)");
+            return;
+        }
+
+        if (formData.secureVault.bankDetails.ifscCode && !ifscRegex.test(formData.secureVault.bankDetails.ifscCode)) {
+            if (isViewerAdmin) {
+                setActiveSection('vault');
+                toast.error("Invalid Bank IFSC Format (AAAA0123456)");
+                return;
+            }
+        }
+
         setIsSaving(true);
         try {
             await onSave(formData);

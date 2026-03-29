@@ -55,14 +55,42 @@ const userSchema = mongoose.Schema({
       phone: { type: String, default: "" }
     },
     taxId: { type: String, default: "" }, // Deprecated - replaced by panNumber
-    panNumber: { type: String, default: "" },
-    aadharNumber: { type: String, default: "" },
+    panNumber: { 
+      type: String, 
+      default: "",
+      validate: {
+        validator: function(v) {
+          return !v || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v);
+        },
+        message: props => `${props.value} is not a valid PAN number!`
+      }
+    },
+    aadharNumber: { 
+      type: String, 
+      default: "",
+      validate: {
+        validator: function(v) {
+          return !v || /^[2-9]{1}[0-9]{11}$/.test(v.replace(/\s/g, ''));
+        },
+        message: props => `${props.value} is not a valid Aadhar number!`
+      }
+    },
     resumeUrl: { type: String, default: "" }
   },
   secureVault: {
     bankDetails: {
       accountNumber: { type: String, default: "" },
-      ifscCode: { type: String, default: "" },
+      ifscCode: { 
+        type: String, 
+        default: "",
+        validate: {
+          validator: function(v) {
+            // Only validate if not encrypted (contains ':')
+            return !v || v.includes(':') || /^[A-Z]{4}0[A-Z0-9]{6}$/.test(v);
+          },
+          message: props => `${props.value} is not a valid IFSC code!`
+        }
+      },
       bankName: { type: String, default: "" },
       accountHolder: { type: String, default: "" }
     }
