@@ -1,6 +1,20 @@
 const Shift = require('../models/Shift');
 const User = require('../models/User');
+const Organization = require('../models/Organization');
 const asyncHandler = require('../utils/asyncHandler');
+
+/**
+ * Helper: Calculate hours between two time strings (HH:mm)
+ * Handles overnight shifts (e.g., 22:00 to 06:00)
+ */
+const calculateShiftDuration = (startTime, endTime) => {
+  const [startH, startM] = startTime.split(':').map(Number);
+  const [endH, endM] = endTime.split(':').map(Number);
+  
+  let duration = (endH + endM/60) - (startH + startM/60);
+  if (duration < 0) duration += 24; // Overnight transition
+  return parseFloat(duration.toFixed(2));
+};
 
 /**
  * @desc    Create a new shift timing pattern
@@ -10,6 +24,18 @@ const asyncHandler = require('../utils/asyncHandler');
 const createShift = asyncHandler(async (req, res) => {
   const { name, startTime, endTime, gracePeriod, workDays } = req.body;
   const tenantId = req.user.tenantId;
+
+  // Enforce Duration Policy
+  const org = await Organization.findOne({ tenantId });
+  const expectedHours = org?.configuration?.expectedHours || 8;
+  const proposedDuration = calculateShiftDuration(startTime, endTime);
+
+  if (proposedDuration < expectedHours) {
+    return res.status(400).json({ 
+      success: false, 
+      message: `Strategic Constraint: Shift duration (${proposedDuration}h) is less than the required organizational standard (${expectedHours}h).` 
+    });
+  }
 
   const shift = await Shift.create({
     name,
@@ -130,6 +156,22 @@ const updateShift = asyncHandler(async (req, res) => {
   let shift = await Shift.findOne({ _id: id, tenantId });
   if (!shift) {
     return res.status(404).json({ success: false, message: 'Shift pattern not found.' });
+  }
+
+  // Enforce Duration Policy if times are changing
+  if (req.body.startTime || req.body.endTime) {
+    const start = req.body.startTime || shift.startTime;
+    const end = req.body.endTime || shift.endTime;
+    const org = await Organization.findOne({ tenantId });
+    const expectedHours = org?.configuration?.expectedHours || 8;
+    const proposedDuration = calculateShiftDuration(start, end);
+
+    if (proposedDuration < expectedHours) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Strategic Constraint: Updated shift duration (${proposedDuration}h) would violate organizational standards (Min: ${expectedHours}h).` 
+      });
+    }
   }
 
   shift = await Shift.findByIdAndUpdate(id, req.body, {

@@ -14,6 +14,7 @@ function Attendance({ token }) {
   const [currentRecordId, setCurrentRecordId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [stats, setStats] = useState({ avgHours: '0.0', presence: 0, shift: null });
+  const [config, setConfig] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
 
   useEffect(() => {
@@ -26,6 +27,9 @@ function Attendance({ token }) {
       const response = await apiClient.get('/attendance/me');
       const { records: fetchedRecords, leaves: fetchedLeaves, stats: fetchedStats } = response.data;
       console.log("[Attendance] Loaded Leaves:", fetchedLeaves);
+      
+      const orgRes = await apiClient.get('/organization');
+      setConfig(orgRes.data[0]?.configuration || null);
       
       setRecords(fetchedRecords || []);
       setLeaves(fetchedLeaves || []);
@@ -73,7 +77,7 @@ function Attendance({ token }) {
 
   const isWeekoff = stats.shift?.workDays 
     ? !stats.shift.workDays.includes(new Date().getDay()) 
-    : [0, 6].includes(new Date().getDay());
+    : (config?.weeklyOffs || [0, 6]).includes(new Date().getDay());
 
   return (
     <div className="p-10 max-w-[1400px] mx-auto min-h-[85vh] animate-fade-in space-y-12">

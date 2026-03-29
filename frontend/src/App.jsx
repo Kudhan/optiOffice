@@ -21,6 +21,7 @@ import Reports from './components/Reports';
 import TeamHub from './components/TeamHub';
 import HelpDesk from './components/HelpDesk';
 import TicketDetails from './components/TicketDetails';
+import GlobalSettings from './components/GlobalSettings';
 import SetupPassword from './components/SetupPassword';
 import Placeholder from './components/Placeholder';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -99,7 +100,11 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              <Route path="settings" element={<Placeholder title="Settings" />} />
+              <Route path="settings" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <GlobalSettings />
+                </ProtectedRoute>
+              } />
               <Route path="reports" element={
                 <ProtectedRoute allowedRoles={['admin', 'manager']}>
                   <Reports />

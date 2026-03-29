@@ -1,21 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconCalendar, IconUsers, IconInfo, IconChevronDown } from './Icons';
+import apiClient from '../api/client';
 
-const LeaveRequestModal = ({ isOpen, onClose, onSubmit, user, managers = [] }) => {
+const LeaveRequestModal = ({ isOpen, onClose, onSubmit, user, config, managers = [] }) => {
+    const [stats, setStats] = useState({});
+    const [loadingStats, setLoadingStats] = useState(false);
+
+    const rawClassifications = config?.leaveClassifications || [];
+    
     const [formData, setFormData] = useState({
-        type: 'EL',
+        type: rawClassifications[0]?.code || 'EL',
         startDate: '',
         endDate: '',
         reason: ''
     });
 
-    const leaveTypes = [
-        { id: 'EL', label: 'Earned Leave', desc: 'Vacation & Personal Time' },
-        { id: 'SL', label: 'Sick Leave', desc: 'Medical & Wellness' },
-        { id: 'CL', label: 'Casual Leave', desc: 'Unplanned Urgent Matters' },
-        { id: 'LWP', label: 'Leave Without Pay', desc: 'Extended Absence' }
-    ];
+    useEffect(() => {
+        if (isOpen) {
+            fetchStats();
+        }
+    }, [isOpen]);
+
+    const fetchStats = async () => {
+        try {
+            setLoadingStats(true);
+            const { data } = await apiClient.get('/leaves/usage-stats');
+            setStats(data || {});
+        } catch (err) {
+            console.error("Stats link synchronization failure");
+        } finally {
+            setLoadingStats(false);
+        }
+    };
+
+    const calculateDays = () => {
+        if (!formData.startDate || !formData.endDate) return 0;
+        const start = new Date(formData.startDate);
+        const end = new Date(formData.endDate);
+        if (isNaN(start) || isNaN(end) || end < start) return 0;
+        
+        let count = 0;
+        let cur = new Date(start);
+        const weeklyOffs = config?.weeklyOffs || [0, 6];
+        
+        while (cur <= end) {
+            if (!weeklyOffs.includes(cur.getDay())) {
+                count++;
+            }
+            cur.setDate(cur.getDate() + 1);
+        }
+        return count;
+    };
+
+    const requestDays = calculateDays();
+    const selectedType = rawClassifications.find(c => c.code === formData.type);
+    const usedDays = stats[formData.type] || 0;
+    const remainingDays = selectedType ? Math.max(0, selectedType.days - usedDays) : 0;
+    const willExceed = selectedType && (usedDays + requestDays > selectedType.days) && selectedType.isDeductible !== false;
 
     if (!isOpen) return null;
 
@@ -46,38 +88,71 @@ const LeaveRequestModal = ({ isOpen, onClose, onSubmit, user, managers = [] }) =
                     </div>
 
                     <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="space-y-6 relative z-10">
-                        {/* Manager Selection Display (Hardcoded label as requested) */}
-                        <div className="bg-sky-500/5 border border-sky-500/10 rounded-2xl p-4 flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
-                                <IconUsers className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-[8px] font-black uppercase text-sky-500 tracking-widest">Routing Approval To</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight">
-                                    {user?.manager?.full_name || 'Department Head / Admin'}
-                                </p>
-                            </div>
+                        {/* Status Balance Ribbon */}
+                        <div className="flex items-center gap-4">
+                            <div className="h-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
+                            <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] whitespace-nowrap">
+                                Quota <span className="text-sky-500">Availability</span>
+                            </h3>
+                            <div className="h-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Leave Type Selector */}
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Configuration Type</label>
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                    {leaveTypes.map(type => (
-                                        <button
-                                            key={type.id}
-                                            type="button"
-                                            onClick={() => setFormData({...formData, type: type.id})}
-                                            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${formData.type === type.id ? 'bg-sky-500 border-sky-500 text-white shadow-xl shadow-sky-500/20' : 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 text-slate-600 hover:border-sky-500'}`}
-                                        >
-                                            <span className="text-[10px] font-black uppercase tracking-tighter">{type.id}</span>
-                                            <span className="text-[9px] font-bold opacity-70 leading-tight uppercase tracking-tighter">{type.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                        {/* Leave Type Selector with Stats */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            {rawClassifications.map(type => {
+                                const used = stats[type.code] || 0;
+                                const isSelected = formData.type === type.code;
+                                const isExhausted = type.isDeductible !== false && used >= type.days;
+                                
+                                return (
+                                    <button
+                                        key={type.code}
+                                        type="button"
+                                        onClick={() => setFormData({...formData, type: type.code})}
+                                        className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col justify-between h-28 relative overflow-hidden group ${
+                                            isSelected 
+                                                ? 'bg-sky-500 border-sky-500 text-white shadow-xl shadow-sky-500/20' 
+                                                : isExhausted
+                                                ? 'bg-rose-500/5 border-rose-500/20 text-slate-400'
+                                                : 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 text-slate-600 hover:border-sky-500'
+                                        }`}
+                                    >
+                                        <div>
+                                            <span className="text-[10px] font-black uppercase tracking-tighter block">{type.code}</span>
+                                            <span className={`text-[8px] font-bold opacity-70 leading-tight uppercase tracking-tighter block truncate ${isSelected ? 'text-white' : ''}`}>{type.title}</span>
+                                        </div>
+                                        <div className="mt-auto">
+                                            <span className={`text-[11px] font-black ${isSelected ? 'text-white' : 'text-sky-500'}`}>{used} <span className="text-[8px] opacity-50">/ {type.days}</span></span>
+                                        </div>
+                                        {type.isDeductible === false && (
+                                            <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-amber-500" title="Non-Deductible" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
 
+                        {/* Analysis Window */}
+                        {requestDays > 0 && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className={`p-4 rounded-2xl border flex items-center gap-4 transition-colors ${
+                                    willExceed ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'
+                                }`}
+                            >
+                                <IconInfo className="w-5 h-5 shrink-0" />
+                                <div className="text-[10px] font-bold uppercase tracking-tight leading-relaxed">
+                                    {willExceed ? (
+                                        <span>Alert: This {requestDays}-day request exceeds your {selectedType?.title} quota. It will be converted to Loss of Pay (LWP).</span>
+                                    ) : (
+                                        <span>Tactical Analysis: This {requestDays}-day request will leave you with {remainingDays - requestDays} days of {selectedType?.title}.</span>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Date Range Selection */}
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Extraction Point (Start)</label>

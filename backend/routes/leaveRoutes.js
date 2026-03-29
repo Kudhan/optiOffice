@@ -3,6 +3,7 @@ const router = express.Router();
 const { 
   getLeaves, 
   getBalance, 
+  getUsageStats,
   getTeamCalendar, 
   applyLeave, 
   approveLeave, 
@@ -13,6 +14,7 @@ const { protect } = require('../middleware/authMiddleware');
 
 router.get('/', protect, getLeaves);
 router.get('/balance', protect, getBalance);
+router.get('/usage-stats', protect, getUsageStats);
 router.get('/team-calendar', protect, getTeamCalendar);
 router.post('/', protect, applyLeave);
 router.put('/:id/approve', protect, approveLeave);

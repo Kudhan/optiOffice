@@ -5,7 +5,7 @@ const DEBUG = process.env.REACT_APP_DEBUG === 'true' || true; // Force true for 
 
 // Create the axios client instance
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1',
+  baseURL: process.env.REACT_APP_API_URL || 'https://optiflow.backend.logybyte.in/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -47,19 +47,19 @@ apiClient.interceptors.response.use(
             window.location.href = '/login';
           }
         }, 1500);
-      } 
+      }
       // Authorization/Forbidden Errors (Security Warnings)
       // These triggered accidental logouts before; now they selectively warn the user
       else if (status === 403) {
         const securityDetail = response.data?.detail || response.data?.message || 'Access Denied: Security Policy Enforced.';
-        
+
         // Immediate Session Termination for Blocked Accounts
         if (securityDetail.toLowerCase().includes('disabled')) {
           localStorage.removeItem('token');
-          toast.error(securityDetail, { 
-            id: 'security-lockout', 
-            duration: 5000, 
-            style: { background: '#9f1239', color: '#fff' } 
+          toast.error(securityDetail, {
+            id: 'security-lockout',
+            duration: 5000,
+            style: { background: '#9f1239', color: '#fff' }
           });
           setTimeout(() => { window.location.href = '/login'; }, 2000);
         } else {
@@ -67,9 +67,9 @@ apiClient.interceptors.response.use(
           toast.error(securityDetail, {
             duration: 5000,
             id: 'security-restriction',
-            style: { 
-              borderRadius: '20px', 
-              background: '#0B1120', 
+            style: {
+              borderRadius: '20px',
+              background: '#0B1120',
               color: '#fff',
               border: '1px solid rgba(244, 63, 94, 0.4)',
               fontSize: '12px',

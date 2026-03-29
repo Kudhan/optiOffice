@@ -41,7 +41,7 @@ services:
     environment:
       # In production, this needs to be the public IP/Domain if Nginx serves it strictly, 
       # but React builds it statically. Nginx proxy routing is preferred in real prod.
-      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_API_URL=https://optiflow.backend.logybyte.in
     depends_on:
       - backend
     networks:

@@ -104,6 +104,7 @@ function Layout() {
     { label: 'Policies', path: '/policies', icon: <IconShield className="w-5 h-5" /> },
     { label: 'Activity Logs', path: '/activity-logs', icon: <IconActivity className="w-5 h-5" />, permission: 'can_manage_users' },
     { label: 'Reports', path: '/reports', icon: <IconBarChart className="w-5 h-5" />, allowedRoles: ['admin', 'manager'] },
+    { label: 'Project Settings', path: '/settings', icon: <IconSettings className="w-5 h-5" />, allowedRoles: ['admin'] },
   ];
 
   const filteredNavItems = navItems.filter(item => {

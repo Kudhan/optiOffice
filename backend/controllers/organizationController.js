@@ -10,7 +10,37 @@ const getOrganization = async (req, res) => {
     let org = await Organization.findOne({ tenantId: req.user.tenantId });
     if (!org) {
        // Create a default if it doesn't exist
-       org = await Organization.create({ tenantId: req.user.tenantId, name: 'Default Company' });
+       org = await Organization.create({ 
+         tenantId: req.user.tenantId, 
+         name: 'Default Company',
+         configuration: {
+           expectedHours: 8,
+           weeklyOffs: [0, 6],
+           lateThreshold: 15,
+           leaveClassifications: [
+             { title: 'Earned Leave', code: 'EL', days: 15, isDeductible: true },
+             { title: 'Sick Leave', code: 'SL', days: 12, isDeductible: true },
+             { title: 'Casual Leave', code: 'CL', days: 8, isDeductible: true },
+             { title: 'Work From Home', code: 'WFH', days: 30, isDeductible: false },
+             { title: 'Leave Without Pay', code: 'LWP', days: 0, isDeductible: true }
+           ]
+         }
+       });
+    } else if (!org.configuration) {
+       // Patch missing configuration for existing tenants
+       org.configuration = {
+         expectedHours: 8,
+         weeklyOffs: [0, 6],
+         lateThreshold: 15,
+         leaveClassifications: [
+           { title: 'Earned Leave', code: 'EL', days: 15, isDeductible: true },
+           { title: 'Sick Leave', code: 'SL', days: 12, isDeductible: true },
+           { title: 'Casual Leave', code: 'CL', days: 8, isDeductible: true },
+           { title: 'Work From Home', code: 'WFH', days: 30, isDeductible: false },
+           { title: 'Leave Without Pay', code: 'LWP', days: 0, isDeductible: true }
+         ]
+       };
+       await org.save();
     }
     res.json([org]); // Keeping array response if React expects it
   } catch (error) {

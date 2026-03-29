@@ -49,6 +49,7 @@ const Leaves = () => {
     const [leaves, setLeaves] = useState([]);
     const [pagination, setPagination] = useState({ total: 0, pages: 1, currentPage: 1, limit: 10 });
     const [balance, setBalance] = useState({ annual_total: 30, used: 0, remaining: 30 });
+    const [config, setConfig] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [activeTab, setActiveTab] = useState('personal'); // 'personal' | 'team'
@@ -58,13 +59,15 @@ const Leaves = () => {
     const fetchData = async (page = 1) => {
         try {
             setLoading(true);
-            const [leavesRes, balanceRes] = await Promise.all([
+            const [leavesRes, balanceRes, orgRes] = await Promise.all([
                 apiClient.get(`/leaves?page=${page}&limit=10`),
-                apiClient.get('/leaves/balance')
+                apiClient.get('/leaves/balance'),
+                apiClient.get('/organization')
             ]);
             setLeaves(leavesRes.data?.data || []);
             setPagination(leavesRes.data?.pagination || { total: 0, pages: 1, currentPage: 1, limit: 10 });
             setBalance(balanceRes.data || { annual_total: 30, used: 0, remaining: 30 });
+            setConfig(orgRes.data[0]?.configuration || null);
         } catch (err) {
             console.error("Signal fragmentation in tactical data link");
         } finally {
@@ -107,6 +110,20 @@ const Leaves = () => {
                 style: { borderRadius: '15px', background: '#0B1120', color: '#fff' }
             });
         }
+    };
+
+    const getTypeLabel = (code) => {
+        const found = config?.leaveClassifications?.find(l => l.code === code);
+        return found ? found.title : code;
+    };
+
+    const calculateTypeUsed = (typeCode) => {
+        return (leaves || [])
+            .filter(l => l.type === typeCode && l.status === 'Approved')
+            .reduce((sum, l) => {
+                const diffTime = Math.abs(new Date(l.endDate) - new Date(l.startDate));
+                return sum + Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            }, 0);
     };
 
     const pendingApprovals = useMemo(() => {
@@ -317,7 +334,7 @@ const Leaves = () => {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className={`text-[10px] font-black uppercase tracking-widest ${request.type === 'EL' ? 'text-sky-500' : 'text-amber-500'}`}>{request.type} Strategy</span>
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${request.type === 'EL' ? 'text-sky-500' : 'text-amber-500'}`}>{getTypeLabel(request.type)} Strategy</span>
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
@@ -412,31 +429,50 @@ const Leaves = () => {
                         >
                             {/* Standard Employee/Manager Personal View */}
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                <ProgressRing 
-                                    label="Earned Leave Balance" 
-                                    value={balance.remaining} 
-                                    percentage={(balance.remaining / balance.annual_total) * 100} 
-                                    color="sky"
-                                />
-                                <ProgressRing 
-                                    label="Sick Leave Utilisation" 
-                                    value={balance.used} 
-                                    percentage={(balance.used / balance.annual_total) * 100} 
-                                    color="amber"
-                                />
+                                {config?.leaveClassifications?.slice(0, 2).map((typeCfg, idx) => {
+                                    const used = calculateTypeUsed(typeCfg.code);
+                                    return (
+                                        <ProgressRing 
+                                            key={typeCfg.code}
+                                            label={`${typeCfg.title} Plan`} 
+                                            value={used} 
+                                            percentage={(used / typeCfg.days) * 100} 
+                                            color={idx === 0 ? "sky" : "amber"}
+                                        />
+                                    );
+                                })}
                                 <div className="bg-slate-900 rounded-[2rem] p-8 flex flex-col justify-between relative overflow-hidden shadow-xl text-white">
                                     <div className="relative z-10">
-                                        <p className="text-[10px] font-black opacity-50 uppercase tracking-widest">Total Remaining Allowance</p>
+                                        <p className="text-[10px] font-black opacity-50 uppercase tracking-widest">Global Remaining Capacity</p>
                                         <h4 className="text-4xl font-black tracking-tighter mt-2">{balance.remaining} <span className="text-xs opacity-50 uppercase tracking-widest ml-2">Days Clear</span></h4>
                                     </div>
                                     <div className="flex items-center gap-2 mt-4 relative z-10">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                        <p className="text-[9px] font-black uppercase tracking-widest opacity-70">Quota Re-filling in 124 Days</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest opacity-70">Unified Organizational Quota</p>
                                     </div>
                                     <IconInfo className="absolute top-8 right-8 w-12 h-12 text-white/5" />
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/20 rounded-full blur-[60px] -mr-16 -mt-16" />
                                 </div>
                             </div>
+
+                            {config?.leaveClassifications?.length > 2 && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {config.leaveClassifications.slice(2).map((typeCfg) => {
+                                        const used = calculateTypeUsed(typeCfg.code);
+                                        return (
+                                            <div key={typeCfg.code} className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{typeCfg.title}</p>
+                                                    <h4 className="text-2xl font-black text-slate-900 dark:text-white">{used} / {typeCfg.days}</h4>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center">
+                                                    <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
                                 {/* Pending Approvals for Managers */}
@@ -468,7 +504,7 @@ const Leaves = () => {
                                                                 </div>
                                                                 <div>
                                                                     <h5 className="font-bold text-slate-900 dark:text-white uppercase tracking-tight">{request.user?.full_name}</h5>
-                                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{request.type} Strategy</p>
+                                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{getTypeLabel(request.type)} Strategy</p>
                                                                 </div>
                                                             </div>
                                                             <div className="bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-600 text-[9px] font-black text-slate-500 uppercase tracking-tighter text-center">
@@ -539,8 +575,17 @@ const Leaves = () => {
                                                     <tr key={request.id} className="group hover:bg-sky-500/5 transition-all">
                                                         <td className="px-8 py-6">
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`w-2 h-2 rounded-full ${request.type === 'EL' ? 'bg-sky-500' : 'bg-amber-500'} animate-pulse`} />
-                                                                <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">{request.type} Strategy</span>
+                                                                <div className={`w-2 h-2 rounded-full ${
+                                                                    config?.leaveClassifications?.find(c => c.code === request.type)?.isDeductible !== false ? 'bg-sky-500' : 'bg-amber-500'
+                                                                } animate-pulse`} />
+                                                                <div>
+                                                                    <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight block leading-none mb-1">
+                                                                        {getTypeLabel(request.type)} Strategy
+                                                                    </span>
+                                                                    {config?.leaveClassifications?.find(c => c.code === request.type)?.isDeductible === false && (
+                                                                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-amber-500">Duty Execution</span>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </td>
                                                         <td className="px-8 py-6">
@@ -602,6 +647,7 @@ const Leaves = () => {
                 onClose={() => setShowModal(false)} 
                 onSubmit={handleApply}
                 user={user}
+                config={config}
             />
         </div>
     );

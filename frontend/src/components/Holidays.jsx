@@ -86,6 +86,9 @@ const HolidayCard = ({ holiday, isAdmin, onRefresh, setLoading }) => {
     }
   };
 
+  const diffTime = dateObj.getTime() - today.getTime();
+  const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
   return (
     <div className={`bg-primary-surface backdrop-blur-xl rounded-[2.5rem] p-6 border border-border bento-card-hover glass-hover flex items-center gap-6 group transition-all duration-500 hover:shadow-2xl hover:shadow-sky-500/10 ${
       isPassed ? 'opacity-40 grayscale-[0.3]' : 'opacity-100'
@@ -102,6 +105,16 @@ const HolidayCard = ({ holiday, isAdmin, onRefresh, setLoading }) => {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center flex-wrap gap-2 mb-2">
+          {!isPassed && daysRemaining > 0 && (
+            <span className="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest bg-sky-500 text-white shadow-lg shadow-sky-500/20 animate-pulse">
+              In {daysRemaining} {daysRemaining === 1 ? 'Day' : 'Days'}
+            </span>
+          )}
+          {daysRemaining === 0 && !isPassed && (
+            <span className="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+              Happening Today
+            </span>
+          )}
           <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider ${
             holiday.type === 'Public' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
           }`}>
@@ -121,7 +134,7 @@ const HolidayCard = ({ holiday, isAdmin, onRefresh, setLoading }) => {
             {holiday.isCustom !== false ? 'Personal Custom' : 'National Roster'}
           </span>
           {isPassed && (
-            <span className="bg-slate-500/10 text-slate-500 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider animate-pulse">
+            <span className="bg-slate-500/10 text-slate-500 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider">
               Completed
             </span>
           )}
@@ -210,9 +223,19 @@ function Holidays() {
       {/* Header Area */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-12 gap-8">
         <div>
-          <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none mb-4">
-            Office <span className="italic text-sky-500 font-extrabold underline decoration-sky-500/20 underline-offset-8">Leave.</span>
-          </h2>
+          <div className="flex items-center gap-4 flex-wrap mb-4">
+            <h2 className="text-6xl font-black text-content-main tracking-tighter leading-none">
+              Office <span className="italic text-sky-500 font-extrabold underline decoration-sky-500/20 underline-offset-8">Leave.</span>
+            </h2>
+            {nextHoliday && (
+              <div className="bg-amber-500/10 border border-amber-500/20 px-4 py-2 rounded-2xl flex items-center gap-2 animate-bounce-slow">
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">
+                  Next: {nextHoliday.name} • In {nextHoliday.daysRemaining} {nextHoliday.daysRemaining === 1 ? 'Day' : 'Days'}
+                </span>
+              </div>
+            )}
+          </div>
           <p className="text-content-muted font-bold text-lg tracking-tight max-w-xl">
             View upcoming public and company-specific holidays for your hub.
           </p>
@@ -307,6 +330,27 @@ function Holidays() {
             <span className="text-5xl font-black text-primary-surface dark:text-content-main block leading-tight">{nextHoliday.daysRemaining}</span>
             <span className="text-[10px] font-black uppercase tracking-widest text-sky-500">Days Remaining</span>
           </div>
+        </div>
+      )}
+
+      {/* Holiday Statistics Bar */}
+      {!loading && holidays.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+          {[
+            { label: 'Total Calendar Events', value: holidays.length, icon: IconCalendar, color: 'sky' },
+            { label: 'Upcoming Potential', value: holidays.filter(h => new Date(h.date) >= new Date().setHours(0,0,0,0)).length, icon: IconSync, color: 'emerald' },
+            { label: 'Completed Milestones', value: holidays.filter(h => new Date(h.date) < new Date().setHours(0,0,0,0)).length, icon: IconGlobe, color: 'slate' }
+          ].map((stat, i) => (
+            <div key={i} className="bg-primary-surface border border-border p-6 rounded-[2rem] flex items-center justify-between group hover:border-sky-500/30 transition-all duration-500">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-content-muted mb-1">{stat.label}</p>
+                <p className="text-3xl font-black text-content-main">{stat.value}</p>
+              </div>
+              <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-500/10 flex items-center justify-center text-${stat.color}-500 group-hover:scale-110 transition-transform`}>
+                <stat.icon className="w-6 h-6" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

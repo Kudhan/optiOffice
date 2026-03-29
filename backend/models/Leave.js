@@ -18,7 +18,6 @@ const leaveSchema = mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['EL', 'SL', 'CL', 'LWP'],
     required: true
   },
   startDate: {

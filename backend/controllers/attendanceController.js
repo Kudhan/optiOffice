@@ -45,6 +45,14 @@ const checkIn = asyncHandler(async (req, res) => {
   let warning = null;
   const user = await User.findById(req.user.id).populate('shift_id');
   
+  const Organization = require('../models/Organization');
+  const org = await Organization.findOne({ tenantId: req.user.tenantId });
+  const config = org?.configuration || { 
+    expectedHours: 8,
+    lateThreshold: 15,
+    weeklyOffs: [0, 6]
+  };
+
   if (user && user.shift_id) {
     const { startTime, endTime, gracePeriod, workDays, name } = user.shift_id;
     
@@ -71,7 +79,9 @@ const checkIn = asyncHandler(async (req, res) => {
     }
 
     const cutoff = new Date(shiftStart);
-    cutoff.setMinutes(shiftStart.getMinutes() + (gracePeriod || 0));
+    // Use Global Late Threshold as fallback if shift gracePeriod is 0 or null
+    const finalGrace = gracePeriod !== undefined && gracePeriod !== 0 ? gracePeriod : (config.lateThreshold || 0);
+    cutoff.setMinutes(shiftStart.getMinutes() + finalGrace);
 
     // 2. Strict Early Check (Allow only 1 hour before)
     const earlyLimit = new Date(shiftStart.getTime() - 60 * 60 * 1000);
@@ -93,16 +103,15 @@ const checkIn = asyncHandler(async (req, res) => {
     // 4. Identify Lateness for record status
     if (now > cutoff) {
       status = 'Late';
-      console.log(`[Attendance] Personnel ${user.full_name} is Late. Shift starts at ${startTime} (Grace: ${gracePeriod}m)`);
+      console.log(`[Attendance] Personnel ${user.full_name} is Late. Shift starts at ${startTime} (Grace: ${finalGrace}m)`);
     }
   } else {
-    // Fallback to global threshold
-    const [thresholdH, thresholdM] = LATE_THRESHOLD.split(':').map(Number);
-    const cutoff = new Date(now);
-    cutoff.setHours(thresholdH, thresholdM, 0, 0);
-
-    if (now > cutoff) {
-      status = 'Late';
+    // 1. Weekly Off Check
+    if (config.weeklyOffs && config.weeklyOffs.includes(dayOfWeek)) {
+       return res.status(400).json({ 
+         success: false, 
+         message: `Attendance Blocked: Today is a weekly off based on organization policy.` 
+       });
     }
   }
 

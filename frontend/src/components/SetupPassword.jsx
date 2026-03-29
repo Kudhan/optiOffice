@@ -39,7 +39,7 @@ const SetupPassword = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/auth/setup-password', {
+      const response = await axios.post('https://optiflow.backend.logybyte.in/auth/setup-password', {
         token,
         password
       });
@@ -60,7 +60,7 @@ const SetupPassword = () => {
       {/* Dynamic Background Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full"></div>
-      
+
       <div className="max-w-md w-full px-6 py-12 relative z-10">
         {/* Header Section */}
         <div className="text-center mb-10">
@@ -110,10 +110,9 @@ const SetupPassword = () => {
                   type={showPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`block w-full pl-11 pr-4 py-3.5 bg-black/40 border rounded-xl text-white placeholder-gray-600 focus:outline-none transition-all text-sm ${
-                    passwordsMatch ? 'border-green-500/50 focus:ring-green-500/30' : 
-                    confirmPassword ? 'border-red-500/50 focus:ring-red-500/30' : 'border-white/10 focus:ring-blue-500/50'
-                  }`}
+                  className={`block w-full pl-11 pr-4 py-3.5 bg-black/40 border rounded-xl text-white placeholder-gray-600 focus:outline-none transition-all text-sm ${passwordsMatch ? 'border-green-500/50 focus:ring-green-500/30' :
+                      confirmPassword ? 'border-red-500/50 focus:ring-red-500/30' : 'border-white/10 focus:ring-blue-500/50'
+                    }`}
                   placeholder="••••••••"
                   required
                 />
@@ -142,11 +141,10 @@ const SetupPassword = () => {
             <button
               type="submit"
               disabled={loading || !allRulesMet || !passwordsMatch}
-              className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm tracking-wide transition-all shadow-lg ${
-                loading || !allRulesMet || !passwordsMatch
+              className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm tracking-wide transition-all shadow-lg ${loading || !allRulesMet || !passwordsMatch
                   ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5'
                   : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:opacity-90 active:scale-[0.98] border border-blue-400/20'
-              }`}
+                }`}
             >
               {loading ? (
                 <>
