@@ -201,14 +201,25 @@ const updateTicketStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const tenantIdStr = req.user.tenantId ? req.user.tenantId.toString() : null;
+    const { role } = req.user;
+    const userId = req.user._id.toString();
 
-    const ticket = await Ticket.findOneAndUpdate(
-      { _id: id, tenantId: tenantIdStr },
-      { status },
-      { new: true }
-    );
-
+    // Find ticket first to check assignment
+    const ticket = await Ticket.findOne({ _id: id });
     if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+
+    // Authorization: Admin OR Assigned User OR Creator (if within tenant)
+    const isAdmin = ['admin', 'Admin'].includes(role);
+    const isAssigned = ticket.assignedTo?.toString() === userId;
+    const isCreator = ticket.createdBy?.toString() === userId;
+
+    if (!isAdmin && !isAssigned && !isCreator) {
+        return res.status(403).json({ message: "Not authorized to update this ticket" });
+    }
+
+    ticket.status = status;
+    await ticket.save();
+
     res.json(ticket);
   } catch (error) {
     console.error('[HelpDesk] Status Update Error:', error.stack);

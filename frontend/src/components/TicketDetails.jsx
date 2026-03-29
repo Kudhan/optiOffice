@@ -106,6 +106,10 @@ const TicketDetails = () => {
         </div>
     );
 
+    const isAssignedToMe = ticket?.assignedTo?._id?.toString() === user?.id || ticket?.assignedTo?.id === user?.id || ticket?.assignedTo === user?.id;
+    const isSupportStaff = ['agent', 'admin', 'manager'].includes(user?.role?.toLowerCase());
+    const canManageStatus = isAdmin || isAssignedToMe;
+
     return (
         <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-12 animate-fade-in">
             
@@ -133,7 +137,7 @@ const TicketDetails = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-4">
-                    {isAgentOrAdmin && ticket.status !== 'Resolved' && ticket.status !== 'Closed' && (
+                    {canManageStatus && ticket.status !== 'Resolved' && ticket.status !== 'Closed' && (
                         <button 
                             onClick={() => handleStatusUpdate('Resolved')}
                             className="bg-emerald-500 text-white font-black px-6 py-3 rounded-2xl shadow-xl shadow-emerald-500/20 flex items-center gap-3 active:scale-95 transition-all text-[10px] uppercase tracking-widest"
@@ -142,7 +146,7 @@ const TicketDetails = () => {
                             Resolve Ticket
                         </button>
                     )}
-                    {isAgentOrAdmin && (ticket.status === 'Resolved' || ticket.status === 'Closed') && (
+                    {canManageStatus && (ticket.status === 'Resolved' || ticket.status === 'Closed') && (
                         <button 
                             onClick={() => handleStatusUpdate('In-Progress')}
                             className="bg-sky-500 text-white font-black px-6 py-3 rounded-2xl shadow-xl shadow-sky-500/20 flex items-center gap-3 active:scale-95 transition-all text-[10px] uppercase tracking-widest"
@@ -151,7 +155,7 @@ const TicketDetails = () => {
                             Reopen Ticket
                         </button>
                     )}
-                    {isAdmin && (
+                    {canManageStatus && (
                         <select 
                             value={ticket.status}
                             onChange={(e) => handleStatusUpdate(e.target.value)}

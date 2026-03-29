@@ -68,7 +68,15 @@ const HelpDesk = () => {
     const stats = useMemo(() => {
         if (!tickets || !user) return { active: 0, myAssignments: 0, resolvedToday: 0 };
         const active = tickets.filter(t => t.status === 'Open' || t.status === 'In-Progress' || t.status === 'Pending').length;
-        const myAssignments = tickets.filter(t => t.assignedTo?.id === user?.id || t.assignedTo === user?.id).length;
+        
+        const myAssignments = tickets.filter(t => {
+            const assignee = t.assignedTo;
+            if (!assignee) return false;
+            const assigneeId = (typeof assignee === 'object') ? (assignee._id || assignee.id) : assignee;
+            const myId = user.id || user._id;
+            return assigneeId?.toString() === myId?.toString();
+        }).length;
+
         const resolvedToday = tickets.filter(t => t.status === 'Resolved' && new Date(t.updatedAt).toDateString() === new Date().toDateString()).length;
         return { active, myAssignments, resolvedToday };
     }, [tickets, user]);
