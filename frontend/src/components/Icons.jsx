@@ -358,6 +358,12 @@ export const IconTrendingUp = ({ className = "" }) => (
   </svg>
 );
 
+export const IconCheck = ({ className = "" }) => (
+  <svg {...iconProps} className={className}>
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
 export const IconClipboardList = ({ className = "" }) => (
   <svg {...iconProps} className={className}>
     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />

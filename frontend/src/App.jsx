@@ -19,6 +19,8 @@ import Policies from './components/Policies';
 import ActivityLogs from './components/ActivityLogs';
 import Reports from './components/Reports';
 import TeamHub from './components/TeamHub';
+import HelpDesk from './components/HelpDesk';
+import TicketDetails from './components/TicketDetails';
 import Placeholder from './components/Placeholder';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
@@ -97,6 +99,8 @@ function App() {
                   <Reports />
                 </ProtectedRoute>
               } />
+              <Route path="help-desk" element={<HelpDesk />} />
+              <Route path="help-desk/:id" element={<TicketDetails />} />
               <Route path="sprints" element={<Placeholder title="Sprint Management" />} />
             </Route>
 

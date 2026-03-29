@@ -106,7 +106,8 @@ function Dashboard() {
     const checkStatus = async () => {
         try {
             const res = await apiClient.get('attendance/me');
-            const records = res.data;
+            const attendanceData = res.data;
+            const records = Array.isArray(attendanceData) ? attendanceData : (attendanceData.records || []);
             const today = new Date().toISOString().split('T')[0];
             const todayRecord = records.find(r => r.date === today && !r.checkOut);
             if (todayRecord) {

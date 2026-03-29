@@ -1,0 +1,108 @@
+{
+  "nicky": {
+    "_id": "69c8001494672599b47ca243",
+    "tenantId": "optiOffice_corp",
+    "username": "nicky",
+    "email": "nicky@gmail.com",
+    "full_name": "nicky",
+    "phone": "",
+    "profile_photo": "",
+    "bio": "",
+    "publicProfile": {
+      "preferredName": "kudhan",
+      "bio": "",
+      "skills": [
+        "Python"
+      ],
+      "avatarUrl": "",
+      "workEmail": "ds"
+    },
+    "privateIdentity": {
+      "legalName": "Nicky Edit",
+      "dob": "2005-06-18",
+      "gender": "Male",
+      "nationality": "Indian",
+      "personalContact": {
+        "email": "",
+        "mobile": ""
+      },
+      "address": "",
+      "emergencyContact": {
+        "name": "",
+        "relationship": "",
+        "phone": ""
+      },
+      "taxId": "JXIPK15151G",
+      "passportNumber": "",
+      "resumeUrl": ""
+    },
+    "secureVault": {
+      "bankDetails": {
+        "accountNumber": "",
+        "ifscCode": "",
+        "bankName": "",
+        "accountHolder": ""
+      }
+    },
+    "leave_balance": 20,
+    "disabled": false,
+    "role": "employee",
+    "hashed_password": "$2a$12$tnWwUbs7eI5F3QVt3/PcpeTnNRoKtPA7R066joODbUy8AIFeWTBkC",
+    "designation": "",
+    "manager": "69c7fe101eeea0c8fb946dd1",
+    "department": "Design",
+    "department_id": null,
+    "status": "active",
+    "joining_date": "",
+    "sessionVersion": 0,
+    "preferences": {
+      "language": "en",
+      "timezone": "UTC",
+      "notifications": "email"
+    },
+    "shift_id": "69c7fe101eeea0c8fb946dc8",
+    "createdAt": "2026-03-28T16:21:40.042Z",
+    "updatedAt": "2026-03-28T16:54:59.119Z",
+    "__v": 0
+  },
+  "tickets": [
+    {
+      "_id": "69c8b20126d09566e1cb1f4c",
+      "tenantId": "optiOffice_corp",
+      "subject": "Update My Profile",
+      "description": "Update the profile name to kudhan",
+      "category": "HR",
+      "priority": "High",
+      "status": "In-Progress",
+      "dueDate": "2026-03-30T05:00:49.794Z",
+      "createdBy": "69c7fe101eeea0c8fb946dd1",
+      "assignedTo": null,
+      "comments": [
+        {
+          "sender": "69c7fe101eeea0c8fb946dd1",
+          "message": "Please Approve it\n",
+          "timestamp": "2026-03-29T05:01:23.216Z",
+          "isPrivate": false,
+          "_id": "69c8b22326d09566e1cb1f6e"
+        },
+        {
+          "sender": "69c7fe101eeea0c8fb946dcf",
+          "message": "Why i should approve",
+          "timestamp": "2026-03-29T05:02:20.463Z",
+          "isPrivate": false,
+          "_id": "69c8b25c26d09566e1cb1fda"
+        },
+        {
+          "sender": "69c7fe101eeea0c8fb946dcf",
+          "message": "ok approved\n",
+          "timestamp": "2026-03-29T05:03:17.866Z",
+          "isPrivate": true,
+          "_id": "69c8b29526d09566e1cb20ac"
+        }
+      ],
+      "createdAt": "2026-03-29T05:00:49.819Z",
+      "updatedAt": "2026-03-29T05:03:17.872Z",
+      "__v": 3
+    }
+  ]
+}

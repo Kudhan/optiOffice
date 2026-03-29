@@ -98,6 +98,7 @@ function Layout() {
     { label: 'Assets', path: '/assets', icon: <IconPackage className="w-5 h-5" /> },
     { label: 'Holidays', path: '/holidays', icon: <IconCalendar className="w-5 h-5" /> },
     { label: 'Leaves', path: '/leaves', icon: <IconMail className="w-5 h-5" /> },
+    { label: 'Help Desk', path: '/help-desk', icon: <IconHelp className="w-5 h-5" /> },
     { label: 'Departments', path: '/departments', icon: <IconBriefcase className="w-5 h-5" />, permission: 'can_manage_users' },
     { label: 'Roles', path: '/roles', icon: <IconShield className="w-5 h-5" />, permission: 'can_manage_users' }, // Using same permission for now
     { label: 'Policies', path: '/policies', icon: <IconShield className="w-5 h-5" /> },
@@ -236,17 +237,13 @@ function Layout() {
               </div>
 
               <div className="flex items-center gap-4 text-content-muted">
-                {/* Attendance Quick Link */}
+                {/* Help Desk Quick Link */}
                 <button 
-                  onClick={() => navigate('/attendance')}
-                  className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all font-black text-[10px] uppercase tracking-widest ${
-                    user.status === 'Clocked In' || user.status === 'Active'
-                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500 hover:text-white'
-                      : 'bg-slate-500/10 text-slate-500 border-slate-500/20 hover:bg-slate-500 hover:text-white'
-                  }`}
+                  onClick={() => navigate('/help-desk')}
+                  className="p-3 rounded-xl bg-primary-surface border border-border hover:border-sky-500 hover:bg-sky-500/5 hover:text-sky-500 transition-all shadow-sm"
+                  title="Help Desk"
                 >
-                  <IconClock className="w-4 h-4" />
-                  {user.status || 'Offline'}
+                  <IconHelp className="w-5 h-5" />
                 </button>
 
                 <ThemeToggle />

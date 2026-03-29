@@ -39,6 +39,7 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const assetRoutes = require('./routes/assetRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const shiftRoutes = require('./routes/shiftRoutes');
 const reportRoutes = require('./routes/reportRoutes');
@@ -55,6 +56,7 @@ app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/leaves', leaveRoutes);
 app.use('/api/v1/assets', assetRoutes);
 app.use('/api/v1/tasks', taskRoutes);
+app.use('/api/v1/tickets', ticketRoutes);
 app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/shifts', shiftRoutes);
 app.use('/api/v1/reports', reportRoutes);
@@ -66,6 +68,7 @@ app.use('/organization', organizationRoutes);
 app.use('/users', userRoutes);
 app.use('/attendance', attendanceRoutes);
 app.use('/tasks', taskRoutes);
+app.use('/tickets', ticketRoutes);
 app.use('/departments', departmentRoutes);
 
 

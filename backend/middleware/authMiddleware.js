@@ -13,14 +13,14 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Real-time Status Verification: The Live Guard
-      const user = await User.findById(decoded.id).select('status disabled');
+      // Safe Document Hydration
+      const user = await User.findById(decoded.id);
       
       if (!user) {
         return res.status(401).json({ detail: 'Account Identity Null: Access Denied' });
       }
 
-      // 1. Blocked Status: Total Lockout (with legacy fallback)
+      // 1. Blocked Status: Total Lockout
       if (user.disabled || user.status?.toLowerCase() === 'blocked') {
         return res.status(403).json({ detail: 'Your account has been disabled. Contact Admin.' });
       }
@@ -33,8 +33,8 @@ const protect = async (req, res, next) => {
         }
       }
 
-      // Mutate request to include current user equivalent
-      req.user = decoded; 
+      // Restore as Mongoose Document to support .save() and existing logic
+      req.user = user;
       next();
     } catch (error) {
       console.error('Auth Middleware Error:', error);
