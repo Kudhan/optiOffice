@@ -256,7 +256,7 @@ function Dashboard() {
   const FunctionalView = (
     <div className="grid grid-cols-12 gap-10">
         <div className="col-span-12 lg:col-span-8">
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-10 h-full">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-10">
                 <AssetValuationPulse stats={data?.stats} isLoading={isLoading} />
             </div>
         </div>

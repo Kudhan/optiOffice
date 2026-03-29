@@ -580,7 +580,7 @@ const Reports = () => {
     };
 
     return (
-        <div className="space-y-10 max-w-[1600px] mx-auto pb-20">
+        <div className="space-y-10 max-w-[1600px] mx-auto pb-20 min-h-screen relative">
             <style>{reportStyles}</style>
             
             {/* Tactical Print Header */}
@@ -598,10 +598,10 @@ const Reports = () => {
             </div>
 
             {/* Strategic Header / Command Bar */}
-            <div className={`screen-only mb-10 sticky top-[5.5rem] z-20 transition-all duration-500 ease-in-out ${
+            <div className={`screen-only mb-10 sticky top-[5.5rem] z-30 transition-all duration-500 ease-in-out ${
                 showNavbar 
                 ? 'translate-y-0 opacity-100' 
-                : '-translate-y-24 opacity-0 pointer-events-none'
+                : '-translate-y-28 opacity-100'
             }`}>
                 <div className="flex flex-col lg:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/10 p-8 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 transition-all duration-300">
                     {/* Visual Identity */}
@@ -661,7 +661,7 @@ const Reports = () => {
                 </div>
 
             {/* Dynamic Content */}
-            <div className="py-6">
+            <div className="py-6 relative z-10">
                 {loading ? (
                     <div className="py-40 text-center flex flex-col items-center justify-center gap-6">
                         <div className="w-16 h-16 border-4 border-slate-100 dark:border-slate-800 border-t-sky-500 rounded-full animate-spin" />

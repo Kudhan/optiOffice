@@ -168,12 +168,12 @@ const Tasks = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-xl flex items-center justify-center p-6"
+                        className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-xl flex items-start justify-center p-6 pt-20 overflow-y-auto custom-scrollbar"
                     >
                         <motion.div 
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
-                            className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-2xl p-10 w-full max-w-2xl space-y-8"
+                            className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-2xl p-10 w-full max-w-2xl space-y-8 mb-20"
                         >
                             <div className="flex justify-between items-center">
                                 <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Configure <span className="text-sky-500 italic">Objective</span></h3>
