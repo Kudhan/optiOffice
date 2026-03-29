@@ -5,7 +5,7 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 async function checkMe() {
     try {
         const monURI = process.env.MONGO_URI;
-        const uri = monURI.includes('?') ? monURI.replace('?', 'optiflow_db?') : `${monURI}/optiflow_db`;
+        const uri = monURI.includes('?') ? monURI.replace('?', 'optioffice_db?') : `${monURI}/optioffice_db`;
         await mongoose.connect(uri);
         const User = mongoose.model('User', new mongoose.Schema({}, { collection: 'users_collection', strict: false }));
         

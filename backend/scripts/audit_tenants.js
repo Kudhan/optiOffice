@@ -8,8 +8,8 @@ async function audit() {
         if (!monURI) throw new Error('MONGO_URI is missing');
         
         const uri = monURI.includes('?') 
-          ? monURI.replace('?', 'optiflow_db?') 
-          : `${monURI}/optiflow_db`;
+          ? monURI.replace('?', 'optioffice_db?') 
+          : `${monURI}/optioffice_db`;
 
         await mongoose.connect(uri);
         const User = mongoose.model('User', new mongoose.Schema({}, { strict: false }));

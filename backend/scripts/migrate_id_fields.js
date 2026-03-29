@@ -7,8 +7,8 @@ async function migrateIdentityFields() {
   try {
     const mongoUri = process.env.MONGO_URI;
     const uri = mongoUri.includes('?') 
-      ? mongoUri.replace('?', 'optiflow_db?') 
-      : `${mongoUri}/optiflow_db`;
+      ? mongoUri.replace('?', 'optioffice_db?') 
+      : `${mongoUri}/optioffice_db`;
 
     await mongoose.connect(uri);
     console.log('[MIGRATION] Connected to MongoDB');

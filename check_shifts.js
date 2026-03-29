@@ -8,7 +8,7 @@ const Shift = require(path.join(__dirname, 'backend', 'models', 'Shift'));
 
 async function checkShifts() {
   try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/optiflow';
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/optioffice';
     console.log('Connecting to:', mongoUri);
     await mongoose.connect(mongoUri);
     const shifts = await Shift.find();
