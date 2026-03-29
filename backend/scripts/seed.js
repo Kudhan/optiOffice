@@ -32,9 +32,9 @@ const seedDB = async () => {
         await Holiday.deleteMany({});
         await Shift.deleteMany({});
 
-        console.log('Inserting Mock Data for OptiOffice...');
+        console.log('Inserting Mock Data for OptiFlow...');
 
-        const tenantId = 'optiOffice_corp';
+        const tenantId = 'optiFlow_corp';
         const hashedPassword = await bcrypt.hash('password123', 10);
 
         // 1. Create Default Roles
@@ -117,8 +117,8 @@ const seedDB = async () => {
         // CEO/Admin first
         const adminDoc = await User.create({
             username: 'admin',
-            email: 'admin@optioffice.com',
-            full_name: 'OptiOffice CEO',
+            email: 'admin@optiflow.com',
+            full_name: 'OptiFlow CEO',
             hashed_password: hashedPassword,
             role: 'admin',
             tenantId: tenantId,
@@ -156,7 +156,7 @@ const seedDB = async () => {
             const dept = departmentDocs[idx % departmentDocs.length];
             return {
                 username: uname,
-                email: `${uname}@optioffice.com`,
+                email: `${uname}@optiflow.com`,
                 full_name: `${uname.charAt(0).toUpperCase() + uname.slice(1)} Manager`,
                 hashed_password: hashedPassword,
                 role: 'manager',
@@ -187,7 +187,7 @@ const seedDB = async () => {
             const dept = departmentDocs[idx % departmentDocs.length];
             return {
                 username: uname,
-                email: `${uname}@optioffice.com`,
+                email: `${uname}@optiflow.com`,
                 full_name: `${uname.charAt(0).toUpperCase() + uname.slice(1)} Worker`,
                 hashed_password: hashedPassword,
                 role: 'employee',
@@ -210,7 +210,7 @@ const seedDB = async () => {
         // Super Admin (Global)
         await User.create({
             username: 'superadmin',
-            email: 'super@optioffice.com',
+            email: 'super@optiflow.com',
             full_name: 'The Overlord',
             hashed_password: hashedPassword, // Use the same 'password123' hash defined above
             role: 'super-admin',
@@ -320,14 +320,14 @@ const seedDB = async () => {
             description: 'Public Holiday'
         });
 
-        console.log('\n✅ Seeding Complete. OptiOffice is ready for testing.');
+        console.log('\n✅ Seeding Complete. OptiFlow is ready for testing.');
         console.log('----------------------------------------------------');
         console.log('TenantID        | Role        | Username    | Password');
         console.log('----------------------------------------------------');
         console.log('global          | Super Admin | superadmin  | password123');
-        console.log('optiOffice_corp | Admin       | admin       | password123');
-        console.log('optiOffice_corp | Employee    | jdoe        | password123');
-        console.log('optiOffice_corp | Employee    | asmith      | password123');
+        console.log('optiFlow_corp   | Admin       | admin       | password123');
+        console.log('optiFlow_corp   | Employee    | jdoe        | password123');
+        console.log('optiFlow_corp   | Employee    | asmith      | password123');
         console.log('----------------------------------------------------');
         process.exit();
     } catch (err) {

@@ -143,7 +143,7 @@ function Dashboard() {
             
             // Personalized Feedback Loop
             toast.success(
-              `Welcome to OptiOffice, ${res.data.userName}! Clock-in at ${res.data.formattedTime}`, 
+              `Welcome to OptiFlow, ${res.data.userName}! Clock-in at ${res.data.formattedTime}`, 
               { icon: '🚀', duration: 4000 }
             );
         } else {

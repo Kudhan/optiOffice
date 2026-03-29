@@ -58,11 +58,12 @@ const ManagerTransferModal = ({ isOpen, onClose, user, onRefresh }) => {
     try {
       setSaving(true);
       await apiClient.patch(`/users/${user.id || user._id}/hierarchy`, {
-        managerId: selectedManager.id || selectedManager._id,
+        managerId: selectedManager === 'ROOT' ? null : (selectedManager.id || selectedManager._id),
         reassignTasks
       });
       
-      toast.success(`Personnel Transfer Protocol Successful: ${user.username} -> ${selectedManager.username}`);
+      const targetName = selectedManager === 'ROOT' ? 'Root Node (Strategic Command)' : selectedManager.username;
+      toast.success(`Personnel Transfer Protocol Successful: ${user.username} -> ${targetName}`);
       onRefresh();
       onClose();
     } catch (err) {
@@ -112,6 +113,31 @@ const ManagerTransferModal = ({ isOpen, onClose, user, onRefresh }) => {
 
           {/* List Area */}
           <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-2 pr-2">
+            {/* Root Node Option */}
+            <button
+              onClick={() => setSelectedManager('ROOT')}
+              className={`w-full p-6 rounded-3xl border transition-all flex items-center justify-between group mb-4 ${
+                selectedManager === 'ROOT'
+                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-xl shadow-emerald-500/20' 
+                  : 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-500'
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm transition-colors ${
+                  selectedManager === 'ROOT' ? 'bg-white text-emerald-500' : 'bg-emerald-500/20 text-emerald-500'
+                }`}>
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div className="text-left leading-none">
+                  <p className="font-black text-[13px] tracking-tight mb-1">STRATEGIC COMMAND (ROOT)</p>
+                  <p className={`text-[9px] font-black uppercase tracking-widest ${
+                     selectedManager === 'ROOT' ? 'text-white/70' : 'text-emerald-500/70'
+                  }`}>No direct reporting line. This node reports to the Organization itself.</p>
+                </div>
+              </div>
+              {selectedManager === 'ROOT' && <CheckCircle2 className="w-5 h-5 text-white" />}
+            </button>
+
             {loading ? (
               <div className="py-20 text-center font-black text-content-muted uppercase text-[10px] tracking-[0.3em] animate-pulse">Syncing Hierarchy...</div>
             ) : filteredManagers.length === 0 ? (

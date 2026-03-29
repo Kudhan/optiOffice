@@ -39,7 +39,7 @@ const MemberCard = ({ user, onRefresh, onOpenSecurity, onOpenDossier, onOpenTran
     const handleRemove = async () => {
         toast((t) => (
             <div className="flex flex-col gap-4">
-                <span className="font-bold text-white text-sm">Are you sure you want to remove this user from OptiOffice?</span>
+                <span className="font-bold text-white text-sm">Are you sure you want to remove this user from OptiFlow?</span>
                 <div className="flex gap-2">
                     <button 
                         onClick={async () => {

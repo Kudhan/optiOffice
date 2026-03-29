@@ -282,7 +282,7 @@ const InviteUserModal = ({ isOpen, onClose, onSuccess }) => {
                                         className="w-full bg-primary-muted/30 border-2 border-transparent focus:border-sky-500/50 focus:bg-white dark:focus:bg-navy-950 rounded-2xl py-4 px-6 text-[11px] font-black lowercase tracking-widest text-content-main outline-none transition-all shadow-inner placeholder:text-content-muted/30"
                                         value={formData.email}
                                         onChange={e => setFormData({...formData, email: e.target.value})}
-                                        placeholder="james@optioffice.com"
+                                        placeholder="james@optiflow.com"
                                     />
                                 </div>
 

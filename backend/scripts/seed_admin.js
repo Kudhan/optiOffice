@@ -9,11 +9,11 @@ async function seedAdmin() {
   try {
     const mongoUri = process.env.MONGO_URI;
     const uri = mongoUri.includes('?') 
-      ? mongoUri.replace('?', 'optioffice_db?') 
-      : `${mongoUri}/optioffice_db`;
+      ? mongoUri.replace('?', 'optiflow_db?') 
+      : `${mongoUri}/optiflow_db`;
 
     await mongoose.connect(uri);
-    console.log('[SEED] Connected to MongoDB (optioffice_db)');
+    console.log('[SEED] Connected to MongoDB (optiflow_db)');
     
     // Create Admin Role
     const adminRole = await Role.findOneAndUpdate(
@@ -34,7 +34,7 @@ async function seedAdmin() {
       
       await User.create({
         username: 'admin',
-        email: 'admin@optioffice.com',
+        email: 'admin@optiflow.com',
         full_name: 'Master Admin',
         role: 'admin',
         tenantId: 'default_tenant',

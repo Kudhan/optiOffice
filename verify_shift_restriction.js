@@ -5,7 +5,7 @@ const Shift = require('./backend/models/Shift');
 require('dotenv').config({ path: './backend/.env' });
 
 async function verify() {
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/optioffice');
+  await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/optiflow');
   
   // Find a test user
   const user = await User.findOne({ role: 'admin' }).populate('shift_id');

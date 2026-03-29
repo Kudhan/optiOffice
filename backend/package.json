@@ -1,7 +1,7 @@
 {
-  "name": "optioffice-backend",
+  "name": "optiflow-backend",
   "version": "1.0.0",
-  "description": "Node.js Express backend for OptiOffice",
+  "description": "Node.js Express backend for OptiFlow",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

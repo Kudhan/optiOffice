@@ -32,4 +32,4 @@ ENVIRONMENT CONFIGURATION
 
 RECEIPT OF WORK: STITCHED & SEALED.
 =================================
-OptiOffice is now a production-grade Command Center.
+OptiFlow is now a production-grade Command Center.

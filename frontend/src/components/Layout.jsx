@@ -126,7 +126,7 @@ function Layout() {
           {!isCollapsed && (
             <Link to="/" className="min-w-0 text-left"> 
               <h1 className="text-content-main font-black text-xl tracking-tighter leading-none truncate">
-                {isAdmin ? 'Admin Portal' : 'OptiOffice'}
+                {isAdmin ? 'Admin Portal' : 'OptiFlow'}
               </h1>
               <p className="text-[10px] font-bold text-content-muted uppercase tracking-widest mt-1">
                 {isAdmin ? 'Command Center' : 'My Workspace'}
@@ -233,7 +233,7 @@ function Layout() {
 
               <div className="hidden lg:flex items-center bg-sky-100/50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 px-4 py-2 rounded-full text-xs font-bold border border-sky-200/50 dark:border-sky-900/40">
                 <span className="w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
-                Tenant: <span className="uppercase ml-1">{user?.tenantId || 'OptiOffice Central'}</span>
+                Tenant: <span className="uppercase ml-1">{user?.tenantId || 'OptiFlow Central'}</span>
               </div>
 
               <div className="flex items-center gap-4 text-content-muted">

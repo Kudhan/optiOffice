@@ -131,7 +131,7 @@ const DossierModal = ({ isOpen, onClose, user, onRefresh, departments = [] }) =>
                         <TrendingUp className="w-8 h-8 text-emerald-500 mb-4" />
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-content-muted mb-2">Performance Quotient</h4>
                         <p className="text-4xl font-black text-content-main tracking-tighter">
-                          {(stats?.performance || 0).toFixed(1)}%
+                          {Number.isFinite(stats?.performance) ? stats.performance.toFixed(1) : '0.0'}%
                         </p>
                       </div>
                       <div className="bg-primary-muted/20 p-8 rounded-[2rem] border border-border">

@@ -99,18 +99,22 @@ const SecurityModal = ({ isOpen, onClose, user, onRefresh }) => {
             
             <div className="bg-primary/30 rounded-3xl p-6 border border-border space-y-6">
               <div className="flex flex-wrap gap-2">
-                {['Admin', 'Manager', 'Employee'].map((role) => (
+                {[
+                  { id: 'admin', label: 'Admin' },
+                  { id: 'manager', label: 'Manager' },
+                  { id: 'employee', label: 'Employee' }
+                ].map((role) => (
                   <button
-                    key={role}
-                    onClick={() => setSelectedRole(role)}
+                    key={role.id}
+                    onClick={() => setSelectedRole(role.id)}
                     className={`flex-1 min-w-[120px] px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                      selectedRole.toLowerCase() === role.toLowerCase() 
+                      selectedRole.toLowerCase() === role.id 
                         ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' 
                         : 'bg-primary-surface text-content-muted hover:bg-primary-muted border border-border'
                     }`}
                   >
-                    {role === 'Admin' && <ShieldCheck className="w-3.5 h-3.5" />}
-                    {role}
+                    {role.id === 'admin' && <ShieldCheck className="w-3.5 h-3.5" />}
+                    {role.label}
                   </button>
                 ))}
               </div>

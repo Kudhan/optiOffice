@@ -588,7 +588,7 @@ const Reports = () => {
                 <div className="flex justify-between items-end">
                     <div>
                         <h1 className="text-5xl font-black tracking-tighter italic">Consolidated Strategic Ledger</h1>
-                        <p className="text-sm font-bold text-slate-500 tracking-[0.3em] mt-2">OptiOffice Command Center // Universal Intelligence Audit</p>
+                        <p className="text-sm font-bold text-slate-500 tracking-[0.3em] mt-2">OptiFlow Command Center // Universal Intelligence Audit</p>
                     </div>
                     <div className="text-right">
                         <p className="text-xs font-black">Generation Node: {new Date().toLocaleDateString()}</p>

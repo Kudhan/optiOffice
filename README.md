@@ -1,8 +1,8 @@
-# OptiOffice 🏢✨
+# OptiFlow 🏢✨
 
-Welcome to **OptiOffice** (formerly Office SaaS Management System). This project represents a comprehensive, multi-tenant enterprise solution designed to streamline workforce operations—from attendance and task tracking to leave management and billing.
+Welcome to **OptiFlow** (formerly Office SaaS Management System). This project represents a comprehensive, multi-tenant enterprise solution designed to streamline workforce operations—from attendance and task tracking to leave management and billing.
 
-Recently, the OptiOffice ecosystem underwent a massive architectural migration and UI modernization to meet 2026 SaaS standards.
+Recently, the OptiFlow ecosystem underwent a massive architectural migration and UI modernization to meet 2026 SaaS standards.
 
 ---
 
@@ -97,9 +97,9 @@ Returns current SaaS subscription details for the tenant.
 
 ---
 
-## 🚀 The OptiOffice v2.0 Roadmap
+## 🚀 The OptiFlow v2.0 Roadmap
 
-While the foundation is solidly built for scale, the following high-value features are scheduled for development in **OptiOffice v2.0**:
+While the foundation is solidly built for scale, the following high-value features are scheduled for development in **OptiFlow v2.0**:
 
 1. **🤖 AI-Automated Shift Scheduling:** Integrated machine learning to automatically generate weekly shifts based on historically approved leaves, employee preferences, and predicted foot-traffic/workload.
 2. **💬 Real-Time WebSockets & Notifications:** Implementing Socket.io to deliver instant popup notifications for task assignments and leave approvals without requiring the user to refresh the Dashboard.

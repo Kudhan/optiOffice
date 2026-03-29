@@ -68,7 +68,7 @@ const SetupPassword = () => {
             <Shield className="w-8 h-8 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-3 tracking-tight">Setup Security Credentials</h1>
-          <p className="text-gray-400 text-sm">Initialize your OptiOffice node by establishing a robust administrative password.</p>
+          <p className="text-gray-400 text-sm">Initialize your OptiFlow node by establishing a robust administrative password.</p>
         </div>
 
         {/* Glassmorphic Form Card */}
@@ -165,7 +165,7 @@ const SetupPassword = () => {
 
         {/* Footer Info */}
         <p className="mt-8 text-center text-[11px] text-gray-600 uppercase tracking-[0.2em]">
-          Powered by OptiOffice Security Framework v2.4
+          Powered by OptiFlow Security Framework v2.4
         </p>
       </div>
     </div>

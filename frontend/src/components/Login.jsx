@@ -68,7 +68,7 @@ function Login({ setToken }) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  placeholder="admin@optioffice.com"
+                  placeholder="admin@optiflow.com"
                 />
               </div>
               

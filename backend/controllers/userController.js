@@ -3,6 +3,7 @@ const Role = require('../models/Role');
 const { Leave } = require('../models/Leave');
 const Attendance = require('../models/Attendance');
 const Task = require('../models/Task');
+const Department = require('../models/Department');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
@@ -102,7 +103,7 @@ const createUser = async (req, res) => {
       }
       
       // Strict Management Role Enforcement
-      if (!['admin', 'manager', 'hr'].includes(managerUser.role)) {
+      if (!['admin', 'manager', 'hr'].includes(managerUser.role?.toLowerCase())) {
         return res.status(400).json({ detail: "Hierarchy Error: Only High-Level Command Nodes (Admin/Manager/HR) can be assigned as personnel managers." });
       }
     }
@@ -207,7 +208,7 @@ const updateUser = async (req, res) => {
       }
     }
 
-    if (role && isAdmin) user.role = role;
+    if (role && isAdmin) user.role = role.toLowerCase();
     if (status && isAdmin) user.status = status;
     if (department && isAdmin) user.department = department;
     if (full_name) user.full_name = full_name;
@@ -247,7 +248,11 @@ const updateUser = async (req, res) => {
     await user.save();
     res.json(stripSensitiveData(user, req.user));
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    console.error('[ERROR] Identity Override Failure:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ detail: error.message });
+    }
+    res.status(500).json({ message: "Identity Override Protocol Failed" });
   }
 };
 
@@ -284,7 +289,7 @@ const getUserDossier = async (req, res) => {
     if (!user) return res.status(404).json({ detail: "User not found" });
 
     // Aggregate stats from other collections 
-    const [totalTasks, completedTasks, lastAttendance, recentTasks, attendanceLogs] = await Promise.all([
+    const [totalTasks, completedTasks, lastAttendance, recentTasks, attendanceLogs, leaves] = await Promise.all([
       Task.countDocuments({ assigned_to: user._id, tenantId: user.tenantId }),
       Task.countDocuments({ 
         assigned_to: user._id, 
@@ -303,7 +308,7 @@ const getUserDossier = async (req, res) => {
       stats: {
         totalTasks,
         completedTasks,
-        performance: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0,
+        performance: totalTasks > 0 ? Number(((completedTasks / totalTasks) * 100).toFixed(1)) : 0,
         lastPulse: lastAttendance ? lastAttendance.status : 'N/A',
         recentTasks, // Full task objects
         attendanceLogs, // Full attendance objects
@@ -312,7 +317,7 @@ const getUserDossier = async (req, res) => {
     });
   } catch (error) {
     console.error('[ERROR] Dossier Stats Failure:', error);
-    res.status(500).json({ message: "Dossier Retrieval Failed" });
+    res.status(500).json({ detail: "Dossier Retrieval Failed: Intelligence Node Connectivity Error." });
   }
 };
 
@@ -330,9 +335,12 @@ const updateUserHierarchy = async (req, res) => {
     }
 
     // New Manager Role Validation
-    const newManager = await User.findById(managerId);
-    if (!newManager || !['admin', 'manager', 'hr'].includes(newManager.role)) {
-      return res.status(400).json({ detail: "Hierarchy Action Denied: The target node must have Command Clearance (Admin/Manager/HR)." });
+    let newManager = null;
+    if (managerId) {
+      newManager = await User.findById(managerId);
+      if (!newManager || !['admin', 'manager', 'hr'].includes(newManager.role?.toLowerCase())) {
+        return res.status(400).json({ detail: "Hierarchy Action Denied: The target node must have Command Clearance (Admin/Manager/HR)." });
+      }
     }
 
     // 2. Circular Dependency Check (Recursive)
@@ -349,7 +357,7 @@ const updateUserHierarchy = async (req, res) => {
 
     const user = await User.findById(targetUserId);
     const oldManagerId = user.manager;
-    user.manager = managerId;
+    user.manager = managerId || null;
     await user.save();
 
     // 3. Bulk Task Reassignment
@@ -363,7 +371,11 @@ const updateUserHierarchy = async (req, res) => {
 
     res.json({ success: true, message: "Hierarchy alignment completed." });
   } catch (error) {
-    res.status(500).json({ message: "Hierarchy Update Failed" });
+    console.error('[ERROR] Hierarchy Update Failure:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ detail: error.message });
+    }
+    res.status(500).json({ detail: "Hierarchy Update Failed: Command Node Logic Error." });
   }
 };
 
@@ -393,6 +405,10 @@ const accountControl = async (req, res) => {
     await user.save();
     res.json({ success: true, message: `Action ${action} executed on node ${user.username}` });
   } catch (error) {
+    console.error('[ERROR] Kill-Switch Failure:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ detail: error.message });
+    }
     res.status(500).json({ message: "Kill-Switch Execution Failed" });
   }
 };
@@ -406,6 +422,10 @@ const updateUserDepartment = async (req, res) => {
     const targetUserId = req.params.id;
 
     // Validate Department
+    if (!mongoose.Types.ObjectId.isValid(departmentId)) {
+      return res.status(400).json({ detail: "Invalid Organizational Unit ID" });
+    }
+    
     const Department = mongoose.model('Department');
     const department = await Department.findOne({ _id: departmentId, tenantId: req.user.tenantId });
     if (!department) {
@@ -434,7 +454,10 @@ const updateUserDepartment = async (req, res) => {
     });
   } catch (error) {
     console.error('[ERROR] Department Shift Failure:', error);
-    res.status(500).json({ message: "Department Shift Failed" });
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ detail: error.message });
+    }
+    res.status(500).json({ message: "Department Shift Protocol Failed" });
   }
 };
 

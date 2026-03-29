@@ -74,8 +74,8 @@ const manageAuthority = async (req, res) => {
       return res.status(404).json({ detail: "User not found" });
     }
 
-    user.role = role;
-    await User.updateOne({ _id: targetUserId, tenantId: req.user.tenantId }, { role: role });
+    user.role = role.toLowerCase();
+    await User.updateOne({ _id: targetUserId, tenantId: req.user.tenantId }, { role: role.toLowerCase() });
 
     res.json({ message: `User role updated to ${role}`, user });
   } catch (error) {
